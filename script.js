@@ -1840,21 +1840,21 @@
       const tick = Math.floor(t*5+seed), pulse = 1+Math.sin(t*1.8+seed)*.08;
       for (const [i,strand] of glitchStrands.entries()) {
         if (mode !== 'build' && (i%3 === 0) !== foreground) continue;
-        const shift = reducedParticleMotion.matches ? 0 : Math.sin(tick*2.7+i*4.1)*2;
+        const shift = reducedParticleMotion.matches ? 0 : Math.sin(tick*2.7+i*4.1);
         ctx.globalAlpha = .8; ctx.strokeStyle = strand.color; ctx.beginPath();
         for (const [j,[px,py]] of strand.points.entries()) {
-          const wobble = Math.sin(t*2.2+j*1.9+i+seed)*(j%2 ? 2 : 4);
-          const x = Math.round(cx+px*.43*pulse+shift+wobble)+.5;
-          const y = Math.round(cy+py*.43*pulse+Math.cos(t*1.6+j+seed)*2)+.5;
+          const wobble = Math.sin(t*2.2+j*1.9+i+seed)*(j%2 ? 1 : 2);
+          const x = Math.round(cx+px*.25*pulse+shift+wobble)+.5;
+          const y = Math.round(cy+py*.25*pulse+Math.cos(t*1.6+j+seed))+.5;
           if (!j) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         }
         ctx.stroke();
         // A short detached sliver jitters beside each colored strand.
         const [px,py] = strand.points[1];
-        ctx.globalAlpha = .55; rect(cx+px*.43+shift*2,cy+py*.43+5,3+i%3,1,strand.color);
+        ctx.globalAlpha = .55; rect(cx+px*.25+shift*2,cy+py*.25+3,2+i%2,1,strand.color);
       }
       if (!foreground) {
-        ctx.globalAlpha = .8; rect(cx-1,cy-2,2,4,'#ecedff');
+        ctx.globalAlpha = .8; rect(cx-1,cy-1,2,2,'#ecedff');
         if (mode === 'build' && tool === 'glitchParticles') {
           ctx.strokeStyle = '#ffe433';ctx.setLineDash([3,3]);ctx.strokeRect(cx-18,cy-18,36,36);ctx.setLineDash([]);
           pixelText('GLITCH',cx-18,cy+31,'#ffe877',9);
