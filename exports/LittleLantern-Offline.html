@@ -855,6 +855,8 @@ dialog .primary {
                 <section class="panel" id="buildPanel" hidden>
                     <div class="eyebrow">room workshop</div>
                     <h2>Make a place of your own.</h2>
+                    <div class="tool-row"><button id="objectsBehindTool" aria-pressed="false">Objects behind</button><button id="behindGroundTool" aria-pressed="false">Behind ground</button></div>
+                    <p class="builder-note">Choose a button, then click an object's base. Click again to restore its normal layer. Hidden objects stay marked while using these tools. Edit lets you choose between objects sharing a tile.</p>
                     <button class="primary" id="saveBuildButton" style="width:100%">Save build</button>
                     <p class="helptext" id="saveStatus" role="status" aria-live="polite">Save your rooms and objects in this browser.</p>
                     <div class="tool-row"><button id="downloadBuildButton">Download backup</button><button id="restoreBuildButton">Restore backup</button></div>
@@ -879,8 +881,6 @@ dialog .primary {
                     <p class="builder-note">Click a tile to place animated, tangled color streaks. Click it again with this tool to remove them.</p>
                     <div class="tool-row"><button id="glitchPillarTool" aria-pressed="false">Glitch pillar</button></div>
                     <p class="builder-note">Click to place a tall pillar of animated glitch particles. Use Edit on its base to change its height and width.</p>
-                    <div class="tool-row"><button id="objectsBehindTool" aria-pressed="false">Objects behind</button><button id="behindGroundTool" aria-pressed="false">Behind ground</button></div>
-                    <p class="builder-note">Choose a button, then click an object's base. Click again to restore its normal layer. Hidden objects stay marked while using these tools. Edit lets you choose between objects sharing a tile.</p>
                     <div class="tool-row"><button id="deleteTool" aria-pressed="false">⌫ Delete</button><button id="editTool" aria-pressed="false">✎ Edit</button><button id="treeTool" aria-pressed="false">♣ Place tree</button></div>
                     <p class="builder-note">Click a clear tile to plant a tree. Click its trunk tile again to remove it.</p>
                     <div class="tool-row"><button id="spikeTool" aria-pressed="false">▲ Place spike</button></div>
