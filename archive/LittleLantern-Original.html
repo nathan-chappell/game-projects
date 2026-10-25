@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Little Lantern · Your first adventure</title>
+<style>
+:root{--bg:#11141d;--panel:#1a1e2a;--line:#34394b;--ink:#f4efdf;--muted:#a9aec1;--accent:#d3bcff;--gold:#efcb84;--green:#b3d4b1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}button{border:1px solid var(--line);border-radius:8px;background:#252a3a;color:var(--ink);padding:9px 14px;transition:background .12s}button:hover:not(:disabled){background:#35394c}.primary{background:var(--accent);border-color:var(--accent);color:#221b34;font-weight:700}.primary:hover:not(:disabled){background:#e0ceff}.quiet{background:transparent}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.muted{color:var(--muted)}[hidden]{display:none!important}.shell{max-width:1200px;margin:auto;padding:0 32px}header{height:92px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px}.brandmark{width:30px;height:36px;position:relative}.brandmark:before{content:"";position:absolute;inset:6px 4px;background:var(--gold);clip-path:polygon(30% 0,70% 0,70% 20%,100% 20%,100% 85%,0 85%,0 20%,30% 20%)}.brandmark:after{content:"";position:absolute;inset:13px 11px 12px;background:#fff3cc}.brand strong{font-size:19px;letter-spacing:-.5px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}.header-actions{display:flex;gap:10px;align-items:center}.intro{padding:30px 0 24px;display:flex;justify-content:space-between;gap:20px;align-items:end}h1{font-size:30px;letter-spacing:-1px;line-height:1.15;margin:0 0 8px}p{margin:0}.mode-switch{display:flex;background:#090c13;border:1px solid var(--line);padding:4px;border-radius:10px;flex-shrink:0}.mode-switch button{border:0;background:transparent;min-width:102px}.mode-switch button[aria-pressed="true"]{background:#343044;color:#e5d5ff}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}.game-frame{background:#080a10;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 22px 65px #0003}.room-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;background:#1b1f2a;font-size:12px;gap:10px}.room-label{display:flex;align-items:center;gap:9px}.dot{width:7px;height:7px;background:var(--green);border-radius:50%}.room-bar .hint{font-size:10px;letter-spacing:1px;color:#aaa6bc}.stage{position:relative;width:100%;aspect-ratio:4/3;background:#191322}canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none;outline:none}canvas:focus-visible{box-shadow:inset 0 0 0 3px var(--gold)}.dialogue{position:absolute;left:3%;right:3%;bottom:4%;min-height:24%;background:#101118f5;border:2px solid #eee6d7;box-shadow:0 0 0 5px #15121e;display:grid;grid-template-columns:46px 1fr;gap:12px;padding:16px 18px;font-family:ui-monospace,Consolas,monospace;font-size:clamp(12px,1.4vw,17px);line-height:1.5;pointer-events:none}.portrait{font-size:32px;color:var(--gold);padding-top:15px}.speaker{font:700 10px system-ui,sans-serif;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:5px}.next{display:block;text-align:right;color:#b9b4c8;font-size:10px;margin-top:8px}.game-footer{padding:12px 17px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #2c2b3b;color:var(--muted);font-size:12px}.game-footer strong{color:var(--ink);font-weight:500}.key{display:inline-grid;place-items:center;min-width:22px;height:23px;padding:0 5px;font:12px ui-monospace,monospace;border:1px solid #535164;border-bottom-width:3px;border-radius:4px;color:var(--ink);background:#242332}.controls{display:flex;justify-content:space-between;align-items:center;margin:16px 0 0;gap:14px}.dpad{display:grid;grid-template-columns:36px 36px 36px;grid-template-rows:30px 30px;gap:4px}.dpad button{padding:0;touch-action:none;user-select:none;-webkit-user-select:none}.dpad [data-dir="up"]{grid-column:2}.dpad [data-dir="left"]{grid-column:1;grid-row:2}.dpad [data-dir="down"]{grid-column:2;grid-row:2}.dpad [data-dir="right"]{grid-column:3;grid-row:2}.controls-right{display:flex;gap:8px;align-items:center}.controls-right button{min-height:42px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}.panel h2{font-size:18px;letter-spacing:-.4px;margin:7px 0 14px}.panel p{font-size:13px;color:var(--muted)}.room-illustration{height:82px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:var(--gold)}.room-illustration svg{width:80px;height:65px;image-rendering:pixelated}.task{border-top:1px solid var(--line);margin-top:20px;padding-top:17px;display:flex;gap:11px}.task-icon{color:var(--gold);font-size:21px}.task strong{display:block;font-size:13px;margin-bottom:4px}.small-note{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}.hint-card{border:1px dashed #494357;padding:14px;border-radius:8px;margin-top:20px}.hint-card button{margin-top:12px;width:100%}label{font-size:12px;color:var(--muted);display:block;margin:14px 0 5px}input,select,textarea{width:100%;border:1px solid #44465a;background:#121620;color:var(--ink);padding:9px;border-radius:6px;font-size:13px}textarea{resize:vertical;min-height:110px;line-height:1.6}select{padding-right:22px}.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 15px}.tile-button{padding:8px 2px 5px;font-size:10px;display:flex;gap:5px;flex-direction:column;align-items:center;border:1px solid var(--line);border-radius:6px}.tile-button[aria-pressed="true"]{border-color:var(--accent);background:#39304b;color:#eee0ff}.swatch{width:22px;height:22px;border:2px solid #ffffff30;display:block;image-rendering:pixelated}.tool-row{display:flex;gap:6px;margin:10px 0}.tool-row button{flex:1;padding:8px 5px;font-size:11px}.tool-row button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}.room-tools{display:flex;gap:6px;align-items:center}.room-tools select{flex:1;min-width:0}.room-tools button{padding:8px 12px}.builder-note{font-size:11px!important}.footer{padding:28px 0 24px;font-size:11px;color:#9399ad;display:flex;align-items:center;justify-content:space-between;gap:16px}.footer-dot{color:var(--green);margin-right:5px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(520px,90vw);background:#e8ddff;color:#211b31;padding:12px 18px;border-radius:9px;box-shadow:0 8px 40px #0006;z-index:10;font-size:13px}dialog{background:var(--panel);color:var(--ink);border:1px solid #5c526f;border-radius:16px;padding:30px;max-width:490px;width:calc(100% - 32px)}dialog::backdrop{background:#060810b0}dialog h2{margin:6px 0 16px;font-size:24px;letter-spacing:-.5px}dialog ol{padding-left:22px}dialog li{margin:13px 0;color:#c6c5d4}dialog strong{color:var(--ink)}dialog .primary{width:100%;margin-top:14px}.editor-caption{padding:12px 0;color:var(--muted);font-size:12px}.chip{display:inline-flex;border:1px solid #4a405b;color:#d7c1f7;border-radius:20px;padding:3px 9px;font-size:10px;letter-spacing:.3px}.helptext{font-size:12px;color:var(--muted);margin-top:12px}@media(max-width:900px){.shell{padding:0 20px}.layout{grid-template-columns:minmax(0,1fr) 245px;gap:16px}.panel{padding:16px}h1{font-size:26px}.header-actions button{padding:9px 11px}}@media(max-width:720px){header{height:76px}.brand .eyebrow{display:none}.brand strong{font-size:16px}.header-actions{gap:6px}.header-actions button{font-size:12px}.brandmark{width:25px}.intro{display:block;padding:24px 0 18px}.intro p{font-size:13px}.mode-switch{margin-top:18px;width:max-content}.layout{grid-template-columns:1fr}.panel{padding:20px}.room-illustration{display:none}.palette{grid-template-columns:repeat(8,1fr)}.game-footer{font-size:11px}.dialogue{font-size:14px;gap:8px;padding:12px;grid-template-columns:30px 1fr}.portrait{font-size:25px}.footer{align-items:start}.footer span:last-child{text-align:right}.shell{padding:0 14px}.hint-card{margin-top:14px}.panel h2{margin-top:4px}.controls{margin-bottom:4px}}@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header><div class="brand"><span class="brandmark" aria-hidden="true"></span><div><strong>Little Lantern</strong><div class="eyebrow">a place for your story</div></div></div><div class="header-actions"><button class="quiet" id="helpButton" aria-label="How to play and build">Help</button><button class="primary" id="downloadButton">↓ Download game</button></div></header>
+<section class="intro"><div><h1 id="pageHeading">Every adventure starts somewhere.</h1><p class="muted" id="pageSubtitle">A little room, a new friend, and a world you can make your own.</p></div><div class="mode-switch" aria-label="Choose play or build mode"><button id="playMode" aria-pressed="true">▷ Explore</button><button id="buildMode" aria-pressed="false">▦ Build</button></div></section>
+<main class="layout">
+<div>
+<div class="game-frame">
+<div class="room-bar"><div class="room-label"><span class="dot" aria-hidden="true"></span><span id="roomName">Lantern Room</span></div><span class="hint" id="stageMode">YOUR ADVENTURE</span></div>
+<div class="stage"><canvas id="game" width="640" height="480" tabindex="0" aria-label="Little Lantern game. Use arrow keys or W A S D to walk. Press Z or Enter to talk. Click the game first to focus it."></canvas><div class="dialogue" id="dialogue" hidden><div class="portrait" aria-hidden="true">♧</div><div><div class="speaker">Mochi, the dog</div><span id="dialogueText"></span><span class="next" id="dialogueNext">Z / Enter to continue ▾</span></div></div></div>
+<div class="game-footer"><strong id="gameHint">Click the room, then use the arrow keys.</strong><span id="locationHint" class="mono">ROOM 01 / 02</span></div>
+</div>
+<div class="controls" id="playControls"><div class="dpad" aria-label="Movement controls"><button data-dir="up" aria-label="Walk up">↑</button><button data-dir="left" aria-label="Walk left">←</button><button data-dir="down" aria-label="Walk down">↓</button><button data-dir="right" aria-label="Walk right">→</button></div><div class="controls-right"><button id="restartButton" class="quiet">Back to start</button><button id="talkButton">Talk <span class="key">Z</span></button></div></div>
+<p class="editor-caption" id="editorCaption" hidden>Pick a tile, then paint the room. Use “Place dog” or “Set start” to move your characters.</p>
+</div>
+<aside>
+<section class="panel" id="explorePanel"><div class="eyebrow">chapter one</div><h2>A small beginning</h2><div class="room-illustration" aria-hidden="true"><svg viewBox="0 0 80 65" shape-rendering="crispEdges"><path fill="#50405d" d="M8 55h64v5H8z"/><path fill="#e6d0a0" d="M20 23h40v27H20zM15 31h50v14H15zM23 48h10v8H23zM47 48h10v8H47z"/><path fill="#b38b62" d="M17 17h11v24H17zM52 17h11v24H52z"/><path fill="#29212e" d="M30 32h4v5h-4zM46 32h4v5h-4zM37 41h8v5h-8z"/><path fill="#b88b8a" d="M39 46h4v5h-4z"/></svg></div><p>Mochi has been keeping this room warm for you. Go say hello.</p><div class="task"><span class="task-icon" id="taskIcon" aria-hidden="true">◇</span><div><strong id="taskTitle">Make your first friend</strong><p id="taskDescription">Walk close to the dog and press Z.</p></div></div><div class="hint-card"><span class="chip">YOUR WORLD, YOUR RULES</span><p style="margin-top:9px">Change the floor. Move the furniture. Give Mochi something new to say.</p><button id="startBuilding">Make it yours →</button></div><p class="small-note">The doorway on the right leads to a little garden. You can change that, too.</p></section>
+<section class="panel" id="buildPanel" hidden><div class="eyebrow">room workshop</div><h2>Make a place of your own.</h2><label for="roomSelect">Your rooms</label><div class="room-tools"><select id="roomSelect"></select><button id="addRoom" aria-label="Add a new room">+</button></div><label for="roomTitle">Room name</label><input id="roomTitle" maxlength="32" autocomplete="off"><label>Paint a tile</label><div class="palette" id="palette" role="group" aria-label="Tile palette"></div><div class="tool-row"><button id="dogTool" aria-pressed="false">Place dog</button><button id="spawnTool" aria-pressed="false">Set start</button><button id="undoButton" disabled>↶ Undo</button></div><label for="doorTarget">Doorways lead to</label><select id="doorTarget"></select><label for="dogWords">What does Mochi say?</label><textarea id="dogWords" maxlength="1200" spellcheck="true"></textarea><p class="builder-note">One line per dialogue page. Click Explore to try your changes.</p><p class="helptext" id="saveStatus">Download your game to keep a copy.</p></section>
+</aside>
+</main>
+<footer class="footer"><span><span class="footer-dot">●</span> No sign-in. Yours to keep.</span><span>Made for small beginnings.<br>Saved copies work offline.</span></footer>
+</div>
+<div id="toast" class="toast" role="status" hidden></div><div id="announcement" aria-live="polite" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"></div>
+<dialog id="helpDialog"><div class="eyebrow">welcome, world maker</div><h2>This is your little adventure.</h2><ol><li><strong>Explore.</strong> Click the game. Walk with the arrow keys or W A S D. Approach Mochi and press Z or Enter to talk. X closes a conversation.</li><li><strong>Build.</strong> Pick a tile and paint. Place the dog, choose your starting spot, or write new dialogue. Doors connect the rooms you choose.</li><li><strong>Keep it.</strong> “Download game” saves a new HTML file with all your edits. Double-click it to play again, even offline.</li></ol><p class="helptext">This file has a map editor, not a built-in AI chatbot. For bigger changes, describe what you want in our chat. Nothing in this game is sent anywhere.</p><p class="helptext">Walking and talking also work with the buttons below the game. Browser storage may remember edits, but downloading a copy is the reliable way to keep them.</p><button class="primary" id="closeHelp">Let's begin →</button></dialog>
+<script id="projectData" type="application/json">{"version":1,"id":"little-lantern-first-adventure","updatedAt":0,"rooms":null}</script>
+<script>
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  const canvas = $('game'), ctx = canvas.getContext('2d');
+  const W = 16, H = 12, T = 40;
+  const tiles = [
+    {id:0,label:'Floor',color:'#72577e',solid:false},
+    {id:1,label:'Wall',color:'#35263f',solid:true},
+    {id:2,label:'Rug',color:'#ad6b85',solid:false},
+    {id:3,label:'Flowers',color:'#b1bc82',solid:false},
+    {id:4,label:'Pond',color:'#557e97',solid:true},
+    {id:5,label:'Path',color:'#c2ad85',solid:false},
+    {id:6,label:'Door',color:'#eac780',solid:false},
+    {id:7,label:'Table',color:'#a67a58',solid:true}
+  ];
+  const clone = v => JSON.parse(JSON.stringify(v));
+  const keyName = 'little-lantern-project-v1';
+  function blankMap() { return Array.from({length:H}, (_,y) => Array.from({length:W}, (_,x) => x===0||y===0||x===W-1||y===H-1 ? 1 : 0)); }
+  function defaults() {
+    const home = blankMap();
+    for(let x=0;x<W;x++) home[1][x]=1;
+    for(let y=6;y<=8;y++) for(let x=5;x<=10;x++) home[y][x]=2;
+    home[4][12]=7;home[4][13]=7;home[8][2]=3;home[8][13]=3;home[5][15]=6;
+    const garden=blankMap();
+    for(let x=0;x<W;x++)garden[5][x]=5;
+    for(let y=3;y<8;y++)for(let x=10;x<14;x++)garden[y][x]=4;
+    for(const [x,y] of [[3,3],[5,8],[7,3],[13,9],[2,8],[6,9]])garden[y][x]=3;
+    garden[5][0]=6;garden[5][15]=1;
+    return {version:1,id:'little-lantern-first-adventure',updatedAt:0,rooms:[
+      {name:'Lantern Room',theme:'room',map:home,spawn:{x:7,y:9},dog:{x:8,y:4},dialogue:['Oh! You made it.','This room is small, but every good story starts somewhere.','Try the doorway on the right. There is a little garden waiting for you.'],target:1},
+      {name:'Quiet Garden',theme:'garden',map:garden,spawn:{x:2,y:5},dog:{x:6,y:7},dialogue:['I took the scenic route.','Those flowers were just an idea once. Now look at them!','Your next room could be anything. A library? A moonlit forest?'],target:0}
+    ]};
+  }
+  function validProject(p) {
+    return p && p.version===1 && p.id==='little-lantern-first-adventure' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length>0 && p.rooms.length<=8 && p.rooms.every(r => r && typeof r.name==='string' && r.name.length<=32 && ['room','garden'].includes(r.theme) && Array.isArray(r.map) && r.map.length===H && r.map.every(row => Array.isArray(row)&&row.length===W&&row.every(t=>Number.isInteger(t)&&t>=0&&t<tiles.length)) && ['spawn','dog'].every(k=>r[k]&&Number.isInteger(r[k].x)&&Number.isInteger(r[k].y)&&r[k].x>=0&&r[k].x<W&&r[k].y>=0&&r[k].y<H) && Array.isArray(r.dialogue)&&r.dialogue.length<=100&&r.dialogue.every(s=>typeof s==='string'&&s.length<=1200)&&Number.isInteger(r.target)&&r.target>=-1&&r.target<p.rooms.length);
+  }
+  let project;
+  try { project=JSON.parse($('projectData').textContent); } catch(e) { project=null; }
+  if(!validProject(project))project=defaults();
+  try { const stored=JSON.parse(localStorage.getItem(keyName));if(validProject(stored)&&stored.updatedAt>project.updatedAt)project=stored; } catch(e) { /* File URLs may not provide browser storage. Downloads still work. */ }
+  let mode='play',roomIndex=0,tool=0,hover=null,stroke=null,dialogue=null,talked=false;
+  let player={x:300,y:380,facing:'down',moving:false,step:0},keys=new Set(),undoStack=[];
+  let lastTime=0,fade=0,doorCooldown=0,toastTimer,saveTimer;
+  const current=()=>project.rooms[roomIndex];
+  const announce=t=>{$('announcement').textContent=t;};
+  function toast(t){$('toast').textContent=t;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3500);}
+  function save(){ project.updatedAt=Date.now();try{localStorage.setItem(keyName,JSON.stringify(project));$('saveStatus').textContent='Edits remembered in this browser. Download a copy to keep them.';}catch(e){$('saveStatus').textContent='Download your game to keep your edits.';} }
+  function remember(){undoStack.push({project:clone(project),roomIndex});if(undoStack.length>25)undoStack.shift();$('undoButton').disabled=false;}
+  function cellOpen(r,x,y,avoidDog=true){return x>=0&&y>=0&&x<W&&y<H&&!tiles[r.map[y][x]].solid&&r.map[y][x]!==6&&(!avoidDog||x!==r.dog.x||y!==r.dog.y);}
+  function findStart(r,preferred=r.spawn){
+    const choices=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(cellOpen(r,x,y))choices.push({x,y});
+    choices.sort((a,b)=>Math.abs(a.x-preferred.x)+Math.abs(a.y-preferred.y)-Math.abs(b.x-preferred.x)-Math.abs(b.y-preferred.y));
+    return choices[0]||null;
+  }
+  function positionPlayer(r,preferred){const start=findStart(r,preferred);if(!start)return false;player.x=start.x*T+T/2;player.y=start.y*T+T/2;player.moving=false;keys.clear();return true;}
+  function changeRoom(index,throughDoor=false){
+    const next=project.rooms[index];if(!next||!findStart(next)){toast('That room needs an open floor tile and a starting spot.');return false;}
+    roomIndex=index;positionPlayer(next);doorCooldown=.8;fade=throughDoor?.32:0;closeDialogue();updateRoomUI();return true;
+  }
+  function updateRoomUI(){
+    $('roomName').textContent=current().name;
+    $('locationHint').textContent='ROOM '+String(roomIndex+1).padStart(2,'0')+' / '+String(project.rooms.length).padStart(2,'0');
+    $('roomSelect').replaceChildren();$('doorTarget').replaceChildren();
+    const none=document.createElement('option');none.value='-1';none.textContent='No destination yet';$('doorTarget').append(none);
+    project.rooms.forEach((r,i)=>{for(const select of [$('roomSelect'),$('doorTarget')]){const option=document.createElement('option');option.value=String(i);option.textContent=r.name;select.append(option);}});
+    $('roomSelect').value=String(roomIndex);$('doorTarget').value=String(current().target);$('roomTitle').value=current().name;$('dogWords').value=current().dialogue.join('\n');$('addRoom').disabled=project.rooms.length>=8;
+  }
+  function setMode(next){
+    endStroke();clearTimeout(saveTimer);save();
+    if(next==='play'&&!positionPlayer(current())){toast('Paint an open floor tile before you explore.');return;}
+    mode=next;keys.clear();closeDialogue();hover=null;
+    $('playMode').setAttribute('aria-pressed',String(mode==='play'));$('buildMode').setAttribute('aria-pressed',String(mode==='build'));
+    $('explorePanel').hidden=mode!=='play';$('buildPanel').hidden=mode!=='build';$('playControls').hidden=mode!=='play';$('editorCaption').hidden=mode!=='build';
+    $('pageHeading').textContent=mode==='build'?'What will your world look like?':'Every adventure starts somewhere.';
+    $('pageSubtitle').textContent=mode==='build'?'Paint a room. Write a conversation. Then step inside.':'A little room, a new friend, and a world you can make your own.';
+    $('stageMode').textContent=mode==='build'?'ROOM WORKSHOP':'YOUR ADVENTURE';
+    canvas.setAttribute('aria-label',mode==='build'?'Room map editor. Choose a tile from the palette, then click or drag on the map to paint.':'Little Lantern game. Use arrow keys or W A S D to walk. Press Z or Enter to talk.');
+    updateRoomUI();canvas.focus({preventScroll:true});
+  }
+  function selectTool(value){tool=value;document.querySelectorAll('.tile-button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.tile)===value)));$('dogTool').setAttribute('aria-pressed',String(value==='dog'));$('spawnTool').setAttribute('aria-pressed',String(value==='spawn'));}
+  tiles.forEach(t=>{const b=document.createElement('button');b.className='tile-button';b.dataset.tile=t.id;b.setAttribute('aria-pressed',String(t.id===0));b.title=t.label+(t.solid?' · blocks walking':'');const swatch=document.createElement('span');swatch.className='swatch';swatch.style.background=t.color;swatch.setAttribute('aria-hidden','true');b.append(swatch,document.createTextNode(t.label));b.onclick=()=>selectTool(t.id);$('palette').append(b);});
+  $('dogTool').onclick=()=>selectTool('dog');$('spawnTool').onclick=()=>selectTool('spawn');
+  $('playMode').onclick=()=>setMode('play');$('buildMode').onclick=$('startBuilding').onclick=()=>setMode('build');
+  $('undoButton').onclick=()=>{endStroke();const old=undoStack.pop();if(!old)return;project=old.project;roomIndex=old.roomIndex;save();updateRoomUI();$('undoButton').disabled=!undoStack.length;toast('Last change undone.');};
+  $('roomSelect').onchange=e=>{endStroke();roomIndex=Number(e.target.value);updateRoomUI();};
+  $('addRoom').onclick=()=>{if(project.rooms.length>=8)return;remember();project.rooms.push({name:'New Room '+(project.rooms.length+1),theme:'room',map:blankMap(),spawn:{x:7,y:9},dog:{x:8,y:4},dialogue:['A new room. A new beginning.'],target:roomIndex});roomIndex=project.rooms.length-1;save();updateRoomUI();toast('Room added! Paint a door and choose where it leads.');};
+  $('roomTitle').onchange=e=>{const name=e.target.value.trim()||'Unnamed Room';remember();current().name=name;save();updateRoomUI();};
+  $('dogWords').onchange=e=>{remember();current().dialogue=e.target.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,100);if(!current().dialogue.length)current().dialogue=['Woof!'];save();};
+  $('doorTarget').onchange=e=>{remember();current().target=Number(e.target.value);save();};
+  function mouseCell(e){const b=canvas.getBoundingClientRect();return {x:Math.floor((e.clientX-b.left)*640/b.width/T),y:Math.floor((e.clientY-b.top)*480/b.height/T)};}
+  function paint(cell){
+    const {x,y}=cell,r=current();if(x<0||y<0||x>=W||y>=H)return;
+    if(tool==='spawn'||tool==='dog'){
+      if(tiles[r.map[y][x]].solid||r.map[y][x]===6){toast('Choose a floor tile, rug, path, or flowers.');return;}
+      const other=tool==='dog'?r.spawn:r.dog;if(other.x===x&&other.y===y){toast('Give the dog and the player their own space.');return;}
+      const key=tool==='dog'?'dog':'spawn';if(r[key].x===x&&r[key].y===y)return;
+      if(!stroke.changed){remember();stroke.changed=true;}r[key]={x,y};
+    }else{
+      if(r.map[y][x]===tool)return;
+      if((tiles[tool].solid||tool===6)&&((r.spawn.x===x&&r.spawn.y===y)||(r.dog.x===x&&r.dog.y===y))){if(!stroke.warned){toast('Move the dog or starting spot before covering that tile.');stroke.warned=true;}return;}
+      if(!stroke.changed){remember();stroke.changed=true;}r.map[y][x]=tool;
+    }
+  }
+  function endStroke(){if(stroke&&stroke.changed)save();stroke=null;}
+  canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;canvas.focus({preventScroll:true});if(mode==='build'){e.preventDefault();stroke={changed:false,warned:false};canvas.setPointerCapture(e.pointerId);hover=mouseCell(e);paint(hover);}else if(dialogue)advanceDialogue();});
+  canvas.addEventListener('pointermove',e=>{hover=mouseCell(e);if(mode==='build'&&stroke)paint(hover);});
+  canvas.addEventListener('pointerup',endStroke);canvas.addEventListener('pointercancel',endStroke);canvas.addEventListener('lostpointercapture',endStroke);canvas.addEventListener('pointerleave',()=>{hover=null;});
+  const dirKeys={ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
+  canvas.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.metaKey){if(mode==='build'&&e.key.toLowerCase()==='z'){e.preventDefault();$('undoButton').click();}return;}
+    if(mode!=='play')return;
+    if(dirKeys[e.key]){e.preventDefault();keys.add(dirKeys[e.key]);}
+    if(['z','Z','Enter',' '].includes(e.key)){e.preventDefault();if(!e.repeat)talk();}
+    if(['x','X','Escape'].includes(e.key)){e.preventDefault();closeDialogue();}
+  });
+  window.addEventListener('keyup',e=>{if(dirKeys[e.key])keys.delete(dirKeys[e.key]);});
+  window.addEventListener('blur',()=>{keys.clear();endStroke();});canvas.addEventListener('blur',()=>keys.clear());document.addEventListener('visibilitychange',()=>keys.clear());
+  document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',e=>{if(mode!=='play')return;e.preventDefault();canvas.focus({preventScroll:true});b.setPointerCapture(e.pointerId);keys.add(b.dataset.dir);});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys.delete(b.dataset.dir));b.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();keys.add(b.dataset.dir);}});b.addEventListener('keyup',()=>keys.delete(b.dataset.dir));b.addEventListener('blur',()=>keys.delete(b.dataset.dir));});
+  function nearDog(){const d=current().dog;return Math.hypot(player.x-(d.x*T+20),player.y-(d.y*T+24))<76;}
+  function dialoguePages(lines){const pages=[];for(const line of lines){let text=line;while(text.length>140){let cut=text.lastIndexOf(' ',140);if(cut<40)cut=140;pages.push(text.slice(0,cut));text=text.slice(cut).trimStart();}if(text)pages.push(text);}return pages.length?pages:['Woof!'];}
+  function talk(){if(mode!=='play')return;if(dialogue){advanceDialogue();return;}if(!nearDog()){toast('Walk a little closer to Mochi, then press Z.');return;}keys.clear();dialogue={lines:dialoguePages(current().dialogue),index:0,shown:0};$('dialogue').hidden=false;talked=true;$('taskIcon').textContent='✓';$('taskTitle').textContent='You made a friend';$('taskDescription').textContent='Now explore, or build something new.';announce(dialogue.lines[0]);renderDialogue();}
+  function renderDialogue(){if(!dialogue)return;const text=dialogue.lines[dialogue.index];$('dialogueText').textContent=text.slice(0,Math.floor(dialogue.shown));$('dialogueNext').textContent=dialogue.shown<text.length?'Z / Enter to show all':(dialogue.index===dialogue.lines.length-1?'Z / Enter to finish ▾':'Z / Enter to continue ▾');}
+  function advanceDialogue(){if(!dialogue)return;const text=dialogue.lines[dialogue.index];if(dialogue.shown<text.length)dialogue.shown=text.length;else if(dialogue.index<dialogue.lines.length-1){dialogue.index++;dialogue.shown=0;announce(dialogue.lines[dialogue.index]);}else closeDialogue();renderDialogue();}
+  function closeDialogue(){dialogue=null;$('dialogue').hidden=true;$('dialogueText').textContent='';keys.clear();}
+  $('talkButton').onclick=()=>{talk();canvas.focus({preventScroll:true});};
+  $('restartButton').onclick=()=>{changeRoom(roomIndex);canvas.focus({preventScroll:true});toast('Back at this room’s starting spot.');};
+  $('helpButton').onclick=()=>{keys.clear();$('helpDialog').showModal();};$('closeHelp').onclick=()=>{$('helpDialog').close();canvas.focus({preventScroll:true});};
+  $('helpDialog').addEventListener('click',e=>{if(e.target===$('helpDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
+  $('downloadButton').onclick=()=>{
+    // Finish text-field changes, then embed data safely inside a standalone copy.
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();endStroke();save();
+    const copy=document.documentElement.cloneNode(true);
+    copy.querySelector('#projectData').textContent=JSON.stringify(project).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
+    copy.querySelector('#helpDialog').removeAttribute('open');copy.querySelector('#dialogue').hidden=true;copy.querySelector('#toast').hidden=true;
+    const blob=new Blob(['<!doctype html>\n'+copy.outerHTML],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='Little-Lantern-My-Game.html';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('Your game copy is downloading. Keep it somewhere you can find it.');
+  };
+  function collides(x,y){
+    const r=current(),left=x-10,right=x+10,top=y-7,bottom=y+6;if(left<0||top<0||right>=640||bottom>=480)return true;
+    for(let ty=Math.floor(top/T);ty<=Math.floor(bottom/T);ty++)for(let tx=Math.floor(left/T);tx<=Math.floor(right/T);tx++)if(tiles[r.map[ty][tx]].solid)return true;
+    const dx=r.dog.x*T+20,dy=r.dog.y*T+24;return left<dx+17&&right>dx-17&&top<dy+5&&bottom>dy-10;
+  }
+  function update(dt){
+    fade=Math.max(0,fade-dt);doorCooldown=Math.max(0,doorCooldown-dt);
+    if(mode!=='play'||$('helpDialog').open)return;
+    if(dialogue){dialogue.shown+=dt*45;renderDialogue();player.moving=false;return;}
+    let dx=(keys.has('right')?1:0)-(keys.has('left')?1:0),dy=(keys.has('down')?1:0)-(keys.has('up')?1:0);
+    player.moving=!!(dx||dy);if(player.moving){if(dx)player.facing=dx>0?'right':'left';else player.facing=dy>0?'down':'up';const len=Math.hypot(dx,dy);dx=dx/len*135*dt;dy=dy/len*135*dt;if(!collides(player.x+dx,player.y))player.x+=dx;if(!collides(player.x,player.y+dy))player.y+=dy;player.step+=dt*10;}
+    const tx=Math.floor(player.x/T),ty=Math.floor(player.y/T);
+    if(!doorCooldown&&current().map[ty][tx]===6){doorCooldown=1;const target=current().target;if(target<0)toast('This doorway needs a destination. Choose one in Build.');else changeRoom(target,true);}
+  }
+  function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
+  function pixelText(text,x,y,color,size=10){ctx.fillStyle=color;ctx.font=`${size}px monospace`;ctx.fillText(text,x,y);}
+  function drawTile(id,x,y,theme){
+    const garden=theme==='garden';
+    rect(x,y,T,T,garden?'#53604b':'#65516e');
+    if(id!==1&&id!==4){rect(x+2,y+2,36,36,garden?((x+y)%80?'#596950':'#5c6c53'):((x+y)%80?'#705b79':'#745e7d'));if(!garden){rect(x+3,y+3,34,2,'#806a89');rect(x+3,y+35,34,2,'#5d4868');}else{rect(x+8,y+12,3,5,'#71815f');rect(x+30,y+27,3,4,'#46563f');}}
+    if(id===1){
+      if(garden){rect(x,y,40,40,'#253c35');rect(x+3,y+4,34,30,'#345244');rect(x+7,y+3,12,10,'#42614b');rect(x+25,y+21,10,10,'#2d493d');rect(x+5,y+33,30,5,'#1d302d');}
+      else{rect(x,y,40,40,'#30223d');rect(x+2,y+2,36,31,'#45314f');rect(x+3,y+4,34,3,'#59405f');rect(x,y+34,40,6,'#211b30');rect(x+17,y+6,2,25,'#382641');if(y===40){rect(x,y+29,40,6,'#9b779a');rect(x,y+35,40,5,'#3c2b47');}}
+    }
+    if(id===2){rect(x,y,40,40,'#95516f');rect(x+2,y+2,36,36,'#a65d7c');rect(x+18,y+17,4,6,'#bb7d8c');const cx=x/T,cy=y/T,m=current().map;for(const [dx,dy,rx,ry,rw,rh] of [[-1,0,0,0,3,40],[1,0,37,0,3,40],[0,-1,0,0,40,3],[0,1,0,37,40,3]])if(!m[cy+dy]||m[cy+dy][cx+dx]!==2)rect(x+rx,y+ry,rw,rh,'#d5b58e');}
+    if(id===3){for(const [ox,oy,c] of [[12,12,'#e1b8cb'],[27,23,'#eaca8c'],[10,30,'#c3b9dd']]){rect(x+ox,y+oy,2,8,'#304939');rect(x+ox-3,y+oy-3,8,6,c);rect(x+ox-1,y+oy-5,4,10,c);rect(x+ox,y+oy-1,2,2,'#f9e8b3');}}
+    if(id===4){rect(x,y,40,40,'#355c70');rect(x+2,y+2,36,36,'#426f85');rect(x+7,y+10,13,2,'#739bad');rect(x+24,y+25,10,2,'#83a5af');rect(x+7,y+30,8,2,'#30596e');}
+    if(id===5){rect(x,y+2,40,36,'#ad9c7a');rect(x+2,y+4,36,31,'#c2af8b');rect(x+7,y+12,5,2,'#d9c8a3');rect(x+25,y+27,7,2,'#a18d6f');}
+    if(id===6){rect(x,y,40,40,'#292031');rect(x+3,y+2,34,38,'#ba976a');rect(x+7,y+3,26,37,'#302637');rect(x+10,y+8,20,32,'#3f3647');rect(x+8,y+35,24,5,'#dec590');rect(x+13,y+36,14,2,'#f2dfb7');}
+    if(id===7){rect(x+4,y+29,5,10,'#3f2b32');rect(x+31,y+29,5,10,'#3f2b32');rect(x+2,y+6,36,26,'#674655');rect(x,y+3,40,24,'#ba8d68');rect(x+2,y+4,36,3,'#dfb78a');rect(x+3,y+24,34,4,'#835c53');rect(x+10,y+9,18,12,'#537c83');rect(x+13,y+10,12,8,'#c6d0ba');rect(x+11,y+9,3,12,'#355662');}
+  }
+  function drawWindow(){if(current().theme==='garden')return;for(const col of [4,11]){if(current().map[0][col]!==1||current().map[1][col]!==1)continue;const x=col*T;rect(x-2,14,44,49,'#211e36');rect(x+2,17,36,40,'#75929e');rect(x+5,20,30,34,'#415771');rect(x+7,21,12,14,'#617b92');rect(x+18,18,3,38,'#d8bc95');rect(x+3,36,34,3,'#d8bc95');rect(x-4,58,48,5,'#b38c86');rect(x+26,25,3,3,'#d4d4bb');}}
+  function drawDog(x,y,time){
+    const wag=mode==='play'?Math.floor(time*4)%2:0;
+    rect(x-19,y-2,38,8,'#32233470');rect(x-16,y-25,32,27,'#e3cc9d');rect(x-19,y-19,38,17,'#e3cc9d');rect(x-19,y-29,9,22,'#ab815d');rect(x+10,y-29,9,22,'#ab815d');rect(x-12,y,7,6,'#e3cc9d');rect(x+5,y,7,6,'#e3cc9d');rect(x-10,y-17,4,5,'#2b2531');rect(x+6,y-17,4,5,'#2b2531');rect(x-3,y-9,6,4,'#493442');rect(x-1,y-4,3,4,'#bd8386');rect(x+19,y-12+wag*3,5,5,'#e3cc9d');
+  }
+  function drawPlayer(x,y,time){
+    const step=player.moving?Math.floor(player.step)%2:0;const bob=player.moving?step:0;
+    rect(x-12,y-2,24,7,'#241c354f');
+    rect(x-8,y-8,6,11-step*2,'#302c49');rect(x+2,y-8,6,9+step*2,'#302c49');rect(x-10,y-22+bob,20,17,'#a86488');rect(x-12,y-20+bob,4,13,'#b77c99');rect(x+8,y-20+bob,4,13,'#b77c99');rect(x-7,y-13+bob,14,3,'#e3bc9b');
+    rect(x-9,y-37+bob,18,18,'#e4bf9a');rect(x-11,y-39+bob,22,8,'#91b3b7');rect(x-11,y-33+bob,5,10,'#75999f');rect(x+6,y-33+bob,5,10,'#75999f');
+    if(player.facing==='up'){rect(x-8,y-32+bob,16,10,'#91b3b7');rect(x-5,y-23+bob,10,3,'#75999f');}
+    else if(player.facing==='left'){rect(x-8,y-29+bob,3,4,'#35283f');rect(x-13,y-26+bob,4,5,'#e4bf9a');}
+    else if(player.facing==='right'){rect(x+5,y-29+bob,3,4,'#35283f');rect(x+9,y-26+bob,4,5,'#e4bf9a');}
+    else{rect(x-6,y-29+bob,3,4,'#35283f');rect(x+3,y-29+bob,3,4,'#35283f');}
+  }
+  function render(time){
+    ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,480);const r=current();
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++)drawTile(r.map[y][x],x*T,y*T,r.theme);drawWindow();
+    const dog={x:r.dog.x*T+20,y:r.dog.y*T+24};
+    if(mode==='play'){
+      if(player.y<dog.y){drawPlayer(player.x,player.y,time);drawDog(dog.x,dog.y,time);}else{drawDog(dog.x,dog.y,time);drawPlayer(player.x,player.y,time);}
+      if(nearDog()&&!dialogue){rect(dog.x-12,dog.y-52,24,17,'#f2e5c7');rect(dog.x-3,dog.y-35,6,4,'#f2e5c7');pixelText('Z',dog.x-4,dog.y-39,'#34283d',12);}
+    }else{
+      drawDog(dog.x,dog.y,time);ctx.strokeStyle='#e0d2ff24';ctx.lineWidth=1;ctx.beginPath();for(let x=0;x<=W;x++){ctx.moveTo(x*T+.5,0);ctx.lineTo(x*T+.5,480);}for(let y=0;y<=H;y++){ctx.moveTo(0,y*T+.5);ctx.lineTo(640,y*T+.5);}ctx.stroke();
+      const sx=r.spawn.x*T,sy=r.spawn.y*T;rect(sx+5,sy+8,30,22,'#c4ddb8');pixelText('GO',sx+12,sy+24,'#243632',12);
+      if(hover&&hover.x>=0&&hover.y>=0&&hover.x<W&&hover.y<H){rect(hover.x*T,hover.y*T,T,T,'#eedbff35');ctx.strokeStyle='#f0d6ff';ctx.lineWidth=2;ctx.strokeRect(hover.x*T+1,hover.y*T+1,38,38);}
+    }
+    if(fade>0)rect(0,0,640,480,`rgba(17,20,29,${Math.min(1,fade/.32)})`);
+    $('gameHint').textContent=mode==='build'?(tool==='dog'?'Click a clear tile to place Mochi.':tool==='spawn'?'Click a clear tile to set the starting spot.':'Painting: '+tiles[tool].label+' · click or drag'):(dialogue?'Z / Enter to continue · X to close':nearDog()?'Mochi is happy to see you. Press Z to talk.':'Arrow keys / W A S D to walk · Z to talk');
+  }
+  function frame(now){const dt=Math.min((now-lastTime)/1000||0,.035);lastTime=now;if(!document.hidden){update(dt);render(now/1000);}requestAnimationFrame(frame);}
+  positionPlayer(current());updateRoomUI();
+  // A downloaded copy may contain the editor's previous DOM state; always start
+  // in Explore and rebuild controls from the embedded project, not that state.
+  $('palette').replaceChildren(...Array.from($('palette').children).slice(-tiles.length));
+  $('playMode').setAttribute('aria-pressed','true');$('buildMode').setAttribute('aria-pressed','false');$('explorePanel').hidden=false;$('buildPanel').hidden=true;$('playControls').hidden=false;$('editorCaption').hidden=true;$('dialogue').hidden=true;$('toast').hidden=true;
+  $('pageHeading').textContent='Every adventure starts somewhere.';$('pageSubtitle').textContent='A little room, a new friend, and a world you can make your own.';$('stageMode').textContent='YOUR ADVENTURE';$('taskIcon').textContent='◇';$('taskTitle').textContent='Make your first friend';$('taskDescription').textContent='Walk close to the dog and press Z.';$('undoButton').disabled=true;selectTool(0);
+  window.addEventListener('pagehide',()=>{endStroke();save();});
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
+

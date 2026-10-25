@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Two Worlds · Castle Awakening</title>
+<style>
+:root{--bg:#11141d;--panel:#1a1e2a;--line:#34394b;--ink:#f4efdf;--muted:#a9aec1;--accent:#d3bcff;--gold:#efcb84;--green:#b3d4b1}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}button{border:1px solid var(--line);border-radius:8px;background:#252a3a;color:var(--ink);padding:9px 14px;transition:background .12s}button:hover:not(:disabled){background:#35394c}.primary{background:var(--accent);border-color:var(--accent);color:#221b34;font-weight:700}.primary:hover:not(:disabled){background:#e0ceff}.quiet{background:transparent}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.muted{color:var(--muted)}[hidden]{display:none!important}.shell{max-width:1200px;margin:auto;padding:0 32px}header{height:92px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px}.brandmark{width:30px;height:36px;position:relative}.brandmark:before{content:"";position:absolute;inset:6px 4px;background:var(--gold);clip-path:polygon(30% 0,70% 0,70% 20%,100% 20%,100% 85%,0 85%,0 20%,30% 20%)}.brandmark:after{content:"";position:absolute;inset:13px 11px 12px;background:#fff3cc}.brand strong{font-size:19px;letter-spacing:-.5px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}.header-actions{display:flex;gap:10px;align-items:center}.intro{padding:30px 0 24px;display:flex;justify-content:space-between;gap:20px;align-items:end}h1{font-size:30px;letter-spacing:-1px;line-height:1.15;margin:0 0 8px}p{margin:0}.mode-switch{display:flex;background:#090c13;border:1px solid var(--line);padding:4px;border-radius:10px;flex-shrink:0}.mode-switch button{border:0;background:transparent;min-width:102px}.mode-switch button[aria-pressed="true"]{background:#343044;color:#e5d5ff}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}.game-frame{background:#080a10;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 22px 65px #0003}.room-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;background:#1b1f2a;font-size:12px;gap:10px}.room-label{display:flex;align-items:center;gap:9px}.dot{width:7px;height:7px;background:var(--green);border-radius:50%}.room-bar .hint{font-size:10px;letter-spacing:1px;color:#aaa6bc}.stage{position:relative;width:100%;aspect-ratio:4/3;background:#191322}canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none;outline:none}canvas:focus-visible{box-shadow:inset 0 0 0 3px var(--gold)}.dialogue{position:absolute;left:3%;right:3%;bottom:4%;min-height:24%;background:#101118f5;border:2px solid #eee6d7;box-shadow:0 0 0 5px #15121e;display:grid;grid-template-columns:46px 1fr;gap:12px;padding:16px 18px;font-family:ui-monospace,Consolas,monospace;font-size:clamp(12px,1.4vw,17px);line-height:1.5;pointer-events:none}.portrait{font-size:32px;color:var(--gold);padding-top:15px}.speaker{font:700 10px system-ui,sans-serif;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:5px}.next{display:block;text-align:right;color:#b9b4c8;font-size:10px;margin-top:8px}.game-footer{padding:12px 17px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #2c2b3b;color:var(--muted);font-size:12px}.game-footer strong{color:var(--ink);font-weight:500}.key{display:inline-grid;place-items:center;min-width:22px;height:23px;padding:0 5px;font:12px ui-monospace,monospace;border:1px solid #535164;border-bottom-width:3px;border-radius:4px;color:var(--ink);background:#242332}.controls{display:flex;justify-content:space-between;align-items:center;margin:16px 0 0;gap:14px}.dpad{display:grid;grid-template-columns:36px 36px 36px;grid-template-rows:30px 30px;gap:4px}.dpad button{padding:0;touch-action:none;user-select:none;-webkit-user-select:none}.dpad [data-dir="up"]{grid-column:2}.dpad [data-dir="left"]{grid-column:1;grid-row:2}.dpad [data-dir="down"]{grid-column:2;grid-row:2}.dpad [data-dir="right"]{grid-column:3;grid-row:2}.controls-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.controls-right button{min-height:42px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}.panel h2{font-size:18px;letter-spacing:-.4px;margin:7px 0 14px}.panel p{font-size:13px;color:var(--muted)}.room-illustration{height:82px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:var(--gold)}.room-illustration svg{width:80px;height:65px;image-rendering:pixelated}.task{border-top:1px solid var(--line);margin-top:20px;padding-top:17px;display:flex;gap:11px}.task-icon{color:var(--gold);font-size:21px}.task strong{display:block;font-size:13px;margin-bottom:4px}.small-note{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}.hint-card{border:1px dashed #494357;padding:14px;border-radius:8px;margin-top:20px}.hint-card button{margin-top:12px;width:100%}label{font-size:12px;color:var(--muted);display:block;margin:14px 0 5px}input,select,textarea{width:100%;border:1px solid #44465a;background:#121620;color:var(--ink);padding:9px;border-radius:6px;font-size:13px}textarea{resize:vertical;min-height:110px;line-height:1.6}select{padding-right:22px}.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0 15px}.tile-button{padding:8px 2px 5px;font-size:10px;display:flex;gap:5px;flex-direction:column;align-items:center;border:1px solid var(--line);border-radius:6px}.tile-button[aria-pressed="true"]{border-color:var(--accent);background:#39304b;color:#eee0ff}.swatch{width:22px;height:22px;border:2px solid #ffffff30;display:block;image-rendering:pixelated}.tool-row{display:flex;gap:6px;margin:10px 0}.tool-row button{flex:1;padding:8px 5px;font-size:11px}.tool-row button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}.room-tools{display:flex;gap:6px;align-items:center}.room-tools select{flex:1;min-width:0}.room-tools button{padding:8px 12px}.builder-note{font-size:11px!important}.footer{padding:28px 0 24px;font-size:11px;color:#9399ad;display:flex;align-items:center;justify-content:space-between;gap:16px}.footer-dot{color:var(--green);margin-right:5px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(520px,90vw);background:#e8ddff;color:#211b31;padding:12px 18px;border-radius:9px;box-shadow:0 8px 40px #0006;z-index:10;font-size:13px}dialog{background:var(--panel);color:var(--ink);border:1px solid #5c526f;border-radius:16px;padding:30px;max-width:490px;width:calc(100% - 32px)}dialog::backdrop{background:#060810b0}dialog h2{margin:6px 0 16px;font-size:24px;letter-spacing:-.5px}dialog ol{padding-left:22px}dialog li{margin:13px 0;color:#c6c5d4}dialog strong{color:var(--ink)}dialog .primary{width:100%;margin-top:14px}.editor-caption{padding:12px 0;color:var(--muted);font-size:12px}.chip{display:inline-flex;border:1px solid #4a405b;color:#d7c1f7;border-radius:20px;padding:3px 9px;font-size:10px;letter-spacing:.3px}.helptext{font-size:12px;color:var(--muted);margin-top:12px}@media(max-width:900px){.shell{padding:0 20px}.layout{grid-template-columns:minmax(0,1fr) 245px;gap:16px}.panel{padding:16px}h1{font-size:26px}.header-actions button{padding:9px 11px}}@media(max-width:720px){header{height:76px}.brand .eyebrow{display:none}.brand strong{font-size:16px}.header-actions{gap:6px}.header-actions button{font-size:12px}.brandmark{width:25px}.intro{display:block;padding:24px 0 18px}.intro p{font-size:13px}.mode-switch{margin-top:18px;width:max-content}.layout{grid-template-columns:1fr}.panel{padding:20px}.room-illustration{display:none}.palette{grid-template-columns:repeat(8,1fr)}.game-footer{font-size:11px}.dialogue{font-size:14px;gap:8px;padding:12px;grid-template-columns:30px 1fr}.portrait{font-size:25px}.footer{align-items:start}.footer span:last-child{text-align:right}.shell{padding:0 14px}.hint-card{margin-top:14px}.panel h2{margin-top:4px}.controls{margin-bottom:4px}}@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header><div class="brand"><span class="brandmark" aria-hidden="true"></span><div><strong>Two Worlds</strong><div class="eyebrow">an undertale × deltarune story</div></div></div><div class="header-actions"><button class="quiet" id="helpButton" aria-label="How to play and build">Help</button><button class="primary" id="downloadButton">↓ Download game</button></div></header>
+<section class="intro"><div><h1 id="pageHeading">Two worlds. One strange awakening.</h1><p class="muted" id="pageSubtitle">You are Kris. An old castle waits beyond the dark.</p></div><div class="mode-switch" aria-label="Choose play or build mode"><button id="playMode" aria-pressed="true">▷ Explore</button><button id="buildMode" aria-pressed="false">▦ Build</button></div></section>
+<main class="layout">
+<div>
+<div class="game-frame">
+<div class="room-bar"><div class="room-label"><span class="dot" aria-hidden="true"></span><span id="roomName">The Waking Chamber</span></div><span class="hint" id="stageMode">YOUR ADVENTURE</span></div>
+<div class="stage"><canvas id="game" width="640" height="480" tabindex="0" aria-label="Two Worlds game. Use arrow keys or W A S D to walk. Press Z or Enter to talk. Press C to inspect nearby objects. C works anywhere on the game page."></canvas><div class="dialogue" id="dialogue" hidden><div class="portrait" id="speakerPortrait" aria-hidden="true">✿</div><div><div class="speaker" id="speakerName">Flowey</div><span id="dialogueText"></span><span class="next" id="dialogueNext">Z / Enter to continue ▾</span></div></div></div>
+<div class="game-footer"><strong id="gameHint">Click the room, then use the arrow keys.</strong><span id="locationHint" class="mono">ROOM 01 / 05</span></div>
+</div>
+<div class="controls" id="playControls"><div class="dpad" aria-label="Movement controls"><button data-dir="up" aria-label="Walk up">↑</button><button data-dir="left" aria-label="Walk left">←</button><button data-dir="down" aria-label="Walk down">↓</button><button data-dir="right" aria-label="Walk right">→</button></div><div class="controls-right"><button id="restartButton" class="quiet">Restart story</button><button id="inspectButton">Inspect <span class="key">C</span></button><button id="talkButton">Talk <span class="key">Z</span></button></div></div>
+<p class="editor-caption" id="editorCaption" hidden>Pick a tile, then paint the room. Use “Place Flowey” or “Set start” to move your characters.</p>
+</div>
+<aside>
+<section class="panel" id="explorePanel"><div class="eyebrow">chapter one · playing as kris</div><h2>Castle Awakening</h2><div class="room-illustration" aria-hidden="true"><svg viewBox="0 0 80 65" shape-rendering="crispEdges"><path fill="#507449" d="M38 36h5v23h-5zM24 48h14v6H24zM43 44h14v6H43z"/><path fill="#efc94f" d="M31 3h18v12H31zM18 12h15v16H18zM48 12h15v16H48zM22 28h14v12H22zM44 28h14v12H44zM33 34h14v10H33z"/><path fill="#fff0bc" d="M29 13h22v22H29zM25 19h30v12H25z"/><path fill="#2b2333" d="M32 20h3v6h-3zM45 20h3v6h-3zM32 29h3v3h-3zM35 32h10v2H35zM45 29h3v3h-3z"/></svg></div><p id="storySummary">You wake among cracked stone and faded banners. Somewhere beyond the doorway, something is waiting.</p><div class="task"><span class="task-icon" id="taskIcon" aria-hidden="true">◇</span><div><strong id="taskTitle">Explore the old castle</strong><p id="taskDescription">Walk through the doorway on the right.</p></div></div><div class="hint-card"><span class="chip" id="partyChip">PARTY · KRIS</span><p style="margin-top:9px">A familiar world. An unfamiliar legend. Your story is only beginning.</p><button id="startBuilding">Edit your castle →</button></div><p class="small-note">C / Z / Enter advances dialogue. L skips ordinary dialogue; scenes marked I. C. cannot be skipped. After the fountain scene, Flowey, Ralsey and Susie follow your footsteps.</p></section>
+<section class="panel" id="buildPanel" hidden><div class="eyebrow">room workshop</div><h2>Make a place of your own.</h2><label for="roomSelect">Your rooms</label><div class="room-tools"><select id="roomSelect"></select><button id="addRoom" aria-label="Add a new room">+</button></div><label for="roomTitle">Room name</label><input id="roomTitle" maxlength="32" autocomplete="off"><label>Paint a tile</label><div class="palette" id="palette" role="group" aria-label="Tile palette"></div><div class="tool-row"><button id="floweyTool" aria-pressed="false">Place Flowey</button><button id="spawnTool" aria-pressed="false">Set start</button><button id="undoButton" disabled>↶ Undo</button></div><div class="npc-editor" style="border-top:1px solid var(--line);margin-top:18px;padding-top:4px"><label>NPCs · Froggit</label><div class="tool-row"><button id="npcTool" aria-pressed="false" style="display:flex;align-items:center;justify-content:center;gap:6px"><svg width="32" height="34" viewBox="0 0 26 27" aria-hidden="true" focusable="false" style="flex-shrink:0" shape-rendering="crispEdges"><rect width="26" height="27" rx="2" fill="#74416c"/><path fill="#18131e" d="M6 2h4v1h-4zM16 2h4v1h-4zM5 3h1v1h-1zM10 3h1v1h-1zM15 3h1v1h-1zM20 3h1v1h-1zM4 4h1v1h-1zM11 4h4v1h-4zM21 4h1v1h-1zM4 5h1v1h-1zM7 5h2v1h-2zM17 5h2v1h-2zM21 5h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM9 6h1v1h-1zM16 6h1v1h-1zM19 6h1v1h-1zM21 6h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM16 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM4 8h1v1h-1zM21 8h1v1h-1zM3 9h1v1h-1zM22 9h1v1h-1zM2 10h1v1h-1zM23 10h1v1h-1zM2 11h1v1h-1zM7 11h1v1h-1zM18 11h1v1h-1zM23 11h1v1h-1zM3 12h1v1h-1zM8 12h10v1h-10zM22 12h1v1h-1zM4 13h1v1h-1zM21 13h1v1h-1zM5 14h16v1h-16zM9 15h1v1h-1zM16 15h1v1h-1zM8 16h1v1h-1zM17 16h1v1h-1zM8 17h1v1h-1zM11 17h1v1h-1zM14 17h1v1h-1zM17 17h1v1h-1zM7 18h1v1h-1zM18 18h1v1h-1zM6 19h1v1h-1zM10 19h1v1h-1zM15 19h1v1h-1zM19 19h1v1h-1zM5 20h1v1h-1zM20 20h1v1h-1zM4 21h1v1h-1zM12 21h2v1h-2zM21 21h1v1h-1zM3 22h1v1h-1zM11 22h1v1h-1zM14 22h1v1h-1zM22 22h1v1h-1zM3 23h1v1h-1zM10 23h1v1h-1zM15 23h1v1h-1zM22 23h1v1h-1zM3 24h8v1h-8zM15 24h8v1h-8z"/><path fill="#f4f0e7" d="M6 3h4v1h-4zM16 3h4v1h-4zM5 4h6v1h-6zM15 4h6v1h-6zM5 5h2v1h-2zM9 5h8v1h-8zM19 5h2v1h-2zM5 6h1v1h-1zM7 6h2v1h-2zM10 6h6v1h-6zM17 6h2v1h-2zM20 6h1v1h-1zM5 7h1v1h-1zM7 7h2v1h-2zM10 7h6v1h-6zM17 7h2v1h-2zM20 7h1v1h-1zM5 8h16v1h-16zM4 9h18v1h-18zM3 10h20v1h-20zM3 11h4v1h-4zM8 11h10v1h-10zM19 11h4v1h-4zM4 12h4v1h-4zM18 12h4v1h-4zM5 13h16v1h-16zM10 15h6v1h-6zM9 16h8v1h-8zM9 17h2v1h-2zM12 17h2v1h-2zM15 17h2v1h-2zM8 18h10v1h-10zM7 19h3v1h-3zM11 19h4v1h-4zM16 19h3v1h-3zM6 20h14v1h-14zM5 21h7v1h-7zM14 21h7v1h-7zM4 22h7v1h-7zM15 22h7v1h-7zM4 23h6v1h-6zM16 23h6v1h-6z"/></svg><span>Place NPC</span></button><button id="npcSelectTool" aria-pressed="false">Select NPC</button></div><p class="builder-note">Place the frog NPC on a clear tile. Select it to edit its speech.</p><label for="npcSelect">NPCs in this room</label><select id="npcSelect"></select><label for="npcName">NPC name</label><input id="npcName" maxlength="32" autocomplete="off" disabled><label for="npcSpeech">What this NPC says</label><textarea id="npcSpeech" maxlength="6000" spellcheck="true" disabled></textarea><p class="builder-note">One line per dialogue page. Face the NPC and press C or Z in Explore.</p><div class="tool-row"><button id="npcMove" disabled>Move NPC</button><button id="npcRemove" disabled>Remove NPC</button></div></div><label for="doorTarget">Other doorways lead to</label><select id="doorTarget"></select><p class="builder-note" id="doorNote"></p><label for="floweyWords" id="dialogueLabel">Room conversation</label><textarea id="floweyWords" maxlength="6000" spellcheck="true"></textarea><p class="builder-note">Edit conversations in rooms 2, 3 and 4. One line per page; use [Kris], [Flowey], [Ralsey] or [Susie] for the speaker. Restart the story to replay them.</p><p class="helptext" id="saveStatus">Download your game to keep a copy.</p></section>
+</aside>
+</main>
+<footer class="footer"><span><span class="footer-dot">●</span> No sign-in. Yours to keep.</span><span>Two worlds. One story.<br>Saved copies work offline.</span></footer>
+</div>
+<div id="toast" class="toast" role="status" hidden></div><div id="announcement" aria-live="polite" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"></div>
+<dialog id="helpDialog"><div class="eyebrow">welcome, world maker</div><h2>This is your little adventure.</h2><ol><li><strong>Explore.</strong> Click the game. Walk with the arrow keys or W A S D. Enter the second room to meet Flowey. Face a nearby object and press C to inspect it. Before meeting Flowey, you get a short description; afterward, he tells you not to waste time. C, Z or Enter advances dialogue. Press L to skip ordinary conversations. Important Cutscenes are labeled “I. C.” and cannot be skipped with L. Finish his speech and he joins you. Continue through the right-hand door into the Echo Chamber for your next conversation. Follow the glowing cracks through its right-hand door to find the Dark Fountain. Continue the conversation to see Susie’s Rude Buster and bring everyone into your party. Then face the fountain and press C or Z for the next I. C.: jumping into dark.G.world. After landing, explore its black passage with your whole party.</li><li><strong>Build.</strong> Pick a tile and paint. Place Flowey in room 2, choose your starting spot, or write new dialogue. Use Place NPC to add Froggit; select it to edit its name and speech. Face it and press C or Z to talk. Doors connect the rooms you choose.</li><li><strong>Keep it.</strong> “Download game” saves a new HTML file with all your edits. Double-click it to play again, even offline.</li></ol><p class="helptext">This file has a map editor, not a built-in AI chatbot. For bigger changes, describe what you want in our chat. Nothing in this game is sent anywhere.</p><p class="helptext">Walking and talking also work with the buttons below the game. Browser storage may remember edits, but downloading a copy is the reliable way to keep them.</p><button class="primary" id="closeHelp">Let's begin →</button></dialog>
+<script id="projectData" type="application/json">{"version":2,"id":"two-worlds-castle-v1","updatedAt":0,"rooms":null}</script>
+<script>
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  const canvas = $('game'), ctx = canvas.getContext('2d');
+  const W = 16, H = 12, T = 40;
+  const tiles = [
+    {id:0,label:'Floor',color:'#72577e',solid:false},
+    {id:1,label:'Wall',color:'#35263f',solid:true},
+    {id:2,label:'Rug',color:'#ad6b85',solid:false},
+    {id:3,label:'Flowers',color:'#b1bc82',solid:false},
+    {id:4,label:'Pond',color:'#557e97',solid:true},
+    {id:5,label:'Path',color:'#c2ad85',solid:false},
+    {id:6,label:'Door',color:'#eac780',solid:false},
+    {id:7,label:'Table',color:'#a67a58',solid:true},
+    {id:8,label:'Pillar',color:'#8b879b',solid:true},
+    {id:9,label:'Rubble',color:'#686372',solid:false}
+  ];
+  const clone = v => JSON.parse(JSON.stringify(v));
+  const keyName = 'two-worlds-castle-project-v1';
+  function blankMap() { return Array.from({length:H}, (_,y) => Array.from({length:W}, (_,x) => x===0||y===0||x===W-1||y===H-1 ? 1 : 0)); }
+  function defaults() {
+    const chamber=blankMap(),hall=blankMap();
+    for(let x=0;x<W;x++){chamber[1][x]=1;hall[1][x]=1;}
+    for(let y=3;y<=9;y++)for(let x=6;x<=9;x++)chamber[y][x]=2;
+    for(const [x,y] of [[2,3],[13,3],[2,8],[13,8]])chamber[y][x]=8;
+    for(const [x,y] of [[4,9],[11,7],[4,4]])chamber[y][x]=9;
+    chamber[3][4]=7;chamber[5][15]=6;
+    for(let y=4;y<=6;y++)for(let x=1;x<=13;x++)hall[y][x]=2;
+    for(const [x,y] of [[3,3],[12,3],[3,8],[12,8]])hall[y][x]=8;
+    for(const [x,y] of [[7,8],[9,3],[5,9],[10,9]])hall[y][x]=9;
+    hall[5][0]=6;
+    return {version:2,id:'two-worlds-castle-v1',updatedAt:0,rooms:[
+      {name:'The Waking Chamber',theme:'castle',map:chamber,spawn:{x:7,y:7},flowey:{x:8,y:4},dialogue:[],target:1},
+      {name:'The Silent Hall',theme:'castle',map:hall,spawn:{x:2,y:5},flowey:{x:5,y:5},dialogue:[
+        '* Hi... you finally woke up.',
+        '* Something has happened.',
+        '* The UNDERGROUND and the legend of DELTARUNE have been combined...',
+        '* ...or something like that. I don\'t know what\'s happening.',
+        '* You need to help me.'
+      ],target:0}
+    ]};
+  }
+  function validNpcs(npcs){
+    return npcs===undefined||(Array.isArray(npcs)&&npcs.length<=24&&new Set(npcs.map(n=>n&&n.id)).size===npcs.length&&npcs.every(n=>
+      n&&typeof n.id==='string'&&n.id.length<=80&&n.sprite==='frog'&&typeof n.name==='string'&&n.name.length>0&&n.name.length<=32&&
+      Number.isInteger(n.x)&&n.x>=0&&n.x<W&&Number.isInteger(n.y)&&n.y>=0&&n.y<H&&
+      Array.isArray(n.speech)&&n.speech.length>0&&n.speech.length<=100&&n.speech.every(line=>typeof line==='string'&&line.length<=1200)));
+  }
+  function validProject(p) {
+    return p && p.version===2 && p.id==='two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length>=2 && p.rooms.length<=20 && p.rooms.every(r => r && validNpcs(r.npcs) && typeof r.name==='string' && r.name.length<=32 && ['room','garden','castle','dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length===H && r.map.every(row => Array.isArray(row)&&row.length===W&&row.every(t=>Number.isInteger(t)&&t>=0&&t<tiles.length)) && ['spawn','flowey'].every(k=>r[k]&&Number.isInteger(r[k].x)&&Number.isInteger(r[k].y)&&r[k].x>=0&&r[k].x<W&&r[k].y>=0&&r[k].y<H) && Array.isArray(r.dialogue)&&r.dialogue.length<=100&&r.dialogue.every(s=>typeof s==='string'&&s.length<=1200)&&Number.isInteger(r.target)&&r.target>=-1&&r.target<p.rooms.length&&(!r.doorLinks||(typeof r.doorLinks==='object'&&!Array.isArray(r.doorLinks)&&Object.entries(r.doorLinks).every(([key,v])=>/^\d+,\d+$/.test(key)&&Number.isInteger(v)&&v>=0&&v<p.rooms.length))));
+  }
+  function echoChamber(){
+    const map=blankMap();for(let x=0;x<W;x++)map[1][x]=1;
+    for(let y=4;y<=8;y++)for(let x=4;x<=11;x++)map[y][x]=2;
+    for(const [x,y] of [[3,3],[12,3],[3,9],[12,9]])map[y][x]=8;
+    for(const [x,y] of [[5,3],[10,3],[5,9],[10,9]])map[y][x]=9;
+    map[3][7]=7;map[3][8]=7;map[5][0]=6;
+    return {name:'The Echo Chamber',theme:'castle',scene:'worlds',map,spawn:{x:5,y:6},flowey:{x:4,y:6},target:1,dialogue:[
+      '[Flowey] * Kris... look at that crack. The light inside it keeps changing.',
+      '[Kris] * That darkness... it looks like a Dark Fountain.',
+      '[Flowey] * A fountain? In the UNDERGROUND, magic was holding a barrier together.',
+      '[Kris] * What if the fountain touched that barrier?',
+      '[Flowey] * Before everything changed, I saw a flash. Then the castle appeared around me.',
+      '[Flowey] * Maybe the two kinds of magic pulled on each other... and tore a hole between our worlds.',
+      '[Kris] * So the worlds are overlapping wherever the hole reaches.',
+      '[Flowey] * That would explain the ruins inside this castle. But why did it start here?',
+      '[Kris] * Someone might have opened the fountain on purpose.',
+      '[Flowey] * Maybe. Or it was an accident. We need more than a guess before we try to close it.',
+      '[Kris] * Then we follow the cracks. Find where the light is coming from.',
+      '[Flowey] * Together, okay? I do not want to find out what happens if the worlds split while we are apart.'
+    ]};
+  }
+  function addEchoChapter(p){
+    if(p.chapter>=2)return p;
+    // Insert before player-made rooms, preserving their maps and destinations.
+    for(const room of p.rooms){
+      if(room.target>=2)room.target++;
+      if(room.doorLinks)for(const key of Object.keys(room.doorLinks))if(room.doorLinks[key]>=2)room.doorLinks[key]++;
+    }
+    p.rooms.splice(2,0,echoChamber());
+    const hall=p.rooms[1];hall.map[5][15]=6;hall.map[5][14]=0;
+    hall.doorLinks={...hall.doorLinks,'15,5':2};p.chapter=2;return p;
+  }
+  function fountainRoom(){
+    const map=blankMap();for(let x=0;x<W;x++)map[1][x]=1;
+    for(let y=5;y<=9;y++)for(let x=4;x<=11;x++)map[y][x]=2;
+    for(const [x,y] of [[3,3],[12,3],[3,9],[12,9]])map[y][x]=8;
+    for(const [x,y] of [[5,3],[10,3],[2,7],[13,7]])map[y][x]=9;
+    for(let y=3;y<=4;y++)for(let x=7;x<=8;x++)map[y][x]=4;
+    map[5][0]=6;
+    return {name:'The Dark Fountain',theme:'castle',scene:'fountain',map,spawn:{x:3,y:6},flowey:{x:2,y:6},target:2,dialogue:[
+      '[Flowey] * The cracks all lead here... Kris, that is not just a little hole!',
+      '[Susie] * KRIS! Finally! A little help here?',
+      '[Ralsey] * Please stay back from the fountain! I am trying to keep its magic from spreading.',
+      '[Kris] * Ralsey? Susie? How did you get here?',
+      '[Susie] * We followed you into the castle. Then this thing started pouring darkness through the floor.',
+      '[Susie] * I tried breaking the stone around it. Bad idea. It just got louder.',
+      '[Ralsey] * It feels like something on the other side is pulling it open. My spell can only slow it down.',
+      '[Flowey] * The barrier... We think your fountain touched the magic around the UNDERGROUND.',
+      '[Ralsey] * That could be why I can feel two different kinds of magic here!',
+      '[Kris] * If we close it now, what happens to everyone caught between the worlds?',
+      '[Ralsey] * I do not know yet. We must keep it stable until we can separate the two kinds of magic safely.',
+      '[Susie] * Great. A fountain that fights back, and now a talking flower. Weird day.',
+      '[Flowey] * I have a name! It is Flowey. And I would also like the worlds to stop falling apart.',
+      '[Susie] * Fine, Flowey. Help Kris look for a way to untangle this mess. Ralsey and I will hold it here.',
+      '[Kris] * We will figure it out together.',
+      '[Ralsey] * Thank you, Kris. Stay close, everyone. When the light pulses, the fountain is trying to grow again.'
+    ]};
+  }
+  function addFountainChapter(p){
+    if(p.chapter>=3)return p;
+    for(const room of p.rooms){
+      if(room.target>=3)room.target++;
+      if(room.doorLinks)for(const key of Object.keys(room.doorLinks))if(room.doorLinks[key]>=3)room.doorLinks[key]++;
+    }
+    p.rooms.splice(3,0,fountainRoom());
+    const echo=p.rooms[2];echo.map[5][15]=6;echo.map[5][14]=0;
+    echo.doorLinks={...echo.doorLinks,'15,5':3};p.chapter=3;return p;
+  }
+  function darkWorldArrival(){
+    const map=Array.from({length:H},()=>Array(W).fill(1));
+    // The reference has a black passage extending right across a purple field.
+    for(let y=5;y<=7;y++)for(let x=3;x<W;x++)map[y][x]=0;
+    return {name:'dark.G.world — Arrival',theme:'dark',scene:'darkArrival',map,spawn:{x:5,y:6},flowey:{x:4,y:6},dialogue:[],target:-1,npcs:[]};
+  }
+  function addDarkWorldChapter(p){
+    if(p.chapter>=4)return p;
+    for(const room of p.rooms){
+      if(room.target>=4)room.target++;
+      if(room.doorLinks)for(const key of Object.keys(room.doorLinks))if(room.doorLinks[key]>=4)room.doorLinks[key]++;
+    }
+    p.rooms.splice(4,0,darkWorldArrival());p.chapter=4;return p;
+  }
+  let project;
+  try { project=JSON.parse($('projectData').textContent); } catch(e) { project=null; }
+  if(!validProject(project))project=defaults();
+  try { const stored=JSON.parse(localStorage.getItem(keyName));if(validProject(stored)&&stored.updatedAt>project.updatedAt)project=stored; } catch(e) { /* File URLs may not provide browser storage. Downloads still work. */ }
+  project=addDarkWorldChapter(addFountainChapter(addEchoChapter(project)));
+  let mode='play',roomIndex=0,tool=0,hover=null,stroke=null,dialogue=null;
+  let selectedNpcId=null,npcSequence=0;
+  const story={met:false,joined:false,emerging:-1,reveal:0,discussion:-1,explained:false,foundFountain:false,fountainWorse:false,teamJoined:false,dived:false};
+  let companions=[],buster=null,dive=null;
+  let follower={x:0,y:0,trail:[]};
+  let player={x:300,y:380,facing:'down',moving:false,step:0},keys=new Set(),undoStack=[];
+  let lastTime=0,fade=0,doorCooldown=0,toastTimer,saveTimer;
+  const current=()=>project.rooms[roomIndex];
+  const announce=t=>{$('announcement').textContent=t;};
+  function toast(t){$('toast').textContent=t;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3500);}
+  function save(){ project.updatedAt=Date.now();try{localStorage.setItem(keyName,JSON.stringify(project));$('saveStatus').textContent='Edits remembered in this browser. Download a copy to keep them.';}catch(e){$('saveStatus').textContent='Download your game to keep your edits.';} }
+  function remember(){undoStack.push({project:clone(project),roomIndex});if(undoStack.length>25)undoStack.shift();$('undoButton').disabled=false;}
+  function fountainFriends(r=current()){return r.scene==='fountain'&&(!story.teamJoined||mode==='build')?[{name:'Ralsey',x:260,y:260},{name:'Susie',x:420,y:260}]:[];}
+  function partyFriends(){return story.teamJoined&&mode==='play'?companions:fountainFriends();}
+  function nearFountainFriend(){return partyFriends().filter(n=>Math.hypot(player.x-n.x,player.y-n.y)<74).sort((a,b)=>Math.hypot(player.x-a.x,player.y-a.y)-Math.hypot(player.x-b.x,player.y-b.y))[0];}
+  function cellOpen(r,x,y,avoidFlowey=true){return !(r.npcs||[]).some(n=>n.x===x&&n.y===y)&&!fountainFriends(r).some(n=>Math.floor(n.x/T)===x&&Math.floor(n.y/T)===y)&&x>=0&&y>=0&&x<W&&y<H&&!tiles[r.map[y][x]].solid&&r.map[y][x]!==6&&(!avoidFlowey||r!==project.rooms[1]||story.joined||x!==r.flowey.x||y!==r.flowey.y);}
+  function findStart(r,preferred=r.spawn){
+    const choices=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(cellOpen(r,x,y))choices.push({x,y});
+    choices.sort((a,b)=>Math.abs(a.x-preferred.x)+Math.abs(a.y-preferred.y)-Math.abs(b.x-preferred.x)-Math.abs(b.y-preferred.y));
+    return choices[0]||null;
+  }
+  function positionPlayer(r,preferred){const start=findStart(r,preferred);if(!start)return false;player.x=start.x*T+T/2;player.y=start.y*T+T/2;player.moving=false;keys.clear();return true;}
+  function scheduleEncounter(){
+    story.emerging=-1;story.discussion=-1;
+    if(mode==='play'&&current().scene==='fountain'&&story.joined&&!story.teamJoined){story.discussion=.75;keys.clear();}
+    if(mode==='play'&&current().scene==='worlds'&&story.joined&&!story.explained){story.discussion=.65;keys.clear();}
+    if(mode==='play'&&roomIndex===1&&!story.met&&!story.joined){story.emerging=.85;story.reveal=0;keys.clear();}
+  }
+  function storyUI(){
+    $('partyChip').textContent=story.teamJoined?'PARTY · KRIS + FLOWEY + RALSEY + SUSIE':story.joined?'PARTY · KRIS + FLOWEY':'PARTY · KRIS';
+    $('taskIcon').textContent=story.joined?'✿':'◇';
+    $('taskTitle').textContent=story.joined?'Flowey joined you':roomIndex===1?'A flower in the ruins':'Explore the old castle';
+    $('taskDescription').textContent=story.joined?'He follows your footsteps, even between rooms.':roomIndex===1?'Listen to what Flowey has to say.':'Walk through the doorway on the right.';
+    $('storySummary').textContent=story.joined?'The UNDERGROUND and the legend of DELTARUNE have collided. Neither of you knows why.':roomIndex===1?'Something stirs between the old stones. A golden flower pushes through.':'You wake among cracked stone and faded banners. Somewhere beyond the doorway, something is waiting.';
+    chapterUI();
+  }
+  function chapterUI(){
+    if(current().scene==='darkArrival'){$('taskTitle').textContent='Explore dark.G.world';$('taskDescription').textContent='Follow the black passage to the right. Your friends are with you.';$('storySummary').textContent='You emerge into a purple world. A black passage stretches ahead. Kris, Flowey, Ralsey and Susie made it through together.';return;}
+    if(!story.joined)return;
+    if(story.teamJoined||story.fountainWorse){
+      $('taskTitle').textContent=story.teamJoined?'Four friends, one mystery':'Rude Buster made it worse';
+      $('taskDescription').textContent=story.teamJoined?'Face the Dark Fountain and press C or Z to investigate it together.':'The fountain absorbed the attack. Everyone needs to pull back.';
+      $('storySummary').textContent='Susie’s Rude Buster fed the fountain instead of stopping it. The darkness is stronger. The four of you must find another way together.';
+      return;
+    }
+    if(current().scene==='fountain'||story.foundFountain){
+      $('taskTitle').textContent=story.foundFountain?'The fountain is still growing':'Friends at the fountain';
+      $('taskDescription').textContent=story.foundFountain?'Ralsey and Susie are holding it steady. Talk to them with Z.':'Ralsey and Susie need your help. Listen to what happened.';
+      $('storySummary').textContent='The cracks lead to a Dark Fountain. Ralsey’s spell slows its magic while Susie guards the edge. Two worlds are pulling it open.';
+      return;
+    }
+    $('taskTitle').textContent=story.explained?'Follow the glowing cracks':current().scene==='worlds'?'Two worlds, one clue':'Continue to the Echo Chamber';
+    $('taskDescription').textContent=story.explained?'Follow the light through the Echo Chamber’s right-hand doorway.':current().scene==='worlds'?'Kris and Flowey compare what they remember.':'Take the right-hand doorway in the Silent Hall.';
+    $('storySummary').textContent=story.explained?'Could a Dark Fountain have touched the Underground’s barrier? You have a theory, but still need to find the source.':current().scene==='worlds'?'An old altar hums with two different kinds of magic. The crack above it glows.':'Flowey is with you. A strange light shines from the next chamber.';
+  }
+  function changeRoom(index,throughDoor=false){
+    const next=project.rooms[index];if(!next||!findStart(next)){toast('That room needs an open floor tile and a starting spot.');return false;}
+    roomIndex=index;positionPlayer(next);doorCooldown=.8;fade=throughDoor?.32:0;closeDialogue();buster=null;if(story.joined)resetFollower();scheduleEncounter();updateRoomUI();return true;
+  }
+  function updateRoomUI(){
+    $('roomName').textContent=current().name;
+    $('locationHint').textContent='ROOM '+String(roomIndex+1).padStart(2,'0')+' / '+String(project.rooms.length).padStart(2,'0');
+    $('roomSelect').replaceChildren();$('doorTarget').replaceChildren();
+    const none=document.createElement('option');none.value='-1';none.textContent='No destination yet';$('doorTarget').append(none);
+    project.rooms.forEach((r,i)=>{for(const select of [$('roomSelect'),$('doorTarget')]){const option=document.createElement('option');option.value=String(i);option.textContent=r.name;select.append(option);}});
+    $('roomSelect').value=String(roomIndex);$('doorTarget').value=String(current().target);$('roomTitle').value=current().name;$('floweyWords').value=current().dialogue.join('\n');$('addRoom').disabled=project.rooms.length>=20;
+    $('floweyTool').disabled=roomIndex!==1;$('floweyWords').disabled=roomIndex!==1&&!['worlds','fountain'].includes(current().scene);
+    $('dialogueLabel').textContent=current().scene==='fountain'?'The fountain encounter':current().scene==='worlds'?'Kris & Flowey’s conversation':'Flowey’s opening speech';
+    $('doorNote').textContent=Object.entries(current().doorLinks||{}).map(([tile,target])=>'Door at '+tile+' → '+project.rooms[target].name+'.').join(' ');
+    if(roomIndex!==1&&tool==='flowey')selectTool(0);updateNpcUI();storyUI();
+  }
+  function setMode(next){
+    if(dive){toast('Finish this I. C. before opening Build.');return;}
+    endStroke();clearTimeout(saveTimer);save();
+    if(next==='play'&&!positionPlayer(current())){toast('Paint an open floor tile before you explore.');return;}
+    mode=next;keys.clear();closeDialogue();hover=null;buster=null;story.emerging=-1;story.discussion=-1;
+    if(mode==='play'){if(story.joined)resetFollower();scheduleEncounter();}
+    $('playMode').setAttribute('aria-pressed',String(mode==='play'));$('buildMode').setAttribute('aria-pressed',String(mode==='build'));
+    $('explorePanel').hidden=mode!=='play';$('buildPanel').hidden=mode!=='build';$('playControls').hidden=mode!=='play';$('editorCaption').hidden=mode!=='build';
+    $('pageHeading').textContent=mode==='build'?'What will your world look like?':'Two worlds. One strange awakening.';
+    $('pageSubtitle').textContent=mode==='build'?'Paint a room. Write a conversation. Then step inside.':'You are Kris. An old castle waits beyond the dark.';
+    $('stageMode').textContent=mode==='build'?'ROOM WORKSHOP':'YOUR ADVENTURE';
+    canvas.setAttribute('aria-label',mode==='build'?'Room map editor. Choose a tile from the palette, then click or drag on the map to paint.':'Two Worlds game. Use arrow keys or W A S D to walk. Press Z or Enter to talk. Press C to inspect nearby objects.');
+    updateRoomUI();canvas.focus({preventScroll:true});
+  }
+  function roomNpcs(){return current().npcs||[];}
+  function selectedNpc(){return roomNpcs().find(n=>n.id===selectedNpcId);}
+  function updateNpcUI(){
+    if(!selectedNpc())selectedNpcId=roomNpcs()[0]?.id||null;
+    $('npcSelect').replaceChildren();
+    if(!roomNpcs().length){const option=document.createElement('option');option.textContent='No NPCs placed yet';option.value='';$('npcSelect').append(option);}
+    for(const npc of roomNpcs()){const option=document.createElement('option');option.value=npc.id;option.textContent=npc.name+' ('+(npc.x+1)+', '+(npc.y+1)+')';$('npcSelect').append(option);}
+    const npc=selectedNpc();$('npcSelect').value=selectedNpcId||'';$('npcSelect').disabled=!npc;
+    $('npcName').value=npc?.name||'';$('npcSpeech').value=npc?npc.speech.join('\n'):'';
+    for(const id of ['npcName','npcSpeech','npcMove','npcRemove'])$(id).disabled=!npc;
+    $('npcTool').disabled=roomNpcs().length>=24;
+    if(tool==='npcMove'&&!npc)selectTool('npcSelect');
+  }
+  function npcAt(x,y){return roomNpcs().find(n=>n.x===x&&n.y===y);}
+  function npcSpaceOpen(x,y,ignoreId=null){
+    const r=current();
+    return !tiles[r.map[y][x]].solid&&r.map[y][x]!==6&&
+      !(r.spawn.x===x&&r.spawn.y===y)&&!(roomIndex===1&&r.flowey.x===x&&r.flowey.y===y)&&
+      !fountainFriends(r).some(n=>Math.floor(n.x/T)===x&&Math.floor(n.y/T)===y)&&
+      !roomNpcs().some(n=>n.id!==ignoreId&&n.x===x&&n.y===y);
+  }
+  function editNpcCell(x,y){
+    const clicked=npcAt(x,y);
+    if(tool==='npcSelect'){if(clicked){selectedNpcId=clicked.id;updateNpcUI();}return;}
+    if(tool==='npcMove'){
+      const npc=selectedNpc();if(!npc)return;
+      if(npc.x===x&&npc.y===y)return;
+      if(!npcSpaceOpen(x,y,npc.id)){toast('Choose a clear tile away from other characters and doorways.');return;}
+      remember();npc.x=x;npc.y=y;save();updateNpcUI();selectTool('npcSelect');return;
+    }
+    if(clicked){selectedNpcId=clicked.id;updateNpcUI();selectTool('npcSelect');return;}
+    if(roomNpcs().length>=24){toast('This room already has 24 NPCs.');return;}
+    if(!npcSpaceOpen(x,y)){toast('Choose a clear tile away from other characters and doorways.');return;}
+    remember();
+    const npc={id:'frog-'+Date.now().toString(36)+'-'+(++npcSequence),sprite:'frog',name:'Froggit',x,y,speech:['* Ribbit.','* Hello there.']};
+    (current().npcs??=[]).push(npc);selectedNpcId=npc.id;save();updateNpcUI();selectTool('npcSelect');toast('Froggit placed. Edit its speech in the NPC panel.');
+  }
+  function selectTool(value){tool=value;document.querySelectorAll('.tile-button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.tile)===value)));$('floweyTool').setAttribute('aria-pressed',String(value==='flowey'));$('spawnTool').setAttribute('aria-pressed',String(value==='spawn'));$('npcTool').setAttribute('aria-pressed',String(value==='npc'));$('npcSelectTool').setAttribute('aria-pressed',String(value==='npcSelect'));$('npcMove').setAttribute('aria-pressed',String(value==='npcMove'));}
+  tiles.forEach(t=>{const b=document.createElement('button');b.className='tile-button';b.dataset.tile=t.id;b.setAttribute('aria-pressed',String(t.id===0));b.title=t.label+(t.solid?' · blocks walking':'');const swatch=document.createElement('span');swatch.className='swatch';swatch.style.background=t.color;swatch.setAttribute('aria-hidden','true');b.append(swatch,document.createTextNode(t.label));b.onclick=()=>selectTool(t.id);$('palette').append(b);});
+  $('npcTool').onclick=()=>selectTool('npc');
+  $('npcSelectTool').onclick=()=>selectTool('npcSelect');
+  $('npcSelect').onchange=e=>{selectedNpcId=e.target.value;updateNpcUI();selectTool('npcSelect');};
+  $('npcName').onchange=e=>{const npc=selectedNpc();if(!npc)return;const name=e.target.value.trim().slice(0,32)||'Froggit';if(name===npc.name)return;remember();npc.name=name;save();updateNpcUI();};
+  $('npcSpeech').onchange=e=>{
+    const npc=selectedNpc();if(!npc)return;
+    const speech=e.target.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,100).map(s=>s.slice(0,1200));
+    if(!speech.length)speech.push('* Ribbit.');
+    if(JSON.stringify(speech)===JSON.stringify(npc.speech))return;
+    remember();npc.speech=speech;save();
+  };
+  $('npcMove').onclick=()=>{if(selectedNpc()){selectTool('npcMove');toast('Click a clear tile to move this NPC.');}};
+  $('npcRemove').onclick=()=>{const npc=selectedNpc();if(!npc)return;remember();current().npcs=roomNpcs().filter(n=>n.id!==npc.id);selectedNpcId=null;save();updateNpcUI();toast('NPC removed. Undo can bring it back.');};
+  $('floweyTool').onclick=()=>selectTool('flowey');$('spawnTool').onclick=()=>selectTool('spawn');
+  $('playMode').onclick=()=>setMode('play');$('buildMode').onclick=$('startBuilding').onclick=()=>setMode('build');
+  $('undoButton').onclick=()=>{endStroke();const old=undoStack.pop();if(!old)return;project=old.project;roomIndex=old.roomIndex;save();updateRoomUI();$('undoButton').disabled=!undoStack.length;toast('Last change undone.');};
+  $('roomSelect').onchange=e=>{endStroke();roomIndex=Number(e.target.value);updateRoomUI();};
+  $('addRoom').onclick=()=>{if(project.rooms.length>=20)return;remember();project.rooms.push({name:'New Room '+(project.rooms.length+1),theme:'castle',map:blankMap(),spawn:{x:7,y:9},flowey:{x:8,y:4},dialogue:[],target:roomIndex});roomIndex=project.rooms.length-1;save();updateRoomUI();toast('Room added! Paint a door and choose where it leads.');};
+  $('roomTitle').onchange=e=>{const name=e.target.value.trim()||'Unnamed Room';remember();current().name=name;save();updateRoomUI();};
+  $('floweyWords').onchange=e=>{remember();current().dialogue=e.target.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).slice(0,100);if(!current().dialogue.length)current().dialogue=['* Hi... you finally woke up.','* You need to help me.'];save();};
+  $('doorTarget').onchange=e=>{remember();current().target=Number(e.target.value);save();};
+  function mouseCell(e){const b=canvas.getBoundingClientRect();return {x:Math.floor((e.clientX-b.left)*640/b.width/T),y:Math.floor((e.clientY-b.top)*480/b.height/T)};}
+  function paint(cell){
+    const {x,y}=cell,r=current();if(x<0||y<0||x>=W||y>=H)return;
+    if(['npc','npcMove','npcSelect'].includes(tool)){editNpcCell(x,y);return;}
+    if(tool==='spawn'||tool==='flowey'){
+      if(npcAt(x,y)){toast('Move the NPC before placing another character here.');return;}
+      if(tiles[r.map[y][x]].solid||r.map[y][x]===6){toast('Choose a floor tile, rug, path, or flowers.');return;}
+      const other=tool==='flowey'?r.spawn:r.flowey;if((tool==='flowey'||roomIndex===1)&&other.x===x&&other.y===y){toast('Give Flowey and Kris their own space.');return;}
+      const key=tool==='flowey'?'flowey':'spawn';if(r[key].x===x&&r[key].y===y)return;
+      if(!stroke.changed){remember();stroke.changed=true;}r[key]={x,y};
+    }else{
+      if(r.map[y][x]===tool)return;
+      if((tiles[tool].solid||tool===6)&&npcAt(x,y)){toast('Move or remove the NPC before covering its tile.');return;}
+      if((tiles[tool].solid||tool===6)&&((r.spawn.x===x&&r.spawn.y===y)||(roomIndex===1&&r.flowey.x===x&&r.flowey.y===y))){if(!stroke.warned){toast('Move Flowey or the starting spot before covering that tile.');stroke.warned=true;}return;}
+      if(!stroke.changed){remember();stroke.changed=true;}r.map[y][x]=tool;
+    }
+  }
+  function endStroke(){if(stroke&&stroke.changed)save();stroke=null;}
+  canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;canvas.focus({preventScroll:true});if(mode==='build'){e.preventDefault();stroke={changed:false,warned:false};canvas.setPointerCapture(e.pointerId);hover=mouseCell(e);paint(hover);}else if(dialogue)advanceDialogue();});
+  canvas.addEventListener('pointermove',e=>{hover=mouseCell(e);if(mode==='build'&&stroke&&typeof tool==='number')paint(hover);});
+  canvas.addEventListener('pointerup',endStroke);canvas.addEventListener('pointercancel',endStroke);canvas.addEventListener('lostpointercapture',endStroke);canvas.addEventListener('pointerleave',()=>{hover=null;});
+  const dirKeys={ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
+  canvas.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.metaKey){if(mode==='build'&&e.key.toLowerCase()==='z'){e.preventDefault();$('undoButton').click();}return;}
+    if(mode!=='play')return;
+    if(dirKeys[e.key]){e.preventDefault();keys.add(dirKeys[e.key]);}
+    if(['z','Z','Enter',' '].includes(e.key)){e.preventDefault();if(!e.repeat)talk();}
+    if(['x','X','Escape'].includes(e.key)){e.preventDefault();if(dialogue&&(importantKinds.has(dialogue.kind)||['intro','worlds'].includes(dialogue.kind)))advanceDialogue();else closeDialogue();}
+  });
+  // Game shortcuts work even when the canvas has not been clicked yet.
+  document.addEventListener('keydown',e=>{
+    if(!['c','C','l','L'].includes(e.key)||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey||e.isComposing)return;
+    const typing=node=>node&&(/^(INPUT|TEXTAREA|SELECT)$/.test(node.tagName)||node.isContentEditable||node.closest?.('[contenteditable="true"],[contenteditable=""]'));
+    if(mode!=='play'||$('helpDialog').open||typing(e.target)||typing(document.activeElement))return;
+    e.preventDefault();if(e.repeat)return;
+    canvas.focus({preventScroll:true});if(e.key.toLowerCase()==='l')skipDialogue();else inspectObject();
+  });
+  window.addEventListener('keyup',e=>{if(dirKeys[e.key])keys.delete(dirKeys[e.key]);});
+  window.addEventListener('blur',()=>{keys.clear();endStroke();});canvas.addEventListener('blur',()=>keys.clear());document.addEventListener('visibilitychange',()=>keys.clear());
+  document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',e=>{if(mode!=='play')return;e.preventDefault();canvas.focus({preventScroll:true});b.setPointerCapture(e.pointerId);keys.add(b.dataset.dir);});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys.delete(b.dataset.dir));b.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();keys.add(b.dataset.dir);}});b.addEventListener('keyup',()=>keys.delete(b.dataset.dir));b.addEventListener('blur',()=>keys.delete(b.dataset.dir));});
+  function floweyPosition(){
+    if(mode==='build')return roomIndex===1?{x:current().flowey.x*T+20,y:current().flowey.y*T+24}:null;
+    if(story.joined)return follower;
+    if(roomIndex===1&&(mode==='build'||story.reveal>0))return {x:current().flowey.x*T+20,y:current().flowey.y*T+24};
+    return null;
+  }
+  function nearFlowey(){const f=floweyPosition();return f&&Math.hypot(player.x-f.x,player.y-f.y)<82;}
+  function nearbyNpc(){
+    const [dx,dy]={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[player.facing];
+    for(let distance=8;distance<=64;distance+=4){
+      const x=Math.floor((player.x+dx*distance)/T),y=Math.floor((player.y+dy*distance)/T);
+      if(x<0||y<0||x>=W||y>=H)return null;
+      const npc=npcAt(x,y);if(npc)return npc;
+      if(tiles[current().map[y][x]].solid)return null;
+    }
+    return null;
+  }
+  function speakToNpc(npc){openDialogue(npc.speech,'npc',npc.name);}
+  function nearbyObject(){
+    const direction={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[player.facing];
+    const descriptions={1:'a stone wall',3:'some flowers',4:current().scene==='fountain'?'a Dark Fountain':'a pool of water',6:'a doorway',7:'a table',8:'a pillar',9:'some broken stones'};
+    // Look forward, stopping at the first object instead of reaching through it.
+    for(let distance=12;distance<=52;distance+=4){
+      const x=Math.floor((player.x+direction[0]*distance)/T),y=Math.floor((player.y+direction[1]*distance)/T);
+      if(x<0||y<0||x>=W||y>=H)break;
+      if(x===Math.floor(player.x/T)&&y===Math.floor(player.y/T))continue;
+      const tile=current().map[y][x];
+      if(descriptions[tile])return descriptions[tile];
+    }
+    return null;
+  }
+  function facingFountain(){
+    if(current().scene!=='fountain')return false;
+    const [dx,dy]={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[player.facing];
+    for(let distance=8;distance<=64;distance+=4){
+      const x=Math.floor((player.x+dx*distance)/T),y=Math.floor((player.y+dy*distance)/T);
+      if(x<0||y<0||x>=W||y>=H)return false;
+      if(npcAt(x,y))return false;
+      if(x>=7&&x<=8&&y>=3&&y<=4)return true;
+      if(tiles[current().map[y][x]].solid)return false;
+    }
+    return false;
+  }
+  function interactFountain(){
+    if(!facingFountain()||!story.teamJoined||story.dived)return false;
+    openDialogue([
+      '[Kris] * There is something beyond the darkness. A way through.',
+      '[Ralsey] * Then this fountain might be a passage between the worlds.',
+      '[Susie] * Beats standing around waiting for it to swallow the castle. Come on!',
+      '[Kris] * Together.',
+      '[Flowey] * Wait. You mean... INTO it?'
+    ],'fountainDive');return true;
+  }
+  function startFountainDive(){
+    keys.clear();player.moving=false;
+    dive={phase:'trio',age:0,starts:{
+      Kris:{x:player.x,y:player.y},Flowey:{x:follower.x,y:follower.y},
+      ...Object.fromEntries(companions.map(n=>[n.name,{x:n.x,y:n.y}]))
+    }};
+    announce('Ralsey, Susie and Kris jump into the Dark Fountain.');
+  }
+  function updateDive(dt){
+    dive.age+=dt;player.moving=false;
+    if(dive.phase==='trio'&&dive.age>=3.4){
+      dive.phase='hesitate';dive.age=0;
+      openDialogue([
+        '[Flowey] * (This is a bad idea. This is a REALLY bad idea.)',
+        '[Flowey] * ...But I am not staying here alone.',
+        '[Flowey] * Wait for me!'
+      ],'floweyHesitate');
+    }else if(dive.phase==='flowey'&&dive.age>=2.3){
+      dive=null;keys.clear();
+      const destination=project.rooms.findIndex(r=>r.scene==='darkArrival');
+      if(!changeRoom(destination,true)){toast('The arrival area needs an open floor tile. You can fix it in Build.');return;}
+      story.dived=true;storyUI();
+      openDialogue(['[Narrator] * You arrive in dark.G.world.','[Flowey] * ...Everybody here?','[Ralsey] * We made it. Stay together.'],'fountainArrival');
+    }
+  }
+  function divePose(name){
+    const start=dive.starts[name];if(!start)return null;
+    const order=['Ralsey','Susie','Kris'];
+    if(name!=='Flowey'&&dive.phase!=='trio')return null;
+    if(name==='Flowey'&&dive.phase!=='flowey')return {...start,scale:1};
+    const delay=name==='Flowey'?.1:.15+order.indexOf(name)*1.05;
+    const t=(dive.age-delay)/.95;
+    if(t<=0)return {...start,scale:1};if(t>=1)return null;
+    return {x:start.x+(320-start.x)*t,y:start.y+(172-start.y)*t-Math.sin(t*Math.PI)*83,scale:1-Math.max(0,t-.65)/.35*.8};
+  }
+  function inspectObject(){
+    if(mode!=='play'||buster||(dive&&dive.phase!=='hesitate')||$('helpDialog').open||story.emerging>=0||story.discussion>=0)return;
+    if(dialogue){advanceDialogue();return;}
+    if(interactFountain())return;
+    const npc=nearbyNpc();if(npc){speakToNpc(npc);return;}
+    if(story.joined){openDialogue(['[Flowey] * lets not waste time.'],'inspect');return;}
+    const object=nearbyObject();
+    if(object)openDialogue(['[Narrator] * '+object],'inspect');
+    else openDialogue(['[Narrator] * nothing to inspect here. Face a nearby pillar or table, then press C.'],'inspect');
+  }
+  function dialoguePages(lines,customSpeaker=null){
+    const pages=[];
+    for(const line of lines){
+      const match=customSpeaker?null:line.match(/^\[(Kris|Flowey|Ralsey|Susie|Narrator)\]\s*/i);
+      const speaker=customSpeaker||(match?match[1][0].toUpperCase()+match[1].slice(1).toLowerCase():'Flowey');
+      let text=match?line.slice(match[0].length):line;
+      while(text.length>140){let cut=text.lastIndexOf(' ',140);if(cut<40)cut=140;pages.push({speaker,text:text.slice(0,cut)});text=text.slice(cut).trimStart();}
+      if(text)pages.push({speaker,text});
+    }
+    return pages.length?pages:[{speaker:'Flowey',text:'* You need to help me.'}];
+  }
+  function announcePage(){const page=dialogue.lines[dialogue.index];announce((page.speaker==='Narrator'?'':page.speaker+': ')+page.text);}
+  function openDialogue(lines,kind='chat',customSpeaker=null){keys.clear();player.moving=false;dialogue={lines:dialoguePages(lines,customSpeaker),index:0,shown:0,kind};$('dialogue').hidden=false;announcePage();renderDialogue();}
+  function talk(){
+    if(mode!=='play'||buster||(dive&&dive.phase!=='hesitate'))return;if(dialogue){advanceDialogue();return;}if(story.emerging>=0||story.discussion>=0)return;
+    if(interactFountain())return;
+    const npc=nearbyNpc();if(npc){speakToNpc(npc);return;}
+    if(nearFountainFriend()){
+      const friend=nearFountainFriend();
+      if(!story.teamJoined&&story.joined)openFountainScene();
+      else openDialogue(friend.name==='Ralsey'?[
+        story.teamJoined?'[Ralsey] * I am right behind you, Kris. We will find a gentler way to separate the magic.':'[Ralsey] * I can only slow it down. Please stay away from the dark water.',
+        '[Ralsey] * The pulses are coming from both worlds. We need to understand them before we seal anything.'
+      ]:[
+        story.teamJoined?'[Susie] * Yeah, yeah. No more blasting mysterious fountains. I get it.':'[Susie] * Hey, Kris. There has to be a way to stop this thing.',
+        '[Susie] * And, uh... glad you made it. All of you. Even the flower.'
+      ]);
+      return;
+    }
+    if(!nearFlowey()){toast(story.joined?'Walk closer to Flowey, then press Z.':'Explore the castle. Someone is waiting in the second room.');return;}
+    if(!story.met)openDialogue(project.rooms[1].dialogue,'intro');
+    else if(current().scene==='fountain'&&!story.teamJoined)openFountainScene();
+    else if(story.teamJoined)openDialogue(['* At least there are four of us now.','* Next time someone wants to blast the fountain, I am voting no.']);
+    else if(current().scene==='worlds')openDialogue(current().dialogue,'worlds');
+    else if(story.explained)openDialogue(["* If a fountain touched the barrier, the cracks might lead us to it.","* Stay close, Kris. We still do not know who opened the way."]);
+    else openDialogue(["* There is a strange light coming from the next room.","* Take the doorway on the right. I am coming with you, Kris."]);
+  }
+  function renderDialogue(){
+    if(!dialogue)return;const page=dialogue.lines[dialogue.index],text=page.text;
+    const portraits={Narrator:['◇','#d1ccdc'],Kris:['◆','#91bbeb'],Flowey:['✿','#efcb84'],Ralsey:['♧','#99dfb5'],Susie:['★','#d19de0']};
+    const portrait=dialogue.kind==='npc'?['♧','#eeeadd']:portraits[page.speaker];
+    $('speakerName').textContent=dialogue.kind!=='npc'&&page.speaker==='Narrator'?'Examine':page.speaker;$('speakerPortrait').textContent=portrait[0];
+    $('speakerPortrait').style.color=portrait[1];
+    $('dialogueText').textContent=text.slice(0,Math.floor(dialogue.shown));
+    const buttons='C / Z / Enter';
+    const prompt=dialogue.shown<text.length?buttons+' to show all':(dialogue.index===dialogue.lines.length-1?buttons+' to finish ▾':buttons+' to continue ▾');
+    $('dialogueNext').textContent=prompt+(importantKinds.has(dialogue.kind)?' · I. C. · cannot skip':' · L to skip');
+  }
+  const importantKinds=new Set(['fountain','busterWindup','busterAfter','fountainDive','floweyHesitate','fountainArrival']);
+  function isImportantCutscene(){
+    return !!dive||!!buster||!!(dialogue&&importantKinds.has(dialogue.kind))||
+      (story.discussion>=0&&current().scene==='fountain');
+  }
+  function skipDialogue(){
+    if(mode!=='play'||$('helpDialog').open)return;
+    if(isImportantCutscene()){toast('I. C. — this important cutscene cannot be skipped.');return;}
+    if(story.emerging>=0){
+      story.emerging=-1;story.reveal=1;openDialogue(project.rooms[1].dialogue,'intro');
+    }else if(story.discussion>=0){
+      story.discussion=-1;openDialogue(current().dialogue,'worlds');
+    }
+    if(!dialogue)return;
+    // Complete only this conversation, keeping its story consequences intact.
+    dialogue.index=dialogue.lines.length-1;
+    dialogue.shown=dialogue.lines[dialogue.index].text.length;
+    advanceDialogue();
+  }
+  function advanceDialogue(){
+    if(!dialogue)return;const text=dialogue.lines[dialogue.index].text;
+    if(dialogue.shown<text.length)dialogue.shown=text.length;
+    else if(dialogue.index<dialogue.lines.length-1){dialogue.index++;dialogue.shown=0;announcePage();}
+    else{
+      const kind=dialogue.kind;closeDialogue();
+      if(kind==='fountainDive')startFountainDive();
+      if(kind==='floweyHesitate'&&dive){dive.phase='flowey';dive.age=0;announce('Flowey jumps in last.');}
+      if(kind==='intro')recruitFlowey();
+      if(kind==='fountain'){story.foundFountain=true;storyUI();openFountainScene();}
+      if(kind==='busterWindup'){if(story.fountainWorse)openBusterAfter();else{buster={age:0};keys.clear();announce('Susie casts Rude Buster at the fountain.');}}
+      if(kind==='busterAfter')recruitFriends();
+      if(kind==='worlds'){const first=!story.explained;story.explained=true;storyUI();if(first)toast('A new clue: the fountain and the barrier.');}
+    }
+    renderDialogue();
+  }
+  function openFountainScene(){
+    if(!story.foundFountain){openDialogue(current().dialogue,'fountain');return;}
+    if(story.fountainWorse){openBusterAfter();return;}
+    openDialogue([
+      '[Susie] * Wait. We are not giving up yet. Let me try something stronger.',
+      '[Ralsey] * Susie, wait! We do not know how the fountain will react to attack magic!',
+      '[Flowey] * That sounds like a very good reason NOT to—',
+      '[Susie] * RUDE BUSTER!'
+    ],'busterWindup');
+  }
+  function openBusterAfter(){openDialogue([
+    '[Susie] * ...Uh. That was supposed to make it SMALLER.',
+    '[Ralsey] * It absorbed your spell! The fountain is turning the attack into more darkness!',
+    '[Flowey] * Great. We just FED it.',
+    '[Kris] * Everyone, get back. We need another way.',
+    '[Susie] * ...Yeah. My bad. No more blasting it.',
+    '[Ralsey] * I cannot hold it here anymore. I am coming with you, Kris. We will find a way together.',
+    '[Susie] * Count me in. I helped make this mess bigger. I am helping fix it.',
+    '[Flowey] * Four of us against two mixed-up worlds. Okay. Stay close.'
+  ],'busterAfter');}
+  function recruitFriends(){
+    if(story.teamJoined)return;
+    const friends=fountainFriends().map(n=>({...n}));
+    story.teamJoined=true;
+    let leader=follower;
+    companions=friends.map(n=>{const member={...n,trail:routeToPlayer(n,leader)};leader=member;return member;});
+    storyUI();toast('Ralsey and Susie joined your party!');announce('Ralsey and Susie now follow Kris and Flowey.');
+  }
+  function closeDialogue(){dialogue=null;$('dialogue').hidden=true;$('dialogueText').textContent='';keys.clear();}
+  // A short path connects Flowey to Kris initially. After that he follows the
+  // actual movement trail, so he takes the same turns around the castle walls.
+  function routeToPlayer(start,target=player){
+    const r=current(),sx=Math.floor(start.x/T),sy=Math.floor(start.y/T),tx=Math.floor(target.x/T),ty=Math.floor(target.y/T);
+    const key=(x,y)=>y*W+x,queue=[{x:sx,y:sy}],parents=new Map([[key(sx,sy),null]]);
+    for(let head=0;head<queue.length;head++){
+      const cell=queue[head];if(cell.x===tx&&cell.y===ty)break;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const x=cell.x+dx,y=cell.y+dy,k=key(x,y);if(!parents.has(k)&&cellOpen(r,x,y,false)){parents.set(k,cell);queue.push({x,y});}}
+    }
+    if(!parents.has(key(tx,ty)))return [];
+    const route=[];let cell={x:tx,y:ty};
+    while(cell){route.unshift({x:cell.x*T+20,y:cell.y*T+20});cell=parents.get(key(cell.x,cell.y));}
+    route.push({x:target.x,y:target.y});return route;
+  }
+  function recruitFlowey(){
+    const f=floweyPosition()||{x:current().flowey.x*T+20,y:current().flowey.y*T+24};
+    follower={x:f.x,y:f.y,trail:routeToPlayer(f)};story.met=true;story.joined=true;story.emerging=-1;story.reveal=1;storyUI();toast('Flowey joined you. He will follow your footsteps.');announce('Flowey joined your party.');
+  }
+  function resetFollower(){
+    const r=current(),cx=Math.floor(player.x/T),cy=Math.floor(player.y/T);
+    const tile=[[-1,0],[0,1],[1,0],[0,-1]].map(([dx,dy])=>({x:cx+dx,y:cy+dy})).find(p=>cellOpen(r,p.x,p.y,false));
+    const point=tile?{x:tile.x*T+20,y:tile.y*T+20}:{x:player.x,y:player.y};
+    follower={x:point.x,y:point.y,trail:routeToPlayer(point)};
+    if(story.teamJoined)resetCompanions();
+  }
+  function resetCompanions(){
+    const used=new Set([Math.floor(player.x/T)+','+Math.floor(player.y/T),Math.floor(follower.x/T)+','+Math.floor(follower.y/T)]);
+    let leader=follower;
+    companions=['Ralsey','Susie'].map(name=>{
+      const cx=Math.floor(leader.x/T),cy=Math.floor(leader.y/T);
+      const tile=[[-1,0],[0,1],[1,0],[0,-1]].map(([dx,dy])=>({x:cx+dx,y:cy+dy})).find(p=>cellOpen(current(),p.x,p.y,false)&&!used.has(p.x+','+p.y));
+      const start=tile?{x:tile.x*T+20,y:tile.y*T+20}:{x:leader.x,y:leader.y};
+      if(tile)used.add(tile.x+','+tile.y);
+      const member={name,...start,trail:routeToPlayer(start,leader)};leader=member;return member;
+    });
+  }
+  function followTrail(member,target,dt,gap){
+    const last=member.trail.length?member.trail[member.trail.length-1]:member;
+    if(Math.hypot(last.x-target.x,last.y-target.y)>1)member.trail.push({x:target.x,y:target.y});
+    let distance=0,previous=member;
+    for(const point of member.trail){distance+=Math.hypot(point.x-previous.x,point.y-previous.y);previous=point;}
+    let budget=Math.min(165*dt,Math.max(0,distance-gap));
+    while(member.trail.length&&budget>0){
+      const point=member.trail[0],dx=point.x-member.x,dy=point.y-member.y,len=Math.hypot(dx,dy);
+      if(len<.01){member.trail.shift();continue;}
+      const move=Math.min(len,budget);member.x+=dx/len*move;member.y+=dy/len*move;budget-=move;
+      if(move>=len-.001)member.trail.shift();
+    }
+  }
+  function updateFollower(dt){
+    if(!story.joined)return;
+    followTrail(follower,player,dt,48);
+    let leader=follower;
+    for(const member of companions){followTrail(member,leader,dt,48);leader=member;}
+  }
+  $('inspectButton').onclick=()=>{inspectObject();canvas.focus({preventScroll:true});};
+  $('talkButton').onclick=()=>{talk();canvas.focus({preventScroll:true});};
+  $('restartButton').onclick=()=>{story.met=false;story.joined=false;story.emerging=-1;story.reveal=0;story.discussion=-1;story.explained=false;story.foundFountain=false;story.fountainWorse=false;story.teamJoined=false;story.dived=false;companions=[];buster=null;dive=null;follower={x:0,y:0,trail:[]};changeRoom(0);canvas.focus({preventScroll:true});toast('Kris wakes in the old castle once more.');};
+  $('helpButton').onclick=()=>{keys.clear();$('helpDialog').showModal();};$('closeHelp').onclick=()=>{$('helpDialog').close();canvas.focus({preventScroll:true});};
+  $('helpDialog').addEventListener('click',e=>{if(e.target===$('helpDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
+  $('downloadButton').onclick=()=>{
+    // Finish text-field changes, then embed data safely inside a standalone copy.
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();endStroke();save();
+    const copy=document.documentElement.cloneNode(true);
+    copy.querySelector('#projectData').textContent=JSON.stringify(project).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
+    copy.querySelector('#helpDialog').removeAttribute('open');copy.querySelector('#dialogue').hidden=true;copy.querySelector('#toast').hidden=true;
+    const blob=new Blob(['<!doctype html>\n'+copy.outerHTML],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='Two-Worlds-My-Game.html';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast('Your game copy is downloading. Keep it somewhere you can find it.');
+  };
+  function collides(x,y){
+    const r=current(),left=x-10,right=x+10,top=y-7,bottom=y+6;if(left<0||top<0||right>=640||bottom>=480)return true;
+    for(let ty=Math.floor(top/T);ty<=Math.floor(bottom/T);ty++)for(let tx=Math.floor(left/T);tx<=Math.floor(right/T);tx++)if(tiles[r.map[ty][tx]].solid)return true;
+    if((r.npcs||[]).some(n=>left<n.x*T+33&&right>n.x*T+7&&top<n.y*T+30&&bottom>n.y*T+15))return true;
+    if(fountainFriends(r).some(n=>left<n.x+13&&right>n.x-13&&top<n.y+6&&bottom>n.y-9))return true;
+    if(story.joined||roomIndex!==1||story.reveal<=0)return false;
+    const dx=r.flowey.x*T+20,dy=r.flowey.y*T+24;return left<dx+14&&right>dx-14&&top<dy+5&&bottom>dy-8;
+  }
+  function update(dt){
+    fade=Math.max(0,fade-dt);doorCooldown=Math.max(0,doorCooldown-dt);
+    if(mode!=='play'||$('helpDialog').open)return;
+    if(dive&&dive.phase!=='hesitate'){updateDive(dt);return;}
+    if(buster){
+      buster.age+=dt;player.moving=false;
+      if(buster.age>=1.15&&!story.fountainWorse){story.fountainWorse=true;storyUI();announce('The attack hits. The Dark Fountain grows stronger!');}
+      if(buster.age>=2.8){buster=null;openBusterAfter();}return;
+    }
+    if(story.emerging>=0){story.emerging-=dt;story.reveal=Math.min(1,story.reveal+dt*2);player.moving=false;if(story.emerging<=0){story.emerging=-1;story.reveal=1;openDialogue(project.rooms[1].dialogue,'intro');}return;}
+    if(story.discussion>=0){story.discussion-=dt;player.moving=false;if(story.discussion<=0){story.discussion=-1;if(current().scene==='fountain')openFountainScene();else openDialogue(current().dialogue,'worlds');}return;}
+    if(dialogue){dialogue.shown+=dt*45;renderDialogue();player.moving=false;return;}
+    let dx=(keys.has('right')?1:0)-(keys.has('left')?1:0),dy=(keys.has('down')?1:0)-(keys.has('up')?1:0);
+    player.moving=!!(dx||dy);if(player.moving){if(dx)player.facing=dx>0?'right':'left';else player.facing=dy>0?'down':'up';const len=Math.hypot(dx,dy);dx=dx/len*135*dt;dy=dy/len*135*dt;if(!collides(player.x+dx,player.y))player.x+=dx;if(!collides(player.x,player.y+dy))player.y+=dy;player.step+=dt*10;}
+    updateFollower(dt);
+    const tx=Math.floor(player.x/T),ty=Math.floor(player.y/T);
+    if(!doorCooldown&&current().map[ty][tx]===6){doorCooldown=1;const target=current().doorLinks?.[tx+','+ty]??current().target;if(target<0)toast('This doorway needs a destination. Choose one in Build.');else changeRoom(target,true);}
+  }
+  function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
+  function pixelText(text,x,y,color,size=10){ctx.fillStyle=color;ctx.font=`${size}px monospace`;ctx.fillText(text,x,y);}
+  function drawTile(id,x,y,theme){
+    if(theme==='dark'&&(id===0||id===1)){rect(x,y,T,T,id===1?'#a349a4':'#000000');return;}
+    const garden=theme==='garden',castle=theme==='castle';
+    rect(x,y,T,T,garden?'#53604b':'#65516e');
+    if(id!==1&&id!==4){rect(x+2,y+2,36,36,garden?((x+y)%80?'#596950':'#5c6c53'):((x+y)%80?'#705b79':'#745e7d'));if(!garden){rect(x+3,y+3,34,2,'#806a89');rect(x+3,y+35,34,2,'#5d4868');}else{rect(x+8,y+12,3,5,'#71815f');rect(x+30,y+27,3,4,'#46563f');}}
+    if(castle){
+      rect(x,y,40,40,'#34323f');rect(x+1,y+1,38,37,((x+y)%80)?'#555160':'#5b5666');rect(x+2,y+2,36,2,'#676272');rect(x+2,y+36,36,2,'#45414f');
+      if((x/T+y/T*3)%7===0){rect(x+14,y+10,2,9,'#3e3b48');rect(x+16,y+18,7,2,'#3e3b48');rect(x+21,y+20,2,6,'#3e3b48');}
+    }
+    if(id===1){
+      if(castle){
+        rect(x,y,40,40,'#24232e');rect(x+1,y+1,38,17,'#44414f');rect(x+2,y+2,36,2,'#5e586b');rect(x+1,y+20,18,17,'#3a3746');rect(x+21,y+20,18,17,'#403c4c');
+        if(y===40){rect(x,y+30,40,5,'#797081');rect(x,y+36,40,4,'#211f2c');}
+      }else if(garden){rect(x,y,40,40,'#253c35');rect(x+3,y+4,34,30,'#345244');rect(x+7,y+3,12,10,'#42614b');rect(x+25,y+21,10,10,'#2d493d');rect(x+5,y+33,30,5,'#1d302d');}
+      else{rect(x,y,40,40,'#30223d');rect(x+2,y+2,36,31,'#45314f');rect(x+3,y+4,34,3,'#59405f');rect(x,y+34,40,6,'#211b30');rect(x+17,y+6,2,25,'#382641');if(y===40){rect(x,y+29,40,6,'#9b779a');rect(x,y+35,40,5,'#3c2b47');}}
+    }
+    if(id===2){rect(x,y,40,40,castle?'#5e344d':'#95516f');rect(x+2,y+2,36,36,castle?'#78435b':'#a65d7c');rect(x+18,y+17,4,6,castle?'#99657b':'#bb7d8c');if(castle&&(x/T+y/T)%4===0){rect(x+7,y+26,11,2,'#60394d');rect(x+9,y+28,6,2,'#60394d');}const cx=x/T,cy=y/T,m=current().map;for(const [dx,dy,rx,ry,rw,rh] of [[-1,0,0,0,3,40],[1,0,37,0,3,40],[0,-1,0,0,40,3],[0,1,0,37,40,3]])if(!m[cy+dy]||m[cy+dy][cx+dx]!==2)rect(x+rx,y+ry,rw,rh,'#d5b58e');}
+    if(id===3){for(const [ox,oy,c] of [[12,12,'#e1b8cb'],[27,23,'#eaca8c'],[10,30,'#c3b9dd']]){rect(x+ox,y+oy,2,8,'#304939');rect(x+ox-3,y+oy-3,8,6,c);rect(x+ox-1,y+oy-5,4,10,c);rect(x+ox,y+oy-1,2,2,'#f9e8b3');}}
+    if(id===4){rect(x,y,40,40,'#355c70');rect(x+2,y+2,36,36,'#426f85');rect(x+7,y+10,13,2,'#739bad');rect(x+24,y+25,10,2,'#83a5af');rect(x+7,y+30,8,2,'#30596e');}
+    if(id===5){rect(x,y+2,40,36,'#ad9c7a');rect(x+2,y+4,36,31,'#c2af8b');rect(x+7,y+12,5,2,'#d9c8a3');rect(x+25,y+27,7,2,'#a18d6f');}
+    if(id===6){rect(x,y,40,40,'#292031');rect(x+3,y+2,34,38,'#ba976a');rect(x+7,y+3,26,37,'#302637');rect(x+10,y+8,20,32,'#3f3647');rect(x+8,y+35,24,5,'#dec590');rect(x+13,y+36,14,2,'#f2dfb7');}
+    if(id===8){rect(x+3,y+31,34,7,'#2e2c39');rect(x+5,y+27,30,8,'#888093');rect(x+10,y+5,20,23,'#6e687c');rect(x+11,y+6,4,20,'#a39aaf');rect(x+23,y+6,5,21,'#4c485d');rect(x+5,y+1,30,6,'#9990a5');rect(x+3,y,34,3,'#b2a6b8');}
+    if(id===9){rect(x+8,y+23,10,6,'#34303e');rect(x+7,y+20,10,5,'#8b8295');rect(x+21,y+11,12,8,'#3e394a');rect(x+20,y+8,12,7,'#9890a2');rect(x+17,y+30,6,4,'#746c7f');}
+    if(id===7){rect(x+4,y+29,5,10,'#3f2b32');rect(x+31,y+29,5,10,'#3f2b32');rect(x+2,y+6,36,26,'#674655');rect(x,y+3,40,24,'#ba8d68');rect(x+2,y+4,36,3,'#dfb78a');rect(x+3,y+24,34,4,'#835c53');rect(x+10,y+9,18,12,'#537c83');rect(x+13,y+10,12,8,'#c6d0ba');rect(x+11,y+9,3,12,'#355662');}
+  }
+  function drawWindow(time){
+    if(['garden','dark'].includes(current().theme))return;
+    for(const col of [4,11]){
+      if(current().map[0][col]!==1||current().map[1][col]!==1)continue;
+      const x=col*T;rect(x-2,8,44,55,'#211e36');rect(x+4,12,32,45,'#657d9c');rect(x+7,15,26,39,'#273346');rect(x+9,17,9,20,'#445d7e');rect(x+19,12,3,44,'#92899c');rect(x+5,34,30,3,'#92899c');rect(x-4,58,48,5,'#a59aab');rect(x+27,22,3,3,'#a8bbcf');
+    }
+    if(current().theme!=='castle')return;
+    for(const col of [2,13]){
+      if(current().map[1][col]!==1)continue;
+      const x=col*T+20, flicker=Math.floor(time*9+col)%3;
+      rect(x-19,31,38,42,'#f4ba6120');rect(x-3,48,6,23,'#201e29');rect(x-8,46,16,5,'#9b8d80');
+      rect(x-5,33-flicker,10,14+flicker,'#dc794d');rect(x-3,29+flicker,6,17-flicker,'#efb365');rect(x-1,36,3,10,'#ffe3a1');
+    }
+    if(current().map[1][7]===1){
+      rect(292,12,36,44,'#37253e');rect(296,13,28,42,'#73465f');rect(309,21,3,23,'#b99a78');rect(302,28,17,3,'#b99a78');rect(296,55,9,6,'#73465f');rect(316,55,8,6,'#73465f');
+    }
+    ctx.strokeStyle='#b2a9bb60';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(40,80);ctx.lineTo(64,80);ctx.lineTo(40,56);ctx.lineTo(40,80);ctx.lineTo(60,60);ctx.moveTo(40,68);ctx.lineTo(52,80);ctx.stroke();
+  }
+  function drawEcho(time){
+    if(current().scene!=='worlds')return;
+    const pulse=.16+Math.sin(time*2)*.05;
+    rect(278,64,84,77,'rgba(141,117,231,'+pulse+')');
+    for(const [x,y,w,hh] of [[316,68,5,14],[310,81,6,12],[314,92,5,13],[307,104,8,12],[313,115,5,13]]){
+      rect(x-3,y,w+6,hh,'#7562a4');rect(x,y,w,hh,'#c1b1f5');rect(x+1,y,2,hh,'#eae1ff');
+    }
+    rect(296,142,12,3,'#edc969');rect(301,137,3,13,'#edc969');
+    rect(332,140,10,3,'#9abced');rect(335,135,3,13,'#9abced');
+  }
+  function drawCrackTrail(time){
+    const scene=current().scene;if(!['worlds','fountain'].includes(scene))return;
+    const points=scene==='worlds'?[[320,164],[344,182],[366,180],[390,205],[420,220],[450,214],[480,223],[514,217],[544,225],[578,218],[613,220]]:[[26,220],[64,214],[92,225],[122,218],[151,229],[184,222],[205,235],[224,219],[254,214],[280,202],[319,194]];
+    ctx.save();ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.lineWidth=8;ctx.strokeStyle='rgba(145,106,220,'+(.25+Math.sin(time*3)*.07)+')';ctx.stroke();
+    ctx.lineWidth=2;ctx.strokeStyle='#c6b2f7';ctx.stroke();ctx.restore();
+    if(scene==='worlds')pixelText('→',574,198,'#d6c7fa',16);
+  }
+  function drawFountain(time){
+    if(current().scene!=='fountain')return;
+    const pulse=(Math.sin(time*2.5)+1)/2;
+    // The pool tiles block walking; the rising darkness is scenery above them.
+    rect(276,116,88,88,'#211e39');rect(282,118,76,79,'#302848');
+    rect(290,175,60,18,'#101320');rect(297,178,46,11,'#080c17');
+    rect(286,192,68,6,'#74649e');rect(298,195,44,3,'#b6a6e3');
+    rect(294,76,52,105,'rgba(104,76,159,'+(.22+pulse*.12)+')');
+    rect(302,65,36,117,'#272039');rect(308,54,24,130,'#12121f');
+    rect(314,42,12,141,'#070b14');rect(305,84,3,73,'#8270b6');rect(333,97,3,62,'#554c83');
+    for(let i=0;i<13;i++){
+      const x=291+(i*17)%57,y=186-((time*(18+i%3*5)+i*19)%137);
+      rect(x,y,2+(i%2),5,i%2?'#ab96d9':'#6e91c2');
+    }
+    if(story.fountainWorse){
+      rect(281,38,78,145,'#54407655');rect(292,30,56,151,'#372542');rect(300,19,40,164,'#171223');rect(311,9,18,175,'#060912');
+      rect(286,101,4,71,'#bd6dd1');rect(348,77,3,96,'#9174cc');
+      ctx.save();ctx.strokeStyle='#b17bdf';ctx.lineWidth=3;ctx.beginPath();
+      for(const side of [-1,1]){ctx.moveTo(320+side*18,187);ctx.lineTo(320+side*37,207);ctx.lineTo(320+side*48,204);ctx.lineTo(320+side*67,235);ctx.lineTo(320+side*85,246);}ctx.stroke();ctx.restore();
+      for(let i=0;i<12;i++){const y=185-((time*45+i*17)%171);rect(282+(i*23)%77,y,3,8,i%2?'#b780d7':'#8194df');}
+    }
+    // Ralsey stops casting here once he joins the moving party.
+    if(story.teamJoined&&mode==='play')return;
+    ctx.save();ctx.strokeStyle='rgba(139,228,191,'+(.45+pulse*.25)+')';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(275,232);ctx.lineTo(293,215);ctx.lineTo(303,185);ctx.lineTo(319,174);ctx.stroke();
+    rect(289,213,5,5,'#c5f7dc');rect(301,184,4,4,'#8ddeb6');ctx.restore();
+  }
+  function drawDive(time){
+    const actors=['Ralsey','Susie','Kris','Flowey'].map(name=>({name,pose:divePose(name)})).filter(n=>n.pose).sort((a,b)=>a.pose.y-b.pose.y);
+    for(const {name,pose} of actors){
+      ctx.save();ctx.translate(pose.x,pose.y);ctx.scale(pose.scale,pose.scale);
+      if(name==='Kris')drawPlayer(0,0,time);
+      else if(name==='Flowey')drawFlowey(0,0,time);
+      else drawFountainFriend({name,x:0,y:0},time);
+      ctx.restore();
+    }
+    if(dive.phase!=='hesitate'){
+      ctx.save();ctx.strokeStyle='#c9adeb';ctx.lineWidth=2;ctx.beginPath();
+      const radius=14+Math.sin(dive.age*5)*5;ctx.ellipse(320,180,radius,5,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+    }
+  }
+  function drawBuster(){
+    if(!buster||mode!=='play')return;
+    const age=buster.age;
+    pixelText(age<1.15?'RUDE BUSTER!':'THE FOUNTAIN IS GROWING!',age<1.15?244:187,92,'#f5b8f2',16);
+    if(age<.65){
+      const radius=8+age*23;ctx.save();ctx.strokeStyle='#e1a0ef';ctx.lineWidth=3;ctx.beginPath();
+      ctx.moveTo(399,218-radius);ctx.lineTo(399+radius,218);ctx.lineTo(399,218+radius);ctx.lineTo(399-radius,218);ctx.closePath();ctx.stroke();ctx.restore();
+      rect(396,214,7,9,'#eed1ff');
+    }else if(age<1.15){
+      const progress=(age-.65)/.5,x=399+(320-399)*progress,y=218+(151-218)*progress;
+      ctx.save();ctx.translate(x,y);ctx.rotate(-.7);ctx.fillStyle='#9e48c0';ctx.beginPath();ctx.moveTo(-30,-14);ctx.lineTo(19,0);ctx.lineTo(-30,14);ctx.lineTo(-14,0);ctx.closePath();ctx.fill();
+      rect(-10,-3,28,6,'#f1d1ff');rect(-25,-2,14,4,'#d48eec');ctx.restore();
+    }else{
+      const progress=(age-1.15)/1.65,radius=20+progress*155;
+      ctx.save();ctx.strokeStyle='rgba(219,148,236,'+(1-progress)*.8+')';ctx.lineWidth=5-3*progress;ctx.beginPath();ctx.arc(320,160,radius,0,Math.PI*2);ctx.stroke();ctx.restore();
+      rect(0,0,640,480,'rgba(122,62,158,'+Math.max(0,.16*(1-progress))+')');
+    }
+  }
+  function drawFountainFriend(n,time){
+    const x=n.x,y=n.y,bob=Math.round(Math.sin(time*2));
+    rect(x-15,y-2,30,7,'#14121e77');
+    if(n.name==='Ralsey'){
+      rect(x-8,y-8,6,10,'#293a39');rect(x+3,y-8,6,10,'#293a39');
+      rect(x-12,y-26,24,21,'#4da97c');rect(x-15,y-11,30,7,'#67c18b');
+      rect(x-8,y-24,16,15,'#69c992');rect(x-4,y-19,8,6,'#263f42');
+      rect(x-12,y-29,7,13,'#5bab80');rect(x+9,y-28,8,9,'#5bab80');rect(x+15,y-30+bob,6,7,'#eee9df');
+      rect(x-10,y-44,20,17,'#f1eade');rect(x-14,y-39,5,11,'#e4e3d9');rect(x+9,y-39,5,11,'#e4e3d9');
+      rect(x-8,y-38,7,6,'#274c44');rect(x+2,y-38,7,6,'#274c44');rect(x-1,y-36,3,2,'#274c44');
+      rect(x-6,y-36,3,2,'#d7e9d4');rect(x+4,y-36,3,2,'#d7e9d4');rect(x-2,y-29,5,2,'#6d696d');
+      rect(x-12,y-28,23,4,'#e486b5');rect(x-8,y-25,5,14,'#d571a7');
+      rect(x-16,y-47,32,5,'#6bce99');rect(x-10,y-53,21,7,'#59b583');rect(x-5,y-60,12,8,'#59b583');rect(x-1,y-65,6,6,'#77d1a0');
+    }else{
+      rect(x-11,y-13,9,15,'#272239');rect(x+3,y-13,9,15,'#272239');rect(x-14,y-2,13,5,'#43364f');rect(x+3,y-2,14,5,'#43364f');
+      rect(x-14,y-36,29,25,'#282335');rect(x-14,y-35,7,23,'#8c438d');rect(x+8,y-35,7,23,'#8c438d');rect(x-9,y-16,21,4,'#dabd6d');
+      rect(x-20,y-34,8,18,'#b37fc0');rect(x+14,y-34,8,18,'#b37fc0');rect(x-20,y-20,8,5,'#e1bf62');rect(x+14,y-20,8,5,'#e1bf62');
+      rect(x-11,y-53,24,21,'#b882c5');rect(x+8,y-42,10,8,'#c995cc');rect(x+9,y-37,7,2,'#eee2d6');
+      rect(x-15,y-58,32,12,'#67377b');rect(x-18,y-50,10,21,'#67377b');rect(x+10,y-51,9,18,'#67377b');rect(x-9,y-48,19,7,'#67377b');
+      rect(x-12,y-58,21,3,'#8b4c94');
+      // Susie braces her axe beside the unstable pool.
+      rect(x-29,y-44,4,44,'#9d7d65');rect(x-39,y-44,13,14,'#b9b9ce');rect(x-35,y-48,12,6,'#d9cde0');rect(x-25,y-43,9,9,'#8e85a8');
+    }
+    pixelText(n.name,x-(n.name.length*3),y+17,n.name==='Ralsey'?'#addfc1':'#d7a8e5',10);
+  }
+  const frogPixels=[
+    '    ####      ####    ',
+    '   #WWWW#    #WWWW#   ',
+    '  #WWWWWW####WWWWWW#  ',
+    '  #WW##WWWWWWWW##WW#  ',
+    '  #W#WW#WWWWWW#WW#W#  ',
+    '  #W#WW#WWWWWW#WW#W#  ',
+    '  #WWWWWWWWWWWWWWWW#  ',
+    ' #WWWWWWWWWWWWWWWWWW# ',
+    '#WWWWWWWWWWWWWWWWWWWW#',
+    '#WWWW#WWWWWWWWWW#WWWW#',
+    ' #WWWW##########WWWW# ',
+    '  #WWWWWWWWWWWWWWWW#  ',
+    '   ################   ',
+    '       #WWWWWW#       ',
+    '      #WWWWWWWW#      ',
+    '      #WW#WW#WW#      ',
+    '     #WWWWWWWWWW#     ',
+    '    #WWW#WWWW#WWW#    ',
+    '   #WWWWWWWWWWWWWW#   ',
+    '  #WWWWWWW##WWWWWWW#  ',
+    ' #WWWWWWW#  #WWWWWWW# ',
+    ' #WWWWWW#    #WWWWWW# ',
+    ' ########    ######## '
+  ];
+  function drawNpc(npc){
+    const x=npc.x*T+20,y=npc.y*T+24,scale=2,width=22;
+    rect(x-19,y-2,38,6,'#17132066');
+    frogPixels.forEach((row,dy)=>{for(let dx=0;dx<row.length;dx++){const pixel=row[dx];if(pixel!==' ')rect(x-width+dx*scale,y-frogPixels.length*scale+dy*scale,scale,scale,pixel==='#'?'#18131e':'#f4f0e7');}});
+    if(mode==='build'&&npc.id===selectedNpcId){ctx.strokeStyle='#efcb84';ctx.lineWidth=2;ctx.strokeRect(npc.x*T+1,npc.y*T+1,38,38);pixelText('SELECTED',x-24,y-52,'#efcb84',9);}
+  }
+  function drawFlowey(x,y,time){
+    const growth=mode==='build'||story.joined||story.met?1:story.reveal;
+    if(growth<=0)return;
+    const sway=mode==='play'?Math.round(Math.sin(time*3)):0;
+    ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.scale(1,growth);x=sway;y=0;
+    rect(-15,0,30,5,'#1d1c2960');rect(x-2,-20,4,23,'#4e9953');rect(x-10,-9,8,4,'#7ab65e');rect(x+2,-13,9,4,'#6ba851');rect(x-8,-6,6,3,'#4e9953');
+    for(const [px,py,pw,ph] of [[-5,-43,10,12],[-17,-35,12,10],[5,-35,12,10],[-14,-22,10,10],[4,-22,10,10],[-5,-19,10,9]]){
+      rect(x+px-1,py-1,pw+2,ph+2,'#9b6e29');rect(x+px,py,pw,ph,'#f7ce4b');rect(x+px+2,py+1,pw-4,2,'#ffe994');
+    }
+    rect(x-10,-34,20,17,'#eae5d9');rect(x-7,-37,14,23,'#f5f1e6');rect(x-6,-31,3,5,'#29252d');rect(x+3,-31,3,5,'#29252d');
+    rect(x-6,-23,2,3,'#29252d');rect(x+4,-23,2,3,'#29252d');rect(x-4,-21,8,2,'#29252d');ctx.restore();
+  }
+  function drawPlayer(x,y,time){
+    const step=player.moving?Math.floor(player.step)%2:0,bob=player.moving?step:0;y+=bob;
+    rect(x-12,y-2,24,7,'#1a18275f');
+    rect(x-8,y-12,7,13-step*2,'#292c59');rect(x+2,y-12,7,11+step*2,'#292c59');rect(x-10,y-2-step*2,9,4,'#1b1d3d');rect(x+2,y-4+step*2,10,4,'#1b1d3d');
+    rect(x-10,y-25,20,16,'#bdc7dc');rect(x-8,y-23,14,9,'#e4e8ed');rect(x+5,y-22,5,13,'#7a8daf');rect(x-13,y-24,6,10,'#cad2df');rect(x+8,y-24,6,10,'#8ea1be');
+    rect(x-13,y-14,5,5,'#70a5d0');rect(x+9,y-14,5,5,'#70a5d0');
+    rect(x-10,y-29,21,6,'#e76fbe');rect(x-6,y-26,15,3,'#bd4c96');rect(x+8,y-27,7,12,'#db60b1');rect(x+12,y-19,5,6,'#ed85cc');
+    rect(x-9,y-42,19,15,'#71a7ce');rect(x-12,y-44,24,12,'#20234e');rect(x-9,y-47,18,5,'#292c61');
+    rect(x-14,y-40,6,12,'#20234e');rect(x+8,y-41,6,13,'#20234e');rect(x-8,y-34,5,4,'#20234e');rect(x+1,y-34,7,4,'#20234e');
+    if(player.facing==='up'){rect(x-9,y-40,19,13,'#262958');rect(x-6,y-30,12,4,'#20234e');}
+    else if(player.facing==='left'){rect(x-12,y-31,4,4,'#71a7ce');}
+    else if(player.facing==='right'){rect(x+9,y-31,4,4,'#71a7ce');}
+  }
+  function render(time){
+    ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,640,480);const r=current();
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++)drawTile(r.map[y][x],x*T,y*T,r.theme);drawWindow(time);drawEcho(time);drawCrackTrail(time);drawFountain(time);
+    const flower=floweyPosition();
+    if(mode==='play'&&dive){
+      for(const npc of roomNpcs())drawNpc(npc);
+      drawDive(time);
+    }else if(mode==='play'){
+      const actors=[{y:player.y,draw:()=>drawPlayer(player.x,player.y,time)},...partyFriends().map(n=>({y:n.y,draw:()=>drawFountainFriend(n,time)})),...roomNpcs().map(n=>({y:n.y*T+24,draw:()=>drawNpc(n)}))];
+      if(flower)actors.push({y:flower.y,draw:()=>drawFlowey(flower.x,flower.y,time)});actors.sort((a,b)=>a.y-b.y).forEach(a=>a.draw());
+      if(story.teamJoined&&facingFountain()&&!dialogue&&!buster)pixelText('C / Z · I. C.',282,212,'#ead8ff',11);
+      const npc=nearbyNpc();if(npc&&!dialogue&&!buster&&story.emerging<0&&story.discussion<0)pixelText('C / Z',npc.x*T+3,npc.y*T-34,'#fff0c7',10);
+      const friend=nearFountainFriend();if(friend&&!dialogue&&!buster&&story.discussion<0)pixelText('Z',friend.x-4,friend.y-75,'#fff0c7',14);
+      if(flower&&nearFlowey()&&!dialogue&&!buster&&story.emerging<0&&story.discussion<0){rect(flower.x-12,flower.y-67,24,17,'#f2e5c7');rect(flower.x-3,flower.y-50,6,4,'#f2e5c7');pixelText('Z',flower.x-4,flower.y-54,'#34283d',12);}
+    }else{
+      for(const friend of fountainFriends())drawFountainFriend(friend,time);
+      for(const npc of roomNpcs())drawNpc(npc);
+      if(flower)drawFlowey(flower.x,flower.y,time);ctx.strokeStyle='#e0d2ff24';ctx.lineWidth=1;ctx.beginPath();for(let x=0;x<=W;x++){ctx.moveTo(x*T+.5,0);ctx.lineTo(x*T+.5,480);}for(let y=0;y<=H;y++){ctx.moveTo(0,y*T+.5);ctx.lineTo(640,y*T+.5);}ctx.stroke();
+      const sx=r.spawn.x*T,sy=r.spawn.y*T;rect(sx+5,sy+8,30,22,'#c4ddb8');pixelText('GO',sx+12,sy+24,'#243632',12);
+      if(hover&&hover.x>=0&&hover.y>=0&&hover.x<W&&hover.y<H){rect(hover.x*T,hover.y*T,T,T,'#eedbff35');ctx.strokeStyle='#f0d6ff';ctx.lineWidth=2;ctx.strokeRect(hover.x*T+1,hover.y*T+1,38,38);}
+    }
+    drawBuster();
+    if(mode==='play'&&dive?.phase==='flowey'&&dive.age>1.15)rect(0,0,640,480,'rgba(8,9,18,'+Math.min(1,(dive.age-1.15)/.9)+')');
+    if(fade>0)rect(0,0,640,480,`rgba(17,20,29,${Math.min(1,fade/.32)})`);
+    $('gameHint').textContent=mode==='build'?(['npc','npcMove','npcSelect'].includes(tool)?(tool==='npc'?'Click a clear tile to place Froggit.':tool==='npcMove'?'Click a clear tile to move the selected NPC.':'Click an NPC to edit its speech.'):tool==='flowey'?'Click a clear tile to place Flowey.':tool==='spawn'?'Click a clear tile to set the starting spot.':'Painting: '+tiles[tool].label+' · click or drag'):(dive&&dive.phase!=='hesitate'?'I. C. · Into the fountain...':buster?'I. C. · Rude Buster!':dialogue?(importantKinds.has(dialogue.kind)?'I. C. · C / Z / Enter to continue':'C / Z / Enter to continue · L to skip'):story.discussion>=0?(current().scene==='fountain'?'I. C. · Your friends are struggling against the fountain...':'A strange light pulses above the altar...'):story.emerging>=0?'Something is growing between the stones...':story.teamJoined&&facingFountain()?'C / Z to enter the fountain · I. C.':nearbyNpc()?'C / Z to talk to '+nearbyNpc().name+'.':nearFountainFriend()?'Press Z to talk to '+nearFountainFriend().name+'.':nearFlowey()?'Press Z to talk to Flowey.':story.teamJoined?'Your party is following · Z talk · C inspect':story.joined?'Flowey is following · Z talk · C inspect':'Arrow keys / W A S D to walk · C to inspect');
+  }
+  function frame(now){const dt=Math.min((now-lastTime)/1000||0,.035);lastTime=now;if(!document.hidden){update(dt);render(now/1000);}requestAnimationFrame(frame);}
+  positionPlayer(current());updateRoomUI();
+  // A downloaded copy may contain the editor's previous DOM state; always start
+  // in Explore and rebuild controls from the embedded project, not that state.
+  $('palette').replaceChildren(...Array.from($('palette').children).slice(-tiles.length));
+  $('playMode').setAttribute('aria-pressed','true');$('buildMode').setAttribute('aria-pressed','false');$('explorePanel').hidden=false;$('buildPanel').hidden=true;$('playControls').hidden=false;$('editorCaption').hidden=true;$('dialogue').hidden=true;$('toast').hidden=true;
+  $('pageHeading').textContent='Two worlds. One strange awakening.';$('pageSubtitle').textContent='You are Kris. An old castle waits beyond the dark.';$('stageMode').textContent='YOUR ADVENTURE';storyUI();$('undoButton').disabled=true;selectTool(0);
+  window.addEventListener('pagehide',()=>{endStroke();save();});
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
