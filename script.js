@@ -478,7 +478,7 @@
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
   let placementLayer = 'normal', layerApplyMode = false;
-  let glitchComfort = null;
+  let glitchComfort = null, glitchWaiting = null;
   const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false, coreGlitchNoticed: false, glitchArrivalSeen: false };
   const maxHP = 100;
   const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
@@ -604,8 +604,13 @@
         Object.keys(slot.treeHarvests).length <= 3840 && Object.entries(slot.treeHarvests).every(([key, count]) =>
           /^\d{1,2}:\d{1,2},\d{1,2}$/.test(key) && Number.isInteger(count) && count >= 0 && count <= 6)));
   }
+  function validGlitchWaiting(waiting) {
+    return waiting === undefined || waiting === null || (typeof waiting === 'object' && ['Ralsey','Susie'].every(name =>
+      waiting[name] && Number.isFinite(waiting[name].x) && waiting[name].x >= 0 && waiting[name].x < 640 &&
+      Number.isFinite(waiting[name].y) && waiting[name].y >= 0 && waiting[name].y < 480));
+  }
   function validProgress(slot) {
-    return slot && (slot.savePoint === undefined || (slot.savePoint && Number.isInteger(slot.savePoint.x) && slot.savePoint.x >= 0 && slot.savePoint.x < W && Number.isInteger(slot.savePoint.y) && slot.savePoint.y >= 0 && slot.savePoint.y < H)) && validCandyProgress(slot) && slot.version === 1 && Number.isFinite(slot.savedAt) && validProject(slot.project) &&
+    return slot && validGlitchWaiting(slot.glitchWaiting) && (slot.savePoint === undefined || (slot.savePoint && Number.isInteger(slot.savePoint.x) && slot.savePoint.x >= 0 && slot.savePoint.x < W && Number.isInteger(slot.savePoint.y) && slot.savePoint.y >= 0 && slot.savePoint.y < H)) && validCandyProgress(slot) && slot.version === 1 && Number.isFinite(slot.savedAt) && validProject(slot.project) &&
       Number.isInteger(slot.roomIndex) && slot.roomIndex >= 0 && slot.roomIndex < slot.project.rooms.length &&
       slot.player && Number.isFinite(slot.player.x) && slot.player.x >= 0 && slot.player.x < 640 &&
       Number.isFinite(slot.player.y) && slot.player.y >= 0 && slot.player.y < 480 &&
@@ -646,7 +651,7 @@
             const point = closestSavePoint(current(), roomIndex, player);
             if (!point) throw new Error('Save point unavailable');
             // Keep a map fallback for browsers without a newer edited build.
-            const snapshot = { version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
+            const snapshot = { glitchWaiting: glitchWaiting ? clone(glitchWaiting) : null, version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
               player: { x: player.x, y: player.y, facing: player.facing },
               story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained, coreFroggitWarned: story.coreFroggitWarned, coreGlitchNoticed: story.coreGlitchNoticed, glitchArrivalSeen: story.glitchArrivalSeen } };
             const latest = readProgressSlots(); latest[index] = snapshot;
@@ -678,6 +683,7 @@
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
     Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, coreExplained: slot.story.coreExplained ?? false, coreFroggitWarned: slot.story.coreFroggitWarned ?? false, coreGlitchNoticed: slot.story.coreGlitchNoticed ?? false, glitchArrivalSeen: slot.story.glitchArrivalSeen ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
+    glitchWaiting = slot.glitchWaiting ? clone(slot.glitchWaiting) : null;
     Object.assign(player, slot.player, { moving: false, step: 0 });
     buster = null; dive = null; companions = []; follower = { x: player.x, y: player.y, trail: [] };
     keys.clear(); lastSpikeContact = null; cameraShakeTime = 0; undoStack = []; $('undoButton').disabled = true; fade = .32; doorCooldown = .5;
@@ -688,7 +694,29 @@
     $('saveDialog').close(); canvas.focus({ preventScroll: true }); toast('Saved game loaded.');
   }
   function memberInParty(name) {
-    return name === 'Kris' || (name === 'Flowey' ? story.joined : story.teamJoined);
+    return name === 'Kris' || (name === 'Flowey' ? story.joined : story.teamJoined && !friendsWaiting());
+  }
+  function friendsWaiting() { return story.glitchArrivalSeen; }
+  function ensureGlitchWaiting() {
+    if (!friendsWaiting()) return;
+    const room = project.rooms.find(room => room.scene === 'glitchWorld'); if (!room) return;
+    const used = new Set();
+    const pick = preferred => {
+      const spots = [];
+      for (let y=0;y<H;y++) for (let x=0;x<W;x++) if (cellOpen(room,x,y,false) && !used.has(x+','+y)) spots.push({ x: x*T+20, y: y*T+20 });
+      spots.sort((a,b) => Math.hypot(a.x-preferred.x,a.y-preferred.y)-Math.hypot(b.x-preferred.x,b.y-preferred.y));
+      const point = spots[0] || preferred; used.add(Math.floor(point.x/T)+','+Math.floor(point.y/T)); return point;
+    };
+    const ralsey = pick(glitchWaiting?.Ralsey || { x: Math.max(20,room.spawn.x*T-60), y: room.spawn.y*T+20 });
+    const susie = pick(glitchWaiting?.Susie || { x: Math.max(20,ralsey.x-40), y: ralsey.y });
+    glitchWaiting = { Ralsey: ralsey, Susie: susie };
+  }
+  function roomWaitingFriends() {
+    if (!friendsWaiting() || !glitchWaiting || current().scene !== 'glitchWorld') return [];
+    return ['Ralsey','Susie'].map(name => ({ name, ...glitchWaiting[name], worried: name === 'Ralsey', comforting: name === 'Susie' }));
+  }
+  function awayDescription(name) {
+    return friendsWaiting() && ['Ralsey','Susie'].includes(name) ? 'Waiting in Glitch World' : 'Not in party yet';
   }
   function isLateStoryRoom(room) {
     return typeof room.scene === 'string' && (room.scene.startsWith('dark') || ['coreEntrance','coreLower','coreDepths','glitchWorld'].includes(room.scene));
@@ -732,11 +760,11 @@
     $('partyHPList').replaceChildren(); $('candyTarget').replaceChildren();
     for (const name of partyNames) {
       const row = document.createElement('p'); row.className = 'helptext';
-      row.textContent = name + ' · HP: ' + partyHP[name] + ' / ' + maxHP + (memberInParty(name) ? '' : ' · Not in party yet');
+      row.textContent = name + ' · HP: ' + partyHP[name] + ' / ' + maxHP + (memberInParty(name) ? '' : ' · ' + awayDescription(name));
       const bar = document.createElement('progress'); bar.value = partyHP[name]; bar.max = maxHP; bar.setAttribute('aria-label', name + ' HP');
       row.append(document.createElement('br'), bar); $('partyHPList').append(row);
       const option = document.createElement('option'); option.value = name;
-      option.textContent = name + (memberInParty(name) ? '' : ' (not in party yet)'); option.disabled = !memberInParty(name); $('candyTarget').append(option);
+      option.textContent = name + (memberInParty(name) ? '' : ' (' + awayDescription(name) + ')'); option.disabled = !memberInParty(name); $('candyTarget').append(option);
     }
     $('candyTarget').value = candyTarget;
     const hp = partyHP[candyTarget], item = itemDefinitions[selectedItem];
@@ -793,7 +821,7 @@
   }
   function remember() { undoStack.push({ project: clone(project), roomIndex }); if (undoStack.length > 25) undoStack.shift(); $('undoButton').disabled = false; }
   function fountainFriends(r = current()) { return r.scene === 'fountain' && (!story.teamJoined || mode === 'build') ? [{ name: 'Ralsey', x: 260, y: 260 }, { name: 'Susie', x: 420, y: 260 }] : []; }
-  function partyFriends() { return story.teamJoined && mode === 'play' ? companions : fountainFriends(); }
+  function partyFriends() { return story.teamJoined && mode === 'play' ? [...companions, ...roomWaitingFriends()] : fountainFriends(); }
   function nearFountainFriend() { return partyFriends().filter(n => Math.hypot(player.x - n.x, player.y - n.y) < 74).sort((a, b) => Math.hypot(player.x - a.x, player.y - a.y) - Math.hypot(player.x - b.x, player.y - b.y))[0]; }
   function cellOpen(r, x, y, avoidFlowey = true) { if (roomSpikes(r).some(point => point.x === x && point.y === y)) return false; if (roomTrees(r).some(tree => tree.x === x && tree.y === y)) return false; return !(r.npcs || []).some(n => n.x === x && n.y === y) && !fountainFriends(r).some(n => Math.floor(n.x / T) === x && Math.floor(n.y / T) === y) && x >= 0 && y >= 0 && x < W && y < H && !tiles[r.map[y][x]].solid && r.map[y][x] !== 6 && (!avoidFlowey || r !== project.rooms[1] || story.joined || x !== r.flowey.x || y !== r.flowey.y); }
   function findStart(r, preferred = r.spawn) {
@@ -810,7 +838,7 @@
   }
   function storyUI() {
     $('inventorySummary').textContent = 'Items: ' + (Object.entries(inventory.items).filter(([id, count]) => count > 0).map(([id, count]) => itemDefinitions[id].name + ' × ' + count).join(', ') || 'none');
-    $('partyChip').textContent = story.teamJoined ? 'PARTY · KRIS + FLOWEY + RALSEY + SUSIE' : story.joined ? 'PARTY · KRIS + FLOWEY' : 'PARTY · KRIS';
+    $('partyChip').textContent = story.teamJoined && !friendsWaiting() ? 'PARTY · KRIS + FLOWEY + RALSEY + SUSIE' : story.joined ? 'PARTY · KRIS + FLOWEY' : 'PARTY · KRIS';
     $('taskIcon').textContent = story.joined ? '✿' : '◇';
     $('taskTitle').textContent = story.joined ? 'Flowey joined you' : roomIndex === 1 ? 'A flower in the ruins' : 'Explore the old castle';
     $('taskDescription').textContent = story.joined ? 'He follows your footsteps, even between rooms.' : roomIndex === 1 ? 'Listen to what Flowey has to say.' : 'Walk through the doorway on the right.';
@@ -818,7 +846,7 @@
     chapterUI();
   }
   function chapterUI() {
-    if (current().scene === 'glitchWorld') { $('taskTitle').textContent='Glitch World';$('taskDescription').textContent='Follow the gray walkway through the white silence. Everyone made it through the fall.';$('storySummary').textContent='The endless fall is over. The CORE has vanished, leaving a white world and a single gray road.';return; }
+    if (current().scene === 'glitchWorld') { $('taskTitle').textContent='Glitch World';$('taskDescription').textContent=friendsWaiting() ? 'Continue with Flowey. Susie is staying here to comfort Ralsey.' : 'Follow the gray walkway through the white silence. Everyone made it through the fall.';$('storySummary').textContent='The endless fall is over. The CORE has vanished, leaving a white world and a single gray road.';return; }
     if (current().scene === 'coreDepths') { $('taskTitle').textContent='Deeper into the CORE';$('taskDescription').textContent='The floor near this spike looks unstable too. Save at the golden star before exploring.';$('storySummary').textContent='Another floor collapsed. The party has fallen farther beneath the CORE.';return; }
     if (current().scene === 'coreLower') { $('taskTitle').textContent='Below the CORE';$('taskDescription').textContent='Explore the lower chamber. Its spike is surrounded by unstable flooring. The golden star lets you save your progress.';$('storySummary').textContent='The floor gave way beneath the party. The entrance above is out of reach.';return; }
     if (current().scene === 'coreEntrance') { $('taskTitle').textContent='Inside the CORE';$('taskDescription').textContent='Explore the metal walkway. The floor near the spike looks unstable.';$('storySummary').textContent='The bounce pad carried everyone into the CORE. Warning lights flicker along the pipes.';return; }
@@ -1377,6 +1405,15 @@
     const npc = nearbyNpc(); if (npc) { speakToNpc(npc); return; }
     if (nearFountainFriend()) {
       const friend = nearFountainFriend();
+      if (friendsWaiting() && current().scene === 'glitchWorld') {
+        openDialogue(friend.name === 'Susie' ? [
+          "[Susie] * It's okay, Ralsey. I'm staying right here with you.",
+          "[Ralsey] * Thank you, Susie..."
+        ] : [
+          "[Ralsey] * I just need a moment...",
+          "[Susie] * Take your time. I've got you."
+        ], 'waitingFriends'); return;
+      }
       if (!story.teamJoined && story.joined) openFountainScene();
       else openDialogue(friend.name === 'Ralsey' ? [
         story.teamJoined ? '[Ralsey] * I am right behind you, Kris. We will find a gentler way to separate the magic.' : '[Ralsey] * I can only slow it down. Please stay away from the dark water.',
@@ -1390,6 +1427,7 @@
     if (!nearFlowey()) { toast(story.joined ? 'Walk closer to Flowey, then press Z.' : 'Explore the castle. Someone is waiting in the second room.'); return; }
     if (!story.met) openDialogue(project.rooms[1].dialogue, 'intro');
     else if (current().scene === 'fountain' && !story.teamJoined) openFountainScene();
+    else if (friendsWaiting()) openDialogue(["[Flowey] * Come on, Kris. Let's keep moving."]);
     else if (story.teamJoined) openDialogue(['* At least there are four of us now.', '* Next time someone wants to blast the fountain, I am voting no.']);
     else if (current().scene === 'worlds') openDialogue(current().dialogue, 'worlds');
     else if (story.explained) openDialogue(["* If a fountain touched the barrier, the cracks might lead us to it.", "* Stay close, Kris. We still do not know who opened the way."]);
@@ -1499,7 +1537,8 @@
     const tile = [[-1, 0], [0, 1], [1, 0], [0, -1]].map(([dx, dy]) => ({ x: cx + dx, y: cy + dy })).find(p => cellOpen(r, p.x, p.y, false));
     const point = tile ? { x: tile.x * T + 20, y: tile.y * T + 20 } : { x: player.x, y: player.y };
     follower = { x: point.x, y: point.y, trail: routeToPlayer(point) };
-    if (story.teamJoined) resetCompanions();
+    if (story.teamJoined && !friendsWaiting()) resetCompanions();
+    else { companions = []; ensureGlitchWaiting(); }
   }
   function resetCompanions() {
     const used = new Set([Math.floor(player.x / T) + ',' + Math.floor(player.y / T), Math.floor(follower.x / T) + ',' + Math.floor(follower.y / T)]);
@@ -1528,12 +1567,13 @@
   function updateFollower(dt) {
     if (!story.joined) return;
     followTrail(follower, player, dt, 48);
+    if (friendsWaiting()) return;
     let leader = follower;
     for (const member of companions) { followTrail(member, leader, dt, 48); leader = member; }
   }
   $('inspectButton').onclick = () => { inspectObject(); canvas.focus({ preventScroll: true }); };
   $('talkButton').onclick = () => { talk(); canvas.focus({ preventScroll: true }); };
-  $('restartButton').onclick = () => { glitchComfort = null; padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; story.coreFroggitWarned = false; story.coreGlitchNoticed = false; story.glitchArrivalSeen = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
+  $('restartButton').onclick = () => { glitchComfort = null; glitchWaiting = null; padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; story.coreFroggitWarned = false; story.coreGlitchNoticed = false; story.glitchArrivalSeen = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
   $('helpButton').onclick = () => { keys.clear(); $('helpDialog').showModal(); }; $('closeHelp').onclick = () => { $('helpDialog').close(); canvas.focus({ preventScroll: true }); };
   $('helpDialog').addEventListener('click', e => { if (e.target === $('helpDialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close(); } });
   $('downloadButton').onclick = () => {
@@ -1770,12 +1810,11 @@
   function finishGlitchComfort() {
     if (!glitchComfort) return;
     story.glitchArrivalSeen = true;
+    glitchWaiting = { Ralsey: { ...glitchComfort.targets.Ralsey }, Susie: { ...glitchComfort.targets.Susie } };
     if (glitchComfort.roomIndex === roomIndex && mode === 'play') {
       Object.assign(follower,glitchComfortPose('Flowey')); follower.trail = routeToPlayer(follower);
-      let leader = follower;
-      for (const member of companions) { Object.assign(member,glitchComfortPose(member.name)); member.trail = routeToPlayer(member,leader); leader = member; }
     }
-    glitchComfort = null;
+    companions = []; glitchComfort = null; storyUI();
   }
   function drawGlitchComfort(time) {
     const t = reducedParticleMotion.matches ? 0 : time, ralsey = glitchComfortPose('Ralsey'), susie = glitchComfortPose('Susie');
@@ -1787,13 +1826,19 @@
       actors.push({ y: pose.y, draw: () => name === 'Kris' ? drawPlayer(pose.x,pose.y,t) : name === 'Flowey' ? drawFlowey(pose.x,pose.y,t) : drawFountainFriend({ name, ...pose, worried: name === 'Ralsey', comforting: name === 'Susie' && reach > 0 },t) });
     }
     actors.sort((a,b) => a.y-b.y).forEach(actor => actor.draw());
-    if (reach > 0) {
-      const sx = susie.x+16, sy = susie.y-31;
-      const hx = sx+(ralsey.x-11-sx)*reach, hy = susie.y-18+(ralsey.y-27-(susie.y-18))*reach;
-      ctx.save(); ctx.strokeStyle = '#b37fc0'; ctx.lineWidth = 7; ctx.lineJoin = 'miter'; ctx.beginPath();
-      ctx.moveTo(sx,sy); ctx.lineTo(Math.round((sx+hx)/2),Math.round(hy+4)); ctx.lineTo(hx,hy); ctx.stroke();
-      rect(hx-6,hy-2,4,6,'#e1bf62'); rect(hx-2,hy-3,7,7,'#c995cc'); ctx.restore();
-    }
+    drawComfortingArm(susie,ralsey,reach);
+  }
+  function drawComfortingArm(susie, ralsey, reach = 1) {
+    if (reach <= 0) return;
+    const sx = susie.x+16, sy = susie.y-31;
+    const hx = sx+(ralsey.x-11-sx)*reach, hy = susie.y-18+(ralsey.y-27-(susie.y-18))*reach;
+    ctx.save(); ctx.strokeStyle = '#b37fc0'; ctx.lineWidth = 7; ctx.lineJoin = 'miter'; ctx.beginPath();
+    ctx.moveTo(sx,sy); ctx.lineTo(Math.round((sx+hx)/2),Math.round(hy+4)); ctx.lineTo(hx,hy); ctx.stroke();
+    rect(hx-6,hy-2,4,6,'#e1bf62'); rect(hx-2,hy-3,7,7,'#c995cc'); ctx.restore();
+  }
+  function drawWaitingFriends(time) {
+    for (const friend of roomWaitingFriends()) drawFountainFriend(friend,time);
+    if (roomWaitingFriends().length) drawComfortingArm(glitchWaiting.Susie,glitchWaiting.Ralsey);
   }
   function drawHoleFall(time) {
     holeFall.actors.forEach((actor, index) => {
@@ -2585,6 +2630,7 @@
       drawGlitchComfort(time);
     } else if (mode === 'play' && padJump) {
       for (const npc of roomNpcs().filter(object => objectLayer(object) === 'normal')) drawNpc(npc);
+      drawWaitingFriends(time);
       drawPadJump(time);
     } else if (mode === 'play' && holeFall) {
       drawHoleFall(time);
@@ -2595,6 +2641,7 @@
       const actors = [{ y: player.y, draw: () => drawPlayer(player.x, player.y, time) }, ...partyFriends().map(n => ({ y: n.y, draw: () => drawFountainFriend(n, time) })), ...roomNpcs().filter(object => objectLayer(object) === 'normal').map(n => ({ y: n.y * T + 24, draw: () => drawNpc(n) }))];
       for (const tile of roomTrees().filter(object => objectLayer(object) === 'normal')) { const tree = { ...tile, x: tile.x * T + 20, y: tile.y * T + 20 }; actors.push({ y: tree.y, draw: () => drawDarkTree(tree) }); }
       if (flower) actors.push({ y: flower.y, draw: () => drawFlowey(flower.x, flower.y, time) }); actors.sort((a, b) => a.y - b.y).forEach(a => a.draw());
+      if (roomWaitingFriends().length) drawComfortingArm(glitchWaiting.Susie,glitchWaiting.Ralsey);
       if (story.teamJoined && facingFountain() && !dialogue && !buster) pixelText('C / Z · I. C.', 282, 212, '#ead8ff', 11);
       if (nearbyCandyTree() && !dialogue && !buster) pixelText('C / Z · G. CANDY', player.x - 48, player.y - 68, '#ffd9ee', 10);
       const npc = nearbyNpc(); if (npc && !dialogue && !buster && story.emerging < 0 && story.discussion < 0) pixelText('C / Z', npc.x * T + 3, npc.y * T - 34, '#fff0c7', 10);
@@ -2605,7 +2652,8 @@
         drawDarkTree({ ...tile, x: tile.x * T + 20, y: tile.y * T + 20 });
         if (tool === 'tree' || tool === 'edit') { ctx.strokeStyle = '#efcb84'; ctx.lineWidth = 2; ctx.strokeRect(tile.x * T + 2, tile.y * T + 2, 36, 36); }
       }
-      for (const friend of fountainFriends()) drawFountainFriend(friend, time);
+      for (const friend of [...fountainFriends(), ...roomWaitingFriends()]) drawFountainFriend(friend, time);
+      if (roomWaitingFriends().length) drawComfortingArm(glitchWaiting.Susie,glitchWaiting.Ralsey);
       for (const npc of roomNpcs().filter(object => objectLayer(object) === 'normal')) drawNpc(npc);
       if (flower) drawFlowey(flower.x, flower.y, time); ctx.strokeStyle = '#e0d2ff24'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 0; x <= W; x++) { ctx.moveTo(x * T + .5, 0); ctx.lineTo(x * T + .5, 480); } for (let y = 0; y <= H; y++) { ctx.moveTo(0, y * T + .5); ctx.lineTo(640, y * T + .5); } ctx.stroke();
       const sx = r.spawn.x * T, sy = r.spawn.y * T; rect(sx + 5, sy + 8, 30, 22, '#c4ddb8'); pixelText('GO', sx + 12, sy + 24, '#243632', 12);
@@ -2616,7 +2664,7 @@
     if (mode === 'play' && dive?.phase === 'flowey' && dive.age > 1.15) rect(0, 0, 640, 480, 'rgba(8,9,18,' + Math.min(1, (dive.age - 1.15) / .9) + ')');
     ctx.restore();
     if (fade > 0) rect(0, 0, 640, 480, `rgba(17,20,29,${Math.min(1, fade / .32)})`);
-    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'glitchPillar' ? 'Click to place a glitch pillar; use Edit on its base to adjust its size.' : tool === 'edit' ? 'Click an object base or tile to edit its appearance and layer.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
+    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'glitchPillar' ? 'Click to place a glitch pillar; use Edit on its base to adjust its size.' : tool === 'edit' ? 'Click an object base or tile to edit its appearance and layer.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : friendsWaiting() ? 'Flowey is following · Susie and Ralsey are waiting in Glitch World' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
   }
   function frame(now) { const dt = Math.min((now - lastTime) / 1000 || 0, .035); lastTime = now; if (!document.hidden) { update(dt); render(now / 1000); } requestAnimationFrame(frame); }
   positionPlayer(current()); updateRoomUI();
