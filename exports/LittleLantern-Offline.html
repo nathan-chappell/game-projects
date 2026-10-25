@@ -1602,6 +1602,7 @@ dialog .primary {
     Object.assign(player, slot.player, { moving: false, step: 0 });
     buster = null; dive = null; companions = []; follower = { x: player.x, y: player.y, trail: [] };
     keys.clear(); lastSpikeContact = null; cameraShakeTime = 0; undoStack = []; $('undoButton').disabled = true; fade = .32; doorCooldown = .5;
+    preparePartyForRoom();
     if (collides(player.x, player.y)) positionPlayer(current(), { x: Math.floor(player.x / T), y: Math.floor(player.y / T) });
     if (story.joined) resetFollower();
     updateRoomUI(); storyUI(); save();
@@ -1609,6 +1610,27 @@ dialog .primary {
   }
   function memberInParty(name) {
     return name === 'Kris' || (name === 'Flowey' ? story.joined : story.teamJoined);
+  }
+  function isLateStoryRoom(room) {
+    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || room.scene === 'coreEntrance');
+  }
+  function partyStageForRoom(room, index) {
+    if (isLateStoryRoom(room) || (index >= 2 && !room.scene)) return 2;
+    if (room.scene === 'worlds' || room.scene === 'fountain') return 1;
+    return 0;
+  }
+  function preparePartyForRoom() {
+    // Jumping ahead in Build or loading an older save can bypass recruitment.
+    // Repair membership without changing anyone's HP, items or completed dialogue.
+    const stage = partyStageForRoom(current(), roomIndex);
+    if (stage === 2) story.teamJoined = true;
+    if (stage >= 1 || story.teamJoined) {
+      story.met = true; story.joined = true; story.reveal = 1; story.emerging = -1;
+    }
+    if (current().scene === 'fountain' && stage >= 1) story.explained = true;
+    if (isLateStoryRoom(current())) {
+      story.explained = true; story.foundFountain = true; story.fountainWorse = true; story.dived = true;
+    }
   }
   function updateInventoryMenu() {
     const carried = Object.keys(itemDefinitions).filter(id => (inventory.items[id] || 0) > 0);
@@ -1745,7 +1767,7 @@ dialog .primary {
   }
   function changeRoom(index, throughDoor = false, preferred) {
     const next = project.rooms[index]; if (!next || !findStart(next)) { toast('That room needs an open floor tile and a starting spot.'); return false; }
-    roomIndex = index; lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
+    roomIndex = index; preparePartyForRoom(); lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
   }
   function defaultRoomBackground(room = current()) {
     return ['darkGoldenHall','darkFurnace','coreEntrance'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
@@ -1779,7 +1801,7 @@ dialog .primary {
     endStroke(); clearTimeout(saveTimer); save();
     if (next === 'play' && !positionPlayer(current())) { toast('Paint an open floor tile before you explore.'); return; }
     mode = next; keys.clear(); closeDialogue(); hover = null; buster = null; story.emerging = -1; story.discussion = -1;
-    if (mode === 'play') { if (story.joined) resetFollower(); scheduleEncounter(); }
+    if (mode === 'play') { preparePartyForRoom(); if (story.joined) resetFollower(); scheduleEncounter(); }
     $('playMode').setAttribute('aria-pressed', String(mode === 'play')); $('buildMode').setAttribute('aria-pressed', String(mode === 'build'));
     $('explorePanel').hidden = mode !== 'play'; $('buildPanel').hidden = mode !== 'build'; $('playControls').hidden = mode !== 'play'; $('editorCaption').hidden = mode !== 'build';
     $('pageHeading').textContent = mode === 'build' ? 'What will your world look like?' : 'Two worlds. One strange awakening.';
@@ -2582,7 +2604,9 @@ dialog .primary {
     announce('Your party has fallen.');
   }
   function savedPartyAlive(slot) {
-    const names = ['Kris', ...(slot.story.joined ? ['Flowey'] : []), ...(slot.story.teamJoined ? ['Susie', 'Ralsey'] : [])];
+    const stage = partyStageForRoom(slot.project.rooms[slot.roomIndex], slot.roomIndex);
+    const fullParty = slot.story.teamJoined || stage === 2;
+    const names = ['Kris', ...(slot.story.joined || fullParty || stage >= 1 ? ['Flowey'] : []), ...(fullParty ? ['Susie', 'Ralsey'] : [])];
     return names.some(name => (slot.partyHP?.[name] ?? (name === 'Kris' ? slot.hp ?? maxHP : maxHP)) > 0);
   }
   $('gameOverDialog').addEventListener('cancel', e => e.preventDefault());
