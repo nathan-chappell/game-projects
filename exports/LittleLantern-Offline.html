@@ -1495,7 +1495,8 @@ dialog .primary {
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
   let placementLayer = 'normal', layerApplyMode = false;
-  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false, coreGlitchNoticed: false };
+  let glitchComfort = null;
+  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false, coreGlitchNoticed: false, glitchArrivalSeen: false };
   const maxHP = 100;
   const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
   const freshPartyHP = () => Object.fromEntries(partyNames.map(name => [name, maxHP]));
@@ -1625,7 +1626,7 @@ dialog .primary {
       Number.isInteger(slot.roomIndex) && slot.roomIndex >= 0 && slot.roomIndex < slot.project.rooms.length &&
       slot.player && Number.isFinite(slot.player.x) && slot.player.x >= 0 && slot.player.x < 640 &&
       Number.isFinite(slot.player.y) && slot.player.y >= 0 && slot.player.y < 480 &&
-      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.coreGlitchNoticed === undefined || typeof slot.story.coreGlitchNoticed === 'boolean') && (slot.story.coreFroggitWarned === undefined || typeof slot.story.coreFroggitWarned === 'boolean') && (slot.story.coreExplained === undefined || typeof slot.story.coreExplained === 'boolean') && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
+      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.glitchArrivalSeen === undefined || typeof slot.story.glitchArrivalSeen === 'boolean') && (slot.story.coreGlitchNoticed === undefined || typeof slot.story.coreGlitchNoticed === 'boolean') && (slot.story.coreFroggitWarned === undefined || typeof slot.story.coreFroggitWarned === 'boolean') && (slot.story.coreExplained === undefined || typeof slot.story.coreExplained === 'boolean') && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
       progressFlags.every(key => typeof slot.story[key] === 'boolean') &&
       (!slot.story.teamJoined || slot.story.joined);
   }
@@ -1664,7 +1665,7 @@ dialog .primary {
             // Keep a map fallback for browsers without a newer edited build.
             const snapshot = { version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
               player: { x: player.x, y: player.y, facing: player.facing },
-              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained, coreFroggitWarned: story.coreFroggitWarned, coreGlitchNoticed: story.coreGlitchNoticed } };
+              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained, coreFroggitWarned: story.coreFroggitWarned, coreGlitchNoticed: story.coreGlitchNoticed, glitchArrivalSeen: story.glitchArrivalSeen } };
             const latest = readProgressSlots(); latest[index] = snapshot;
             localStorage.setItem(progressKey, JSON.stringify(latest));
             partyHP = clone(snapshot.partyHP);
@@ -1693,7 +1694,7 @@ dialog .primary {
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
-    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, coreExplained: slot.story.coreExplained ?? false, coreFroggitWarned: slot.story.coreFroggitWarned ?? false, coreGlitchNoticed: slot.story.coreGlitchNoticed ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
+    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, coreExplained: slot.story.coreExplained ?? false, coreFroggitWarned: slot.story.coreFroggitWarned ?? false, coreGlitchNoticed: slot.story.coreGlitchNoticed ?? false, glitchArrivalSeen: slot.story.glitchArrivalSeen ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
     Object.assign(player, slot.player, { moving: false, step: 0 });
     buster = null; dive = null; companions = []; follower = { x: player.x, y: player.y, trail: [] };
     keys.clear(); lastSpikeContact = null; cameraShakeTime = 0; undoStack = []; $('undoButton').disabled = true; fade = .32; doorCooldown = .5;
@@ -2491,7 +2492,7 @@ dialog .primary {
     companions = friends.map(n => { const member = { ...n, trail: routeToPlayer(n, leader) }; leader = member; return member; });
     storyUI(); toast('Ralsey and Susie joined your party!'); announce('Ralsey and Susie now follow Kris and Flowey.');
   }
-  function closeDialogue() { dialogue = null; $('dialogue').hidden = true; $('dialogueText').textContent = ''; keys.clear(); }
+  function closeDialogue() { if (dialogue?.kind === 'glitchArrival') finishGlitchComfort(); dialogue = null; $('dialogue').hidden = true; $('dialogueText').textContent = ''; keys.clear(); }
   // A short path connects Flowey to Kris initially. After that he follows the
   // actual movement trail, so he takes the same turns around the castle walls.
   function routeToPlayer(start, target = player) {
@@ -2549,7 +2550,7 @@ dialog .primary {
   }
   $('inspectButton').onclick = () => { inspectObject(); canvas.focus({ preventScroll: true }); };
   $('talkButton').onclick = () => { talk(); canvas.focus({ preventScroll: true }); };
-  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; story.coreFroggitWarned = false; story.coreGlitchNoticed = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
+  $('restartButton').onclick = () => { glitchComfort = null; padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; story.coreFroggitWarned = false; story.coreGlitchNoticed = false; story.glitchArrivalSeen = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
   $('helpButton').onclick = () => { keys.clear(); $('helpDialog').showModal(); }; $('closeHelp').onclick = () => { $('helpDialog').close(); canvas.focus({ preventScroll: true }); };
   $('helpDialog').addEventListener('click', e => { if (e.target === $('helpDialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close(); } });
   $('downloadButton').onclick = () => {
@@ -2749,6 +2750,68 @@ dialog .primary {
       openDialogue(['[Flowey] * Well now we need a ladder... lets continue.'], 'holeLanding');
     }
   }
+  function openGlitchArrival() {
+    if (glitchComfort || story.glitchArrivalSeen) return;
+    const starts = { Kris: { x: player.x, y: player.y }, Flowey: { x: follower.x, y: follower.y },
+      ...Object.fromEntries(companions.map(member => [member.name, { x: member.x, y: member.y }])) };
+    const used = new Set([Math.floor(player.x/T)+','+Math.floor(player.y/T)]);
+    const pickSpot = (x, y, fallback) => {
+      const spots = [];
+      for (let ty=0;ty<H;ty++) for (let tx=0;tx<W;tx++) if (cellOpen(current(),tx,ty,false) && !used.has(tx+','+ty)) spots.push({ x: tx*T+20, y: ty*T+20, tx, ty });
+      spots.sort((a,b) => Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y));
+      const spot = spots[0]; if (!spot) return fallback;
+      used.add(spot.tx+','+spot.ty); return { x: spot.x, y: spot.y };
+    };
+    const ralsey = pickSpot(player.x-80,player.y,starts.Ralsey || player);
+    const susie = pickSpot(ralsey.x-40,ralsey.y,starts.Susie || ralsey);
+    const flowey = pickSpot(player.x+40,player.y,starts.Flowey);
+    glitchComfort = { roomIndex, age: 0, reach: 0, aside: 0, starts, targets: { Kris: starts.Kris, Ralsey: ralsey, Susie: susie, Flowey: flowey } };
+    openDialogue([
+      "[Ralsey] * Susie... I'm worried we're not going to make it.",
+      "[Susie] * Hey, don't say that. We've made it this far together.",
+      "[Susie] * We'll find a way out. I've got you, okay?",
+      "[Flowey] * Kris... let's continue without them."
+    ], 'glitchArrival');
+  }
+  function updateGlitchComfort(dt) {
+    glitchComfort.age += dt;
+    if (dialogue?.index >= 1) glitchComfort.reach = Math.min(1,glitchComfort.reach+dt/0.65);
+    if (dialogue?.index >= 3) glitchComfort.aside = Math.min(1,glitchComfort.aside+dt/0.7);
+  }
+  function glitchComfortPose(name) {
+    const start = glitchComfort.starts[name] || glitchComfort.targets[name], target = glitchComfort.targets[name];
+    const progress = name === 'Flowey' ? glitchComfort.aside : Math.min(1,glitchComfort.age/0.65);
+    const t = reducedParticleMotion.matches && progress > 0 ? 1 : progress*progress*(3-2*progress);
+    return { x: start.x+(target.x-start.x)*t, y: start.y+(target.y-start.y)*t };
+  }
+  function finishGlitchComfort() {
+    if (!glitchComfort) return;
+    story.glitchArrivalSeen = true;
+    if (glitchComfort.roomIndex === roomIndex && mode === 'play') {
+      Object.assign(follower,glitchComfortPose('Flowey')); follower.trail = routeToPlayer(follower);
+      let leader = follower;
+      for (const member of companions) { Object.assign(member,glitchComfortPose(member.name)); member.trail = routeToPlayer(member,leader); leader = member; }
+    }
+    glitchComfort = null;
+  }
+  function drawGlitchComfort(time) {
+    const t = reducedParticleMotion.matches ? 0 : time, ralsey = glitchComfortPose('Ralsey'), susie = glitchComfortPose('Susie');
+    const reach = reducedParticleMotion.matches && glitchComfort.reach > 0 ? 1 : glitchComfort.reach;
+    const actors = roomNpcs().filter(object => objectLayer(object) === 'normal').map(npc => ({ y: npc.y*T+24, draw: () => drawNpc(npc) }));
+    for (const tree of roomTrees().filter(object => objectLayer(object) === 'normal')) actors.push({ y: tree.y*T+20, draw: () => drawDarkTree({ ...tree, x: tree.x*T+20, y: tree.y*T+20 }) });
+    for (const name of ['Kris','Flowey','Ralsey','Susie']) {
+      const pose = glitchComfortPose(name);
+      actors.push({ y: pose.y, draw: () => name === 'Kris' ? drawPlayer(pose.x,pose.y,t) : name === 'Flowey' ? drawFlowey(pose.x,pose.y,t) : drawFountainFriend({ name, ...pose, worried: name === 'Ralsey', comforting: name === 'Susie' && reach > 0 },t) });
+    }
+    actors.sort((a,b) => a.y-b.y).forEach(actor => actor.draw());
+    if (reach > 0) {
+      const sx = susie.x+16, sy = susie.y-31;
+      const hx = sx+(ralsey.x-11-sx)*reach, hy = susie.y-18+(ralsey.y-27-(susie.y-18))*reach;
+      ctx.save(); ctx.strokeStyle = '#b37fc0'; ctx.lineWidth = 7; ctx.lineJoin = 'miter'; ctx.beginPath();
+      ctx.moveTo(sx,sy); ctx.lineTo(Math.round((sx+hx)/2),Math.round(hy+4)); ctx.lineTo(hx,hy); ctx.stroke();
+      rect(hx-6,hy-2,4,6,'#e1bf62'); rect(hx-2,hy-3,7,7,'#c995cc'); ctx.restore();
+    }
+  }
   function drawHoleFall(time) {
     holeFall.actors.forEach((actor, index) => {
       const t = Math.max(0, Math.min(1, (holeFall.age - index * .16) / .9));
@@ -2883,7 +2946,9 @@ dialog .primary {
     }
     if (story.emerging >= 0) { story.emerging -= dt; story.reveal = Math.min(1, story.reveal + dt * 2); player.moving = false; if (story.emerging <= 0) { story.emerging = -1; story.reveal = 1; openDialogue(project.rooms[1].dialogue, 'intro'); } return; }
     if (story.discussion >= 0) { story.discussion -= dt; player.moving = false; if (story.discussion <= 0) { story.discussion = -1; if (current().scene === 'fountain') openFountainScene(); else openDialogue(current().dialogue, 'worlds'); } return; }
+    if (glitchComfort) updateGlitchComfort(dt);
     if (dialogue) { dialogue.shown += dt * 45; renderDialogue(); player.moving = false; return; }
+    if (current().scene === 'glitchWorld' && story.teamJoined && !story.glitchArrivalSeen) { openGlitchArrival(); return; }
     if (current().scene === 'coreEntrance' && story.teamJoined && !story.coreGlitchNoticed) { openCoreGlitchConversation(); return; }
     if (current().scene === 'darkFurnace' && story.teamJoined && story.joined && !story.coreExplained) { openCoreConversation(); return; }
     if (current().scene === 'darkFurnace' && !story.coreFroggitWarned) {
@@ -3389,12 +3454,13 @@ dialog .primary {
       rect(x - 10, y - 44, 20, 17, '#f1eade'); rect(x - 14, y - 39, 5, 11, '#e4e3d9'); rect(x + 9, y - 39, 5, 11, '#e4e3d9');
       rect(x - 8, y - 38, 7, 6, '#274c44'); rect(x + 2, y - 38, 7, 6, '#274c44'); rect(x - 1, y - 36, 3, 2, '#274c44');
       rect(x - 6, y - 36, 3, 2, '#d7e9d4'); rect(x + 4, y - 36, 3, 2, '#d7e9d4'); rect(x - 2, y - 29, 5, 2, '#6d696d');
+      if (n.worried) { rect(x-3,y-31,6,2,'#6d696d'); rect(x-5,y-29,2,2,'#6d696d'); rect(x+3,y-29,2,2,'#6d696d'); rect(x-7,y-41,5,1,'#6d696d'); rect(x+3,y-41,5,1,'#6d696d'); }
       rect(x - 12, y - 28, 23, 4, '#e486b5'); rect(x - 8, y - 25, 5, 14, '#d571a7');
       rect(x - 16, y - 47, 32, 5, '#6bce99'); rect(x - 10, y - 53, 21, 7, '#59b583'); rect(x - 5, y - 60, 12, 8, '#59b583'); rect(x - 1, y - 65, 6, 6, '#77d1a0');
     } else {
       rect(x - 11, y - 13, 9, 15, '#272239'); rect(x + 3, y - 13, 9, 15, '#272239'); rect(x - 14, y - 2, 13, 5, '#43364f'); rect(x + 3, y - 2, 14, 5, '#43364f');
       rect(x - 14, y - 36, 29, 25, '#282335'); rect(x - 14, y - 35, 7, 23, '#8c438d'); rect(x + 8, y - 35, 7, 23, '#8c438d'); rect(x - 9, y - 16, 21, 4, '#dabd6d');
-      rect(x - 20, y - 34, 8, 18, '#b37fc0'); rect(x + 14, y - 34, 8, 18, '#b37fc0'); rect(x - 20, y - 20, 8, 5, '#e1bf62'); rect(x + 14, y - 20, 8, 5, '#e1bf62');
+      rect(x - 20, y - 34, 8, 18, '#b37fc0'); if (!n.comforting) rect(x + 14, y - 34, 8, 18, '#b37fc0'); rect(x - 20, y - 20, 8, 5, '#e1bf62'); if (!n.comforting) rect(x + 14, y - 20, 8, 5, '#e1bf62');
       rect(x - 11, y - 53, 24, 21, '#b882c5'); rect(x + 8, y - 42, 10, 8, '#c995cc'); rect(x + 9, y - 37, 7, 2, '#eee2d6');
       rect(x - 15, y - 58, 32, 12, '#67377b'); rect(x - 18, y - 50, 10, 21, '#67377b'); rect(x + 10, y - 51, 9, 18, '#67377b'); rect(x - 9, y - 48, 19, 7, '#67377b');
       rect(x - 12, y - 58, 21, 3, '#8b4c94');
@@ -3532,7 +3598,9 @@ dialog .primary {
     for (let y = 0; y < H; y++)for (let x = 0; x < W; x++) if (![1,10].includes(r.map[y][x])) drawTile(r.map[y][x], x*T, y*T, r.theme);
     drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawLayerObjects('back', time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawGlitchParticles(time, false); drawSpikes(); drawCoreCollapse(); drawJumpPads(); drawSavePoint(time);
     const flower = floweyPosition();
-    if (mode === 'play' && padJump) {
+    if (mode === 'play' && glitchComfort) {
+      drawGlitchComfort(time);
+    } else if (mode === 'play' && padJump) {
       for (const npc of roomNpcs().filter(object => objectLayer(object) === 'normal')) drawNpc(npc);
       drawPadJump(time);
     } else if (mode === 'play' && holeFall) {
