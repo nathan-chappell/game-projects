@@ -1,0 +1,3 @@
+Built-in image_gen tool. Edit mode; transparent background.
+
+Use case: background-extraction. Edit target: the attached pixel-art Noelle character. Make a faithful transparent cutout for a game sprite. Remove only the gray-and-white checkerboard backdrop and the isolated red mark in the top-right corner. Preserve the actual character exactly: stepped black pixel outline, pale yellow long hair, pink face and ears/antlers, white robe with cyan trim, dark boots, same pose and proportions. Keep white pixels INSIDE the robe opaque. No redesign, no extra objects, no text, no shadows, no antialiasing or smoothing. One full-body character centered, tightly framed with a small transparent margin. Actual alpha transparency.

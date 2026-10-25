@@ -61,6 +61,7 @@
                 </div>
                 <p class="editor-caption" id="editorCaption" hidden>Pick a tile, then paint the room. Use “Place Flowey”
                     or “Set start” to move your characters.</p>
+                <div id="bossControls" hidden class="hint-card"><p>She stands silently.</p><button id="leaveBossButton">Back to walkway</button></div>
             </div>
             <aside>
                 <section class="panel" id="explorePanel">
@@ -187,6 +188,11 @@
             edits. Download a build backup to keep another copy.</p><button class="primary"
             id="closeHelp">Let's begin →</button>
     </dialog>
+    <dialog id="bossChoiceDialog" aria-labelledby="bossChoiceTitle">
+<h2 id="bossChoiceTitle">Proceed to the boss fight?</h2>
+<p>Kris and Flowey will continue ahead. Susie and Ralsey will stay behind.</p>
+<div class="tool-row"><button id="proceedBossButton" class="primary">Proceed</button><button id="declineBossButton" autofocus>Not yet</button></div>
+</dialog>
     <dialog id="goldenDoorChoiceDialog" aria-labelledby="goldenDoorChoiceTitle">
 <h2 id="goldenDoorChoiceTitle">Enter the golden doors?</h2>
 <p>Do you want to go inside?</p>
