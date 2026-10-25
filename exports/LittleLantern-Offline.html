@@ -1311,7 +1311,9 @@ dialog .primary {
     return p;
   }
   function addFurnaceChamber(p) {
-    if (p.rooms.some(room => room.scene === 'darkFurnace') || p.rooms.length >= 20) return p;
+    const existing = p.rooms.find(room => room.scene === 'darkFurnace');
+    if (existing) { addCoreFroggit(existing); return p; }
+    if (p.rooms.length >= 20) return p;
     const previous = p.rooms.findIndex(room => room.scene === 'darkGoldenHall'); if (previous < 0) return p;
     const map = Array.from({ length: H }, () => Array(W).fill(1));
     for (let y = 7; y <= 9; y++) for (let x = 3; x <= 12; x++) map[y][x] = 0;
@@ -1319,7 +1321,24 @@ dialog .primary {
     p.rooms.push({ name: 'The Furnace Chamber', scene: 'darkFurnace', theme: 'dark', map,
       spawn: { x: 5, y: 8 }, flowey: { x: 4, y: 8 }, npcs: [], dialogue: [], target: previous,
       doorLinks: { '3,8': previous } });
+    addCoreFroggit(p.rooms[p.rooms.length - 1]);
     return p;
+  }
+  function addCoreFroggit(room) {
+    // Migrate older adventures once, keeping later Build edits and deletions.
+    if (room.coreFroggitAdded) return;
+    room.coreFroggitAdded = true;
+    room.npcs ??= [];
+    if (room.npcs.length >= 24 || room.npcs.some(npc => npc.id === 'core-warning-froggit')) return;
+    for (const y of [8, 9, 7]) for (const x of [10, 11, 12, 9, 8]) {
+      if (tiles[room.map[y][x]].solid || room.map[y][x] === 6 ||
+          room.npcs.some(npc => npc.x === x && npc.y === y) ||
+          ['trees', 'savePoints', 'spikes', 'jumpPads'].some(key => room[key]?.some(point => point.x === x && point.y === y)) ||
+          [room.spawn, room.flowey].some(point => point.x === x && point.y === y)) continue;
+      room.npcs.push({ id: 'core-warning-froggit', sprite: 'frog', name: 'Froggit', x, y,
+        speech: ['Hey! Something weird is happening in the Core!!!'] });
+      return;
+    }
   }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
@@ -1328,7 +1347,7 @@ dialog .primary {
   project = addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project)))))))))));
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
-  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false };
+  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false };
   const maxHP = 100;
   const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
   const freshPartyHP = () => Object.fromEntries(partyNames.map(name => [name, maxHP]));
@@ -1408,7 +1427,7 @@ dialog .primary {
       Number.isInteger(slot.roomIndex) && slot.roomIndex >= 0 && slot.roomIndex < slot.project.rooms.length &&
       slot.player && Number.isFinite(slot.player.x) && slot.player.x >= 0 && slot.player.x < 640 &&
       Number.isFinite(slot.player.y) && slot.player.y >= 0 && slot.player.y < 480 &&
-      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.coreExplained === undefined || typeof slot.story.coreExplained === 'boolean') && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
+      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.coreFroggitWarned === undefined || typeof slot.story.coreFroggitWarned === 'boolean') && (slot.story.coreExplained === undefined || typeof slot.story.coreExplained === 'boolean') && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
       progressFlags.every(key => typeof slot.story[key] === 'boolean') &&
       (!slot.story.teamJoined || slot.story.joined);
   }
@@ -1447,7 +1466,7 @@ dialog .primary {
             // Capture the map too: later editor changes cannot invalidate this adventure.
             const snapshot = { version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
               player: { x: player.x, y: player.y, facing: player.facing },
-              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained } };
+              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained, coreFroggitWarned: story.coreFroggitWarned } };
             const latest = readProgressSlots(); latest[index] = snapshot;
             localStorage.setItem(progressKey, JSON.stringify(latest));
             partyHP = clone(snapshot.partyHP);
@@ -1468,7 +1487,7 @@ dialog .primary {
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
-    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, coreExplained: slot.story.coreExplained ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
+    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, coreExplained: slot.story.coreExplained ?? false, coreFroggitWarned: slot.story.coreFroggitWarned ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
     Object.assign(player, slot.player, { moving: false, step: 0 });
     buster = null; dive = null; companions = []; follower = { x: player.x, y: player.y, trail: [] };
     keys.clear(); lastSpikeContact = null; cameraShakeTime = 0; undoStack = []; $('undoButton').disabled = true; fade = .32; doorCooldown = .5;
@@ -1929,7 +1948,7 @@ dialog .primary {
     }
     return null;
   }
-  function speakToNpc(npc) { openDialogue(npc.speech, 'npc', npc.name); }
+  function speakToNpc(npc) { openDialogue(npc.speech, 'npc', npc.name); dialogue.npcId = npc.id; }
   function nearbyObject() {
     const direction = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[player.facing];
     const descriptions = { 1: 'a stone wall', 3: 'some flowers', 4: current().scene === 'fountain' ? 'a Dark Fountain' : 'a pool of water', 6: 'a doorway', 7: 'a table', 8: 'a pillar', 9: 'some broken stones' };
@@ -2117,7 +2136,8 @@ dialog .primary {
     if (dialogue.shown < text.length) dialogue.shown = text.length;
     else if (dialogue.index < dialogue.lines.length - 1) { dialogue.index++; dialogue.shown = 0; announcePage(); }
     else {
-      const kind = dialogue.kind; closeDialogue();
+      const kind = dialogue.kind, npcId = dialogue.npcId; closeDialogue();
+      if (npcId === 'core-warning-froggit') story.coreFroggitWarned = true;
       if (kind === 'coreIntro') { story.coreExplained = true; storyUI(); }
       if (kind === 'goldenDoors') { story.goldenDoorExplained = true; storyUI(); openGoldenDoorChoice(); }
       if (kind === 'fountainDive') startFountainDive();
@@ -2218,7 +2238,7 @@ dialog .primary {
   }
   $('inspectButton').onclick = () => { inspectObject(); canvas.focus({ preventScroll: true }); };
   $('talkButton').onclick = () => { talk(); canvas.focus({ preventScroll: true }); };
-  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
+  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; story.coreFroggitWarned = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
   $('helpButton').onclick = () => { keys.clear(); $('helpDialog').showModal(); }; $('closeHelp').onclick = () => { $('helpDialog').close(); canvas.focus({ preventScroll: true }); };
   $('helpDialog').addEventListener('click', e => { if (e.target === $('helpDialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close(); } });
   $('downloadButton').onclick = () => {
@@ -2480,6 +2500,12 @@ dialog .primary {
     if (story.discussion >= 0) { story.discussion -= dt; player.moving = false; if (story.discussion <= 0) { story.discussion = -1; if (current().scene === 'fountain') openFountainScene(); else openDialogue(current().dialogue, 'worlds'); } return; }
     if (dialogue) { dialogue.shown += dt * 45; renderDialogue(); player.moving = false; return; }
     if (current().scene === 'darkFurnace' && story.teamJoined && story.joined && !story.coreExplained) { openCoreConversation(); return; }
+    if (current().scene === 'darkFurnace' && !story.coreFroggitWarned) {
+      const froggit = roomNpcs().find(npc => npc.id === 'core-warning-froggit');
+      if (froggit && Math.hypot(player.x - (froggit.x * T + 20), player.y - (froggit.y * T + 20)) < 80) {
+        speakToNpc(froggit); return;
+      }
+    }
     if (nearGoldenDoor() && story.teamJoined && story.joined && !story.goldenDoorExplained) { openGoldenDoorConversation(); return; }
     let dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0), dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
     player.moving = !!(dx || dy); if (player.moving) { if (dx) player.facing = dx > 0 ? 'right' : 'left'; else player.facing = dy > 0 ? 'down' : 'up'; const len = Math.hypot(dx, dy); dx = dx / len * 135 * dt; dy = dy / len * 135 * dt; if (!collides(player.x + dx, player.y)) player.x += dx; if (!collides(player.x, player.y + dy)) player.y += dy; player.step += dt * 10; }
