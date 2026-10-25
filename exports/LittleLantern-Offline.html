@@ -1369,11 +1369,9 @@ dialog .primary {
       const map = Array.from({ length: H }, () => Array(W).fill(1));
       for (let y = 2; y <= 10; y++) for (let x = 6; x <= 9; x++) map[y][x] = 0;
       for (let y = 8; y <= 10; y++) for (let x = 3; x <= 12; x++) map[y][x] = 0;
-      map[11][8] = 6;
       inside = p.rooms.length;
       p.rooms.push({ name: 'Inside the CORE', scene: 'coreEntrance', theme: 'dark', map,
-        spawn: { x: 8, y: 9 }, flowey: { x: 7, y: 9 }, npcs: [], dialogue: [], target: outside,
-        doorLinks: { '8,11': outside } });
+        spawn: { x: 8, y: 9 }, flowey: { x: 7, y: 9 }, npcs: [], dialogue: [], target: -1, doorLinks: {} });
     }
     const room = p.rooms[outside];
     if (room.coreBounceAdded) return p;
@@ -1388,8 +1386,44 @@ dialog .primary {
     }
     return p;
   }
+  function addLowerCore(p) {
+    const entry = p.rooms.find(room => room.scene === 'coreEntrance');
+    if (!entry) return p;
+    if (!p.rooms.some(room => room.scene === 'coreLower')) {
+      if (p.rooms.length >= 20) return p;
+      const map = Array.from({ length: H }, () => Array(W).fill(1));
+      for (let y = 2; y <= 10; y++) for (let x = 6; x <= 9; x++) map[y][x] = 0;
+      for (let y = 8; y <= 10; y++) for (let x = 3; x <= 12; x++) map[y][x] = 0;
+      p.rooms.push({ name: 'CORE — Lower Chamber', scene: 'coreLower', theme: 'dark', map,
+        spawn: { x: 8, y: 9 }, flowey: { x: 7, y: 9 }, npcs: [], dialogue: [],
+        savePoints: [{ x: 4, y: 8 }], target: -1, doorLinks: {} });
+    }
+    if (entry.coreFloorFallVersion === 1) return p;
+    const outside = p.rooms.findIndex(room => room.scene === 'darkFurnace');
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const key = x + ',' + y;
+      if (entry.map[y][x] === 6 && (entry.doorLinks?.[key] ?? entry.target) === outside) {
+        entry.map[y][x] = 1;
+        if (entry.tileColors) delete entry.tileColors[key];
+      }
+    }
+    entry.doorLinks = Object.fromEntries(Object.entries(entry.doorLinks || {}).filter(([,target]) => target !== outside));
+    if (entry.target === outside) entry.target = -1;
+    // Existing Build placements (including an explicitly empty list) take priority.
+    if (entry.spikes === undefined) {
+      entry.spikes = [];
+      for (const [x,y] of [[8,5],[7,5],[8,4],[7,4]]) {
+        if (tiles[entry.map[y][x]].solid || entry.map[y][x] === 6 ||
+            ['npcs','trees','savePoints','jumpPads'].some(key => entry[key]?.some(point => point.x === x && point.y === y)) ||
+            Math.hypot(entry.spawn.x-x,entry.spawn.y-y) < 2.5) continue;
+        entry.spikes.push({ x, y }); break;
+      }
+    }
+    entry.coreFloorFallVersion = 1;
+    return p;
+  }
   function upgradeProject(p) {
-    return addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p))))))))))));
+    return addLowerCore(addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p)))))))))))));
   }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
@@ -1612,7 +1646,7 @@ dialog .primary {
     return name === 'Kris' || (name === 'Flowey' ? story.joined : story.teamJoined);
   }
   function isLateStoryRoom(room) {
-    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || room.scene === 'coreEntrance');
+    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || ['coreEntrance','coreLower'].includes(room.scene));
   }
   function partyStageForRoom(room, index) {
     if (isLateStoryRoom(room) || (index >= 2 && !room.scene)) return 2;
@@ -1739,7 +1773,8 @@ dialog .primary {
     chapterUI();
   }
   function chapterUI() {
-    if (current().scene === 'coreEntrance') { $('taskTitle').textContent='Inside the CORE';$('taskDescription').textContent='Explore the metal walkway and humming machinery. The doorway at the bottom leads back outside.';$('storySummary').textContent='The bounce pad carried everyone into the CORE. Warning lights flicker along the pipes.';return; }
+    if (current().scene === 'coreLower') { $('taskTitle').textContent='Below the CORE';$('taskDescription').textContent='Explore the lower chamber. The golden star lets you save your progress.';$('storySummary').textContent='The floor gave way beneath the party. The entrance above is out of reach.';return; }
+    if (current().scene === 'coreEntrance') { $('taskTitle').textContent='Inside the CORE';$('taskDescription').textContent='Explore the metal walkway. The floor near the spike looks unstable.';$('storySummary').textContent='The bounce pad carried everyone into the CORE. Warning lights flicker along the pipes.';return; }
     if (current().scene === 'darkFurnace') { $('taskTitle').textContent=story.coreExplained ? 'Enter the CORE' : 'Explore the furnace chamber';$('taskDescription').textContent='Pass Froggit and step onto the glowing bounce pad on the right to launch into the CORE. Head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
     if (current().scene === 'darkGoldenHall') { $('taskTitle').textContent='Approach the golden door';$('taskDescription').textContent='Follow the outlined walkway toward the towering golden door.';$('storySummary').textContent='The purple gives way to black. Golden vines curl around a towering, silent doorway.';return; }
     if (current().scene === 'darkWindingPassage') { $('taskTitle').textContent='Follow the winding path';$('taskDescription').textContent='Go up, cross the bridge above the gap, then follow the right-hand passage down.';$('storySummary').textContent='The path folds around a purple chasm. A soft glow marks the way ahead.';return; }
@@ -1770,7 +1805,7 @@ dialog .primary {
     roomIndex = index; preparePartyForRoom(); lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
   }
   function defaultRoomBackground(room = current()) {
-    return ['darkGoldenHall','darkFurnace','coreEntrance'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
+    return ['darkGoldenHall','darkFurnace','coreEntrance','coreLower'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
   }
   function roomBackground(room = current()) { return room.backgroundColor || defaultRoomBackground(room); }
   $('roomBackgroundColor').onchange = e => {
@@ -2566,6 +2601,14 @@ dialog .primary {
   function updateHoleFall(dt) {
     holeFall.age += dt; player.moving = false;
     if (holeFall.age >= 1.8) {
+      if (holeFall.kind === 'core') {
+        const destination = holeFall.targetRoom; holeFall = null;
+        if (changeRoom(destination, true)) {
+          canvas.focus({ preventScroll: true });
+          toast('Everyone landed in the lower CORE chamber.'); announce('The whole party landed below the CORE.');
+        }
+        return;
+      }
       holeFall = null; positionPlayer(current(), { x: 11, y: 9 });
       if (story.joined) resetFollower(); storyUI(); fade = .32; canvas.focus({ preventScroll: true });
       openDialogue(['[Flowey] * Well now we need a ladder... lets continue.'], 'holeLanding');
@@ -2575,6 +2618,17 @@ dialog .primary {
     holeFall.actors.forEach((actor, index) => {
       const t = Math.max(0, Math.min(1, (holeFall.age - index * .16) / .9));
       if (t >= 1) return;
+      if (holeFall.kind === 'core') {
+        const converge = Math.min(1,t*3), sink = reducedParticleMotion.matches ? 0 : t*t*100;
+        ctx.save();
+        if (t > .35) { ctx.beginPath(); ctx.rect(0,0,640,holeFall.y+18); ctx.clip(); }
+        ctx.translate(actor.x+(holeFall.x-actor.x)*converge,actor.y+(holeFall.y-actor.y)*converge+sink);
+        ctx.globalAlpha = 1-Math.max(0,(t-.5)*2);
+        if (actor.name === 'Kris') drawPlayer(0,0,time);
+        else if (actor.name === 'Flowey') drawFlowey(0,0,time);
+        else drawFountainFriend({ name: actor.name, x: 0, y: 0 },time);
+        ctx.restore(); return;
+      }
       const scale = 1 - Math.max(0, (t - .6) / .4) * .98;
       const arc = reducedParticleMotion.matches ? 0 : Math.sin(t * Math.PI) * 58;
       const x = actor.x + (420 - actor.x) * t;
@@ -2585,6 +2639,34 @@ dialog .primary {
       else drawFountainFriend({ name: actor.name, x: 0, y: 0 }, time);
       ctx.restore();
     });
+  }
+  function tryCoreSpikeFall() {
+    if (current().scene !== 'coreEntrance') return false;
+    const spike = roomSpikes().find(point => Math.hypot(player.x-(point.x*T+20),player.y-(point.y*T+20)) < 58);
+    if (!spike) return false;
+    const targetRoom = project.rooms.findIndex(room => room.scene === 'coreLower');
+    if (targetRoom < 0 || !findStart(project.rooms[targetRoom])) return false;
+    holeFall = { kind: 'core', age: 0, targetRoom, x: player.x, y: player.y,
+      actors: [{ name: 'Kris', x: player.x, y: player.y },
+        ...(story.joined ? [{ name: 'Flowey', x: follower.x, y: follower.y }] : []),
+        ...(story.teamJoined ? companions.map(member => ({ name: member.name, x: member.x, y: member.y })) : [])] };
+    closeDialogue(); player.moving = false; cameraShakeTime = .22;
+    announce('The floor near the spike breaks! The whole party falls.'); return true;
+  }
+  function drawCoreCollapse() {
+    if (holeFall?.kind !== 'core') return;
+    const { x,y,age } = holeFall, radius = reducedParticleMotion.matches ? 38 : 14+Math.min(1,age/.35)*24;
+    ctx.save();ctx.strokeStyle='#91b4c4';ctx.lineWidth=2;ctx.fillStyle='#05060c';
+    ctx.beginPath();
+    for (let i=0;i<12;i++) {
+      const angle=i*Math.PI/6, r=radius+(i%2 ? 4 : -3);
+      const px=x+Math.cos(angle)*r, py=y+Math.sin(angle)*r*.55;
+      if (!i) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#202638';ctx.beginPath();
+    for(const direction of [-1,1]) {ctx.moveTo(x+direction*radius,y);ctx.lineTo(x+direction*(radius+14),y-8);ctx.lineTo(x+direction*(radius+27),y-3);}
+    ctx.stroke();ctx.restore();
   }
   function drawPassageHole() {
     if (current().scene !== 'darkGlowPassage' || current().hideHole) return;
@@ -2675,6 +2757,7 @@ dialog .primary {
     player.moving = !!(dx || dy); if (player.moving) { if (dx) player.facing = dx > 0 ? 'right' : 'left'; else player.facing = dy > 0 ? 'down' : 'up'; const len = Math.hypot(dx, dy); dx = dx / len * 135 * dt; dy = dy / len * 135 * dt; if (!collides(player.x + dx, player.y)) player.x += dx; if (!collides(player.x, player.y + dy)) player.y += dy; player.step += dt * 10; }
     updateFollower(dt);
     const tx = Math.floor(player.x / T), ty = Math.floor(player.y / T);
+    if (tryCoreSpikeFall()) return;
     if (tryJumpPad(tx, ty)) return;
     if (nearHole(58)) { offerHoleJump(); return; }
     updateSpikeContact(tx, ty);
@@ -2687,7 +2770,7 @@ dialog .primary {
     if (id === 10) { rect(x,y,T,T,roomBackground()); return; }
     const color = current().tileColors?.[x / T + ',' + y / T];
     if (color) { rect(x, y, T, T, color); return; }
-    if (current().scene === 'coreEntrance' && [0,1,6].includes(id)) {
+    if (['coreEntrance','coreLower'].includes(current().scene) && [0,1,6].includes(id)) {
       if (id === 1) { rect(x,y,T,T,roomBackground()); return; }
       rect(x,y,T,T,'#323549'); rect(x+2,y+2,36,36,'#5a607a');
       rect(x+3,y+3,34,2,'#8991a8'); rect(x+3,y+36,34,2,'#252939');
@@ -2746,7 +2829,7 @@ dialog .primary {
     front: i % 4 === 0
   }));
   function drawDarkWorldParticles(time, foreground) {
-    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance'].includes(current().scene)) return;
+    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance', 'coreLower'].includes(current().scene)) return;
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save();
     for (const particle of darkWorldParticles) {
@@ -2897,7 +2980,8 @@ dialog .primary {
     ctx.restore();
   }
   function drawCoreEntrance(time) {
-    if (current().scene !== 'coreEntrance') return;
+    if (!['coreEntrance','coreLower'].includes(current().scene)) return;
+    const lower = current().scene === 'coreLower';
     const t = reducedParticleMotion.matches ? 0 : time;
     // Steel catwalks sit between red-lit generators and coolant pipes.
     for (const x of [136, 424]) {
@@ -2914,7 +2998,12 @@ dialog .primary {
       for (const y of [100,260]) { rect(x-20,y,16,8,'#658494');rect(x+80,y,16,8,'#658494'); }
     }
     rect(252,20,136,52,'#2b3045');rect(256,24,128,44,'#5a617e');rect(260,28,120,36,'#121c29');
-    pixelText('C O R E',282,51,'#baf8ed',16);
+    pixelText(lower ? 'LOWER CORE' : 'C O R E',lower ? 268 : 282,51,'#baf8ed',lower ? 12 : 16);
+    if (lower) {
+      rect(276,78,88,8,'#1c2131');
+      for(let i=0;i<7;i++)rect(280+i*12,80,6,4,'#696e81');
+      ctx.strokeStyle='#526677';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(306,85);ctx.lineTo(312,107);ctx.lineTo(305,119);ctx.moveTo(336,85);ctx.lineTo(330,101);ctx.lineTo(338,112);ctx.stroke();
+    }
     for (const x of [252,380]) { rect(x,76,8,3,'#ff5461');rect(x,79,8,2,'#9e2547'); }
     ctx.save(); ctx.shadowColor='#6ff5ed';ctx.shadowBlur=9;ctx.fillStyle='#8fdfdf';
     const map=current().map;
@@ -3198,7 +3287,7 @@ dialog .primary {
       ctx.translate(Math.round(Math.sin(time * 95) * strength), Math.round(Math.cos(time * 113) * strength));
     }
     drawIslands();
-    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawGlitchParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
+    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawGlitchParticles(time, false); drawSpikes(); drawCoreCollapse(); drawJumpPads(); drawSavePoint(time);
     const flower = floweyPosition();
     if (mode === 'play' && padJump) {
       for (const npc of roomNpcs()) drawNpc(npc);
