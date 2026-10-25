@@ -1219,7 +1219,7 @@
     const prompt = dialogue.shown < text.length ? buttons + ' to show all' : (dialogue.index === dialogue.lines.length - 1 ? buttons + ' to finish ▾' : buttons + ' to continue ▾');
     $('dialogueNext').textContent = prompt + (importantKinds.has(dialogue.kind) ? ' · I. C. · cannot skip' : ' · L to skip');
   }
-  const importantKinds = new Set(['fountain', 'busterWindup', 'busterAfter', 'fountainDive', 'floweyHesitate', 'fountainArrival', 'goldenDoors', 'coreIntro']);
+  const importantKinds = new Set(['fountain', 'busterWindup', 'busterAfter', 'fountainDive', 'floweyHesitate', 'fountainArrival', 'coreIntro']);
   function isImportantCutscene() {
     return !!dive || !!buster || !!(dialogue && importantKinds.has(dialogue.kind)) ||
       (story.discussion >= 0 && current().scene === 'fountain');
