@@ -334,7 +334,7 @@
   project = addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project)))))))))));
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
-  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false };
+  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false };
   const maxHP = 100;
   const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
   const freshPartyHP = () => Object.fromEntries(partyNames.map(name => [name, maxHP]));
@@ -414,7 +414,7 @@
       Number.isInteger(slot.roomIndex) && slot.roomIndex >= 0 && slot.roomIndex < slot.project.rooms.length &&
       slot.player && Number.isFinite(slot.player.x) && slot.player.x >= 0 && slot.player.x < 640 &&
       Number.isFinite(slot.player.y) && slot.player.y >= 0 && slot.player.y < 480 &&
-      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
+      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.coreExplained === undefined || typeof slot.story.coreExplained === 'boolean') && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
       progressFlags.every(key => typeof slot.story[key] === 'boolean') &&
       (!slot.story.teamJoined || slot.story.joined);
   }
@@ -453,7 +453,7 @@
             // Capture the map too: later editor changes cannot invalidate this adventure.
             const snapshot = { version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
               player: { x: player.x, y: player.y, facing: player.facing },
-              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained } };
+              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained } };
             const latest = readProgressSlots(); latest[index] = snapshot;
             localStorage.setItem(progressKey, JSON.stringify(latest));
             partyHP = clone(snapshot.partyHP);
@@ -474,7 +474,7 @@
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
-    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
+    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, coreExplained: slot.story.coreExplained ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
     Object.assign(player, slot.player, { moving: false, step: 0 });
     buster = null; dive = null; companions = []; follower = { x: player.x, y: player.y, trail: [] };
     keys.clear(); lastSpikeContact = null; cameraShakeTime = 0; undoStack = []; $('undoButton').disabled = true; fade = .32; doorCooldown = .5;
@@ -593,7 +593,7 @@
     chapterUI();
   }
   function chapterUI() {
-    if (current().scene === 'darkFurnace') { $('taskTitle').textContent='Explore the furnace chamber';$('taskDescription').textContent='An enormous machine glows above the lava. Follow the orange stone walkway, or head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
+    if (current().scene === 'darkFurnace') { $('taskTitle').textContent=story.coreExplained ? 'Explore the CORE' : 'Explore the furnace chamber';$('taskDescription').textContent='An enormous machine glows above the lava. Follow the orange stone walkway, or head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
     if (current().scene === 'darkGoldenHall') { $('taskTitle').textContent='Approach the golden door';$('taskDescription').textContent='Follow the outlined walkway toward the towering golden door.';$('storySummary').textContent='The purple gives way to black. Golden vines curl around a towering, silent doorway.';return; }
     if (current().scene === 'darkWindingPassage') { $('taskTitle').textContent='Follow the winding path';$('taskDescription').textContent='Go up, cross the bridge above the gap, then follow the right-hand passage down.';$('storySummary').textContent='The path folds around a purple chasm. A soft glow marks the way ahead.';return; }
     if (current().scene === 'darkJumpIslands') { $('taskTitle').textContent='Cross the leaping isles';$('taskDescription').textContent='Step onto the glowing red arrows to jump between the platforms.';$('storySummary').textContent='Three round islands float in the purple dark. Jump pads point the way across.';return; }
@@ -1099,7 +1099,7 @@
     const prompt = dialogue.shown < text.length ? buttons + ' to show all' : (dialogue.index === dialogue.lines.length - 1 ? buttons + ' to finish ▾' : buttons + ' to continue ▾');
     $('dialogueNext').textContent = prompt + (importantKinds.has(dialogue.kind) ? ' · I. C. · cannot skip' : ' · L to skip');
   }
-  const importantKinds = new Set(['fountain', 'busterWindup', 'busterAfter', 'fountainDive', 'floweyHesitate', 'fountainArrival', 'goldenDoors']);
+  const importantKinds = new Set(['fountain', 'busterWindup', 'busterAfter', 'fountainDive', 'floweyHesitate', 'fountainArrival', 'goldenDoors', 'coreIntro']);
   function isImportantCutscene() {
     return !!dive || !!buster || !!(dialogue && importantKinds.has(dialogue.kind)) ||
       (story.discussion >= 0 && current().scene === 'fountain');
@@ -1124,6 +1124,7 @@
     else if (dialogue.index < dialogue.lines.length - 1) { dialogue.index++; dialogue.shown = 0; announcePage(); }
     else {
       const kind = dialogue.kind; closeDialogue();
+      if (kind === 'coreIntro') { story.coreExplained = true; storyUI(); }
       if (kind === 'goldenDoors') { story.goldenDoorExplained = true; storyUI(); openGoldenDoorChoice(); }
       if (kind === 'fountainDive') startFountainDive();
       if (kind === 'floweyHesitate' && dive) { dive.phase = 'flowey'; dive.age = 0; announce('Flowey jumps in last.'); }
@@ -1223,7 +1224,7 @@
   }
   $('inspectButton').onclick = () => { inspectObject(); canvas.focus({ preventScroll: true }); };
   $('talkButton').onclick = () => { talk(); canvas.focus({ preventScroll: true }); };
-  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
+  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; story.coreExplained = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
   $('helpButton').onclick = () => { keys.clear(); $('helpDialog').showModal(); }; $('closeHelp').onclick = () => { $('helpDialog').close(); canvas.focus({ preventScroll: true }); };
   $('helpDialog').addEventListener('click', e => { if (e.target === $('helpDialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close(); } });
   $('downloadButton').onclick = () => {
@@ -1313,6 +1314,19 @@
   }
   function nearGoldenDoor() {
     return current().scene === 'darkGoldenHall' && !current().hideGoldenDoor && Math.hypot(player.x - 472, player.y - 375) < 85;
+  }
+  function openCoreConversation() {
+    openDialogue([
+      '[Susie] * What is that?',
+      "[Flowey] * That's the CORE.",
+      '[Susie] * The what? Some kind of giant furnace?',
+      "[Flowey] * It's a huge power plant from the Underground. It turns the heat down here into electricity.",
+      '[Flowey] * It supplies power to the whole Underground. Or... it did, before everything got mixed up.',
+      '[Ralsey] * So the Underground really is crossing into the Dark World...',
+      "[Flowey] * Yeah. But the CORE should be in Hotland. Not behind your fancy doors.",
+      "[Susie] * Great. Let's try not to blow this thing up.",
+      '[Flowey] * For once, we agree.'
+    ], 'coreIntro');
   }
   function openGoldenDoorConversation() {
     openDialogue([
@@ -1471,6 +1485,7 @@
     if (story.emerging >= 0) { story.emerging -= dt; story.reveal = Math.min(1, story.reveal + dt * 2); player.moving = false; if (story.emerging <= 0) { story.emerging = -1; story.reveal = 1; openDialogue(project.rooms[1].dialogue, 'intro'); } return; }
     if (story.discussion >= 0) { story.discussion -= dt; player.moving = false; if (story.discussion <= 0) { story.discussion = -1; if (current().scene === 'fountain') openFountainScene(); else openDialogue(current().dialogue, 'worlds'); } return; }
     if (dialogue) { dialogue.shown += dt * 45; renderDialogue(); player.moving = false; return; }
+    if (current().scene === 'darkFurnace' && story.teamJoined && story.joined && !story.coreExplained) { openCoreConversation(); return; }
     if (nearGoldenDoor() && story.teamJoined && story.joined && !story.goldenDoorExplained) { openGoldenDoorConversation(); return; }
     let dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0), dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
     player.moving = !!(dx || dy); if (player.moving) { if (dx) player.facing = dx > 0 ? 'right' : 'left'; else player.facing = dy > 0 ? 'down' : 'up'; const len = Math.hypot(dx, dy); dx = dx / len * 135 * dt; dy = dy / len * 135 * dt; if (!collides(player.x + dx, player.y)) player.x += dx; if (!collides(player.x, player.y + dy)) player.y += dy; player.step += dt * 10; }
