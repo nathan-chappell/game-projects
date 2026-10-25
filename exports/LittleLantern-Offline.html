@@ -1319,7 +1319,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   project = addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project))))))))));
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
-  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false };
+  const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false };
   const maxHP = 100;
   const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
   const freshPartyHP = () => Object.fromEntries(partyNames.map(name => [name, maxHP]));
@@ -1399,7 +1399,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
       Number.isInteger(slot.roomIndex) && slot.roomIndex >= 0 && slot.roomIndex < slot.project.rooms.length &&
       slot.player && Number.isFinite(slot.player.x) && slot.player.x >= 0 && slot.player.x < 640 &&
       Number.isFinite(slot.player.y) && slot.player.y >= 0 && slot.player.y < 480 &&
-      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story &&
+      ['up', 'down', 'left', 'right'].includes(slot.player.facing) && slot.story && (slot.story.goldenDoorExplained === undefined || typeof slot.story.goldenDoorExplained === 'boolean') &&
       progressFlags.every(key => typeof slot.story[key] === 'boolean') &&
       (!slot.story.teamJoined || slot.story.joined);
   }
@@ -1438,7 +1438,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
             // Capture the map too: later editor changes cannot invalidate this adventure.
             const snapshot = { version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
               player: { x: player.x, y: player.y, facing: player.facing },
-              story: Object.fromEntries(progressFlags.map(key => [key, story[key]])) };
+              story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained } };
             const latest = readProgressSlots(); latest[index] = snapshot;
             localStorage.setItem(progressKey, JSON.stringify(latest));
             partyHP = clone(snapshot.partyHP);
@@ -1459,7 +1459,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
-    Object.assign(story, slot.story, { emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
+    Object.assign(story, slot.story, { goldenDoorExplained: slot.story.goldenDoorExplained ?? false, emerging: -1, discussion: -1, reveal: slot.story.met ? 1 : 0 });
     Object.assign(player, slot.player, { moving: false, step: 0 });
     buster = null; dive = null; companions = []; follower = { x: player.x, y: player.y, trail: [] };
     keys.clear(); lastSpikeContact = null; cameraShakeTime = 0; undoStack = []; $('undoButton').disabled = true; fade = .32; doorCooldown = .5;
@@ -2083,7 +2083,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
     const prompt = dialogue.shown < text.length ? buttons + ' to show all' : (dialogue.index === dialogue.lines.length - 1 ? buttons + ' to finish ▾' : buttons + ' to continue ▾');
     $('dialogueNext').textContent = prompt + (importantKinds.has(dialogue.kind) ? ' · I. C. · cannot skip' : ' · L to skip');
   }
-  const importantKinds = new Set(['fountain', 'busterWindup', 'busterAfter', 'fountainDive', 'floweyHesitate', 'fountainArrival']);
+  const importantKinds = new Set(['fountain', 'busterWindup', 'busterAfter', 'fountainDive', 'floweyHesitate', 'fountainArrival', 'goldenDoors']);
   function isImportantCutscene() {
     return !!dive || !!buster || !!(dialogue && importantKinds.has(dialogue.kind)) ||
       (story.discussion >= 0 && current().scene === 'fountain');
@@ -2108,6 +2108,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
     else if (dialogue.index < dialogue.lines.length - 1) { dialogue.index++; dialogue.shown = 0; announcePage(); }
     else {
       const kind = dialogue.kind; closeDialogue();
+      if (kind === 'goldenDoors') { story.goldenDoorExplained = true; storyUI(); }
       if (kind === 'fountainDive') startFountainDive();
       if (kind === 'floweyHesitate' && dive) { dive.phase = 'flowey'; dive.age = 0; announce('Flowey jumps in last.'); }
       if (kind === 'intro') recruitFlowey();
@@ -2206,7 +2207,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   }
   $('inspectButton').onclick = () => { inspectObject(); canvas.focus({ preventScroll: true }); };
   $('talkButton').onclick = () => { talk(); canvas.focus({ preventScroll: true }); };
-  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
+  $('restartButton').onclick = () => { padJump = null; pendingPad = null; lastPadContact = null; holeFall = null; $('holeChoiceDialog').close(); death = null; $('gameOverDialog').close(); partyHP = freshPartyHP(); candyTarget = 'Kris'; selectedItem = ''; inventory = freshInventory(); treeHarvests = {}; story.met = false; story.joined = false; story.emerging = -1; story.reveal = 0; story.discussion = -1; story.explained = false; story.foundFountain = false; story.fountainWorse = false; story.teamJoined = false; story.dived = false; story.goldenDoorExplained = false; companions = []; buster = null; dive = null; follower = { x: 0, y: 0, trail: [] }; changeRoom(0); canvas.focus({ preventScroll: true }); toast('Kris wakes in the old castle once more.'); };
   $('helpButton').onclick = () => { keys.clear(); $('helpDialog').showModal(); }; $('closeHelp').onclick = () => { $('helpDialog').close(); canvas.focus({ preventScroll: true }); };
   $('helpDialog').addEventListener('click', e => { if (e.target === $('helpDialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close(); } });
   $('downloadButton').onclick = () => {
@@ -2297,8 +2298,21 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   function nearGoldenDoor() {
     return current().scene === 'darkGoldenHall' && !current().hideGoldenDoor && Math.hypot(player.x - 472, player.y - 375) < 85;
   }
+  function openGoldenDoorConversation() {
+    openDialogue([
+      '[Ralsey] * How did these doors come from???',
+      '[Flowey] * You recognize them? What are they?',
+      "[Ralsey] * They're the Great Doors. Their magic connects different places in the Dark World.",
+      '[Flowey] * Then why is a giant pair of doors sitting out here?',
+      "[Ralsey] * They should be near Castle Town. Maybe they were pulled here when our worlds combined.",
+      '[Ralsey] * A path behind them might lead somewhere far away. We should be careful before opening them.',
+      "[Flowey] * Great. Even the doors are lost. Let's stick together.",
+      '[Ralsey] * Whatever is on the other side, we will face it together.'
+    ], 'goldenDoors');
+  }
   function inspectGoldenDoor() {
-    if (!nearGoldenDoor()) return false;
+    if (!nearGoldenDoor() || nearSavePoint()) return false;
+    if (story.teamJoined && story.joined && !story.goldenDoorExplained) { openGoldenDoorConversation(); return true; }
     openDialogue(['[Narrator] * An ornate golden door towers above you.'], 'inspect'); return true;
   }
   function drawIslands() {
@@ -2425,6 +2439,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
     if (story.emerging >= 0) { story.emerging -= dt; story.reveal = Math.min(1, story.reveal + dt * 2); player.moving = false; if (story.emerging <= 0) { story.emerging = -1; story.reveal = 1; openDialogue(project.rooms[1].dialogue, 'intro'); } return; }
     if (story.discussion >= 0) { story.discussion -= dt; player.moving = false; if (story.discussion <= 0) { story.discussion = -1; if (current().scene === 'fountain') openFountainScene(); else openDialogue(current().dialogue, 'worlds'); } return; }
     if (dialogue) { dialogue.shown += dt * 45; renderDialogue(); player.moving = false; return; }
+    if (nearGoldenDoor() && story.teamJoined && story.joined && !story.goldenDoorExplained) { openGoldenDoorConversation(); return; }
     let dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0), dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
     player.moving = !!(dx || dy); if (player.moving) { if (dx) player.facing = dx > 0 ? 'right' : 'left'; else player.facing = dy > 0 ? 'down' : 'up'; const len = Math.hypot(dx, dy); dx = dx / len * 135 * dt; dy = dy / len * 135 * dt; if (!collides(player.x + dx, player.y)) player.x += dx; if (!collides(player.x, player.y + dy)) player.y += dy; player.step += dt * 10; }
     updateFollower(dt);
