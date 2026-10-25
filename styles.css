@@ -571,6 +571,8 @@ select {
 }
 
 dialog {
+    max-height: calc(100dvh - 32px);
+    overflow: auto;
     background: var(--panel);
     color: var(--ink);
     border: 1px solid #5c526f;

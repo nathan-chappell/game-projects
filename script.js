@@ -1,7 +1,7 @@
 'use strict';
 (function startGame() {
   // Local-file browsers restrict stylesheet access. Keep this export fallback in sync with styles.css.
-  const offlineExportStyles = ":root {\n    --bg: #11141d;\n    --panel: #1a1e2a;\n    --line: #34394b;\n    --ink: #f4efdf;\n    --muted: #a9aec1;\n    --accent: #d3bcff;\n    --gold: #efcb84;\n    --green: #b3d4b1\n}\n\n* {\n    box-sizing: border-box\n}\n\nbody {\n    margin: 0;\n    background: var(--bg);\n    color: var(--ink);\n    font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif\n}\n\nbutton,\ninput,\ntextarea,\nselect {\n    font: inherit\n}\n\nbutton {\n    cursor: pointer\n}\n\nbutton:disabled {\n    opacity: .4;\n    cursor: default\n}\n\nbutton:focus-visible,\ninput:focus-visible,\ntextarea:focus-visible,\nselect:focus-visible,\na:focus-visible {\n    outline: 3px solid var(--gold);\n    outline-offset: 3px\n}\n\nbutton {\n    border: 1px solid var(--line);\n    border-radius: 8px;\n    background: #252a3a;\n    color: var(--ink);\n    padding: 9px 14px;\n    transition: background .12s\n}\n\nbutton:hover:not(:disabled) {\n    background: #35394c\n}\n\n.primary {\n    background: var(--accent);\n    border-color: var(--accent);\n    color: #221b34;\n    font-weight: 700\n}\n\n.primary:hover:not(:disabled) {\n    background: #e0ceff\n}\n\n.quiet {\n    background: transparent\n}\n\n.mono {\n    font-family: ui-monospace, SFMono-Regular, Consolas, monospace\n}\n\n.muted {\n    color: var(--muted)\n}\n\n[hidden] {\n    display: none !important\n}\n\n.shell {\n    max-width: 1200px;\n    margin: auto;\n    padding: 0 32px\n}\n\nheader {\n    height: 92px;\n    border-bottom: 1px solid var(--line);\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 16px\n}\n\n.brand {\n    display: flex;\n    align-items: center;\n    gap: 12px\n}\n\n.brandmark {\n    width: 30px;\n    height: 36px;\n    position: relative\n}\n\n.brandmark:before {\n    content: \"\";\n    position: absolute;\n    inset: 6px 4px;\n    background: var(--gold);\n    clip-path: polygon(30% 0, 70% 0, 70% 20%, 100% 20%, 100% 85%, 0 85%, 0 20%, 30% 20%)\n}\n\n.brandmark:after {\n    content: \"\";\n    position: absolute;\n    inset: 13px 11px 12px;\n    background: #fff3cc\n}\n\n.brand strong {\n    font-size: 19px;\n    letter-spacing: -.5px\n}\n\n.eyebrow {\n    font-size: 10px;\n    text-transform: uppercase;\n    letter-spacing: 2px;\n    color: var(--muted)\n}\n\n.header-actions {\n    display: flex;\n    gap: 10px;\n    align-items: center\n}\n\n.intro {\n    padding: 30px 0 24px;\n    display: flex;\n    justify-content: space-between;\n    gap: 20px;\n    align-items: end\n}\n\nh1 {\n    font-size: 30px;\n    letter-spacing: -1px;\n    line-height: 1.15;\n    margin: 0 0 8px\n}\n\np {\n    margin: 0\n}\n\n.mode-switch {\n    display: flex;\n    background: #090c13;\n    border: 1px solid var(--line);\n    padding: 4px;\n    border-radius: 10px;\n    flex-shrink: 0\n}\n\n.mode-switch button {\n    border: 0;\n    background: transparent;\n    min-width: 102px\n}\n\n.mode-switch button[aria-pressed=\"true\"] {\n    background: #343044;\n    color: #e5d5ff\n}\n\n.layout {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr) 290px;\n    gap: 24px;\n    align-items: start\n}\n\n.game-frame {\n    background: #080a10;\n    border: 1px solid var(--line);\n    border-radius: 14px;\n    overflow: hidden;\n    box-shadow: 0 22px 65px #0003\n}\n\n.room-bar {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    padding: 12px 17px;\n    background: #1b1f2a;\n    font-size: 12px;\n    gap: 10px\n}\n\n.room-label {\n    display: flex;\n    align-items: center;\n    gap: 9px\n}\n\n.dot {\n    width: 7px;\n    height: 7px;\n    background: var(--green);\n    border-radius: 50%\n}\n\n.room-bar .hint {\n    font-size: 10px;\n    letter-spacing: 1px;\n    color: #aaa6bc\n}\n\n.stage {\n    position: relative;\n    width: 100%;\n    aspect-ratio: 4/3;\n    background: #191322\n}\n\ncanvas {\n    display: block;\n    width: 100%;\n    height: 100%;\n    image-rendering: pixelated;\n    touch-action: none;\n    outline: none\n}\n\ncanvas:focus-visible {\n    box-shadow: inset 0 0 0 3px var(--gold)\n}\n\n.dialogue {\n    position: absolute;\n    left: 3%;\n    right: 3%;\n    bottom: 4%;\n    min-height: 24%;\n    background: #101118f5;\n    border: 2px solid #eee6d7;\n    box-shadow: 0 0 0 5px #15121e;\n    display: grid;\n    grid-template-columns: 46px 1fr;\n    gap: 12px;\n    padding: 16px 18px;\n    font-family: ui-monospace, Consolas, monospace;\n    font-size: clamp(12px, 1.4vw, 17px);\n    line-height: 1.5;\n    pointer-events: none\n}\n\n.portrait {\n    font-size: 32px;\n    color: var(--gold);\n    padding-top: 15px\n}\n\n.speaker {\n    font: 700 10px system-ui, sans-serif;\n    text-transform: uppercase;\n    letter-spacing: 2px;\n    color: var(--gold);\n    margin-bottom: 5px\n}\n\n.next {\n    display: block;\n    text-align: right;\n    color: #b9b4c8;\n    font-size: 10px;\n    margin-top: 8px\n}\n\n.game-footer {\n    padding: 12px 17px;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 12px;\n    border-top: 1px solid #2c2b3b;\n    color: var(--muted);\n    font-size: 12px\n}\n\n.game-footer strong {\n    color: var(--ink);\n    font-weight: 500\n}\n\n.key {\n    display: inline-grid;\n    place-items: center;\n    min-width: 22px;\n    height: 23px;\n    padding: 0 5px;\n    font: 12px ui-monospace, monospace;\n    border: 1px solid #535164;\n    border-bottom-width: 3px;\n    border-radius: 4px;\n    color: var(--ink);\n    background: #242332\n}\n\n.controls {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    margin: 16px 0 0;\n    gap: 14px\n}\n\n.dpad {\n    display: grid;\n    grid-template-columns: 36px 36px 36px;\n    grid-template-rows: 30px 30px;\n    gap: 4px\n}\n\n.dpad button {\n    padding: 0;\n    touch-action: none;\n    user-select: none;\n    -webkit-user-select: none\n}\n\n.dpad [data-dir=\"up\"] {\n    grid-column: 2\n}\n\n.dpad [data-dir=\"left\"] {\n    grid-column: 1;\n    grid-row: 2\n}\n\n.dpad [data-dir=\"down\"] {\n    grid-column: 2;\n    grid-row: 2\n}\n\n.dpad [data-dir=\"right\"] {\n    grid-column: 3;\n    grid-row: 2\n}\n\n.controls-right {\n    display: flex;\n    gap: 8px;\n    align-items: center;\n    flex-wrap: wrap;\n    justify-content: flex-end\n}\n\n.controls-right button {\n    min-height: 42px\n}\n\n.panel {\n    background: var(--panel);\n    border: 1px solid var(--line);\n    border-radius: 12px;\n    padding: 22px\n}\n\n.panel h2 {\n    font-size: 18px;\n    letter-spacing: -.4px;\n    margin: 7px 0 14px\n}\n\n.panel p {\n    font-size: 13px;\n    color: var(--muted)\n}\n\n.room-illustration {\n    height: 82px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin-bottom: 10px;\n    color: var(--gold)\n}\n\n.room-illustration svg {\n    width: 80px;\n    height: 65px;\n    image-rendering: pixelated\n}\n\n.task {\n    border-top: 1px solid var(--line);\n    margin-top: 20px;\n    padding-top: 17px;\n    display: flex;\n    gap: 11px\n}\n\n.task-icon {\n    color: var(--gold);\n    font-size: 21px\n}\n\n.task strong {\n    display: block;\n    font-size: 13px;\n    margin-bottom: 4px\n}\n\n.small-note {\n    font-size: 12px;\n    color: var(--muted);\n    margin-top: 18px;\n    line-height: 1.7\n}\n\n.hint-card {\n    border: 1px dashed #494357;\n    padding: 14px;\n    border-radius: 8px;\n    margin-top: 20px\n}\n\n.hint-card button {\n    margin-top: 12px;\n    width: 100%\n}\n\nlabel {\n    font-size: 12px;\n    color: var(--muted);\n    display: block;\n    margin: 14px 0 5px\n}\n\ninput,\nselect,\ntextarea {\n    width: 100%;\n    border: 1px solid #44465a;\n    background: #121620;\n    color: var(--ink);\n    padding: 9px;\n    border-radius: 6px;\n    font-size: 13px\n}\n\ntextarea {\n    resize: vertical;\n    min-height: 110px;\n    line-height: 1.6\n}\n\nselect {\n    padding-right: 22px\n}\n\n.palette {\n    display: grid;\n    grid-template-columns: repeat(4, 1fr);\n    gap: 6px;\n    margin: 10px 0 15px\n}\n\n.tile-button {\n    padding: 8px 2px 5px;\n    font-size: 10px;\n    display: flex;\n    gap: 5px;\n    flex-direction: column;\n    align-items: center;\n    border: 1px solid var(--line);\n    border-radius: 6px\n}\n\n.tile-button[aria-pressed=\"true\"] {\n    border-color: var(--accent);\n    background: #39304b;\n    color: #eee0ff\n}\n\n.swatch {\n    width: 22px;\n    height: 22px;\n    border: 2px solid #ffffff30;\n    display: block;\n    image-rendering: pixelated\n}\n\n.tool-row {\n    display: flex;\n    gap: 6px;\n    margin: 10px 0\n}\n\n.tool-row button {\n    flex: 1;\n    padding: 8px 5px;\n    font-size: 11px\n}\n\n.tool-row button[aria-pressed=\"true\"] {\n    border-color: var(--gold);\n    color: var(--gold)\n}\n\n.room-tools {\n    display: flex;\n    gap: 6px;\n    align-items: center\n}\n\n.room-tools select {\n    flex: 1;\n    min-width: 0\n}\n\n.room-tools button {\n    padding: 8px 12px\n}\n\n.builder-note {\n    font-size: 11px !important\n}\n\n.footer {\n    padding: 28px 0 24px;\n    font-size: 11px;\n    color: #9399ad;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 16px\n}\n\n.footer-dot {\n    color: var(--green);\n    margin-right: 5px\n}\n\n.toast {\n    position: fixed;\n    bottom: 20px;\n    left: 50%;\n    transform: translateX(-50%);\n    max-width: min(520px, 90vw);\n    background: #e8ddff;\n    color: #211b31;\n    padding: 12px 18px;\n    border-radius: 9px;\n    box-shadow: 0 8px 40px #0006;\n    z-index: 10;\n    font-size: 13px\n}\n\ndialog {\n    background: var(--panel);\n    color: var(--ink);\n    border: 1px solid #5c526f;\n    border-radius: 16px;\n    padding: 30px;\n    max-width: 490px;\n    width: calc(100% - 32px)\n}\n\ndialog::backdrop {\n    background: #060810b0\n}\n\ndialog h2 {\n    margin: 6px 0 16px;\n    font-size: 24px;\n    letter-spacing: -.5px\n}\n\ndialog ol {\n    padding-left: 22px\n}\n\ndialog li {\n    margin: 13px 0;\n    color: #c6c5d4\n}\n\ndialog strong {\n    color: var(--ink)\n}\n\ndialog .primary {\n    width: 100%;\n    margin-top: 14px\n}\n\n.editor-caption {\n    padding: 12px 0;\n    color: var(--muted);\n    font-size: 12px\n}\n\n.chip {\n    display: inline-flex;\n    border: 1px solid #4a405b;\n    color: #d7c1f7;\n    border-radius: 20px;\n    padding: 3px 9px;\n    font-size: 10px;\n    letter-spacing: .3px\n}\n\n.helptext {\n    font-size: 12px;\n    color: var(--muted);\n    margin-top: 12px\n}\n\n@media(max-width:900px) {\n    .shell {\n        padding: 0 20px\n    }\n\n    .layout {\n        grid-template-columns: minmax(0, 1fr) 245px;\n        gap: 16px\n    }\n\n    .panel {\n        padding: 16px\n    }\n\n    h1 {\n        font-size: 26px\n    }\n\n    .header-actions button {\n        padding: 9px 11px\n    }\n}\n\n@media(max-width:720px) {\n    header {\n        height: 76px\n    }\n\n    .brand .eyebrow {\n        display: none\n    }\n\n    .brand strong {\n        font-size: 16px\n    }\n\n    .header-actions {\n        gap: 6px\n    }\n\n    .header-actions button {\n        font-size: 12px\n    }\n\n    .brandmark {\n        width: 25px\n    }\n\n    .intro {\n        display: block;\n        padding: 24px 0 18px\n    }\n\n    .intro p {\n        font-size: 13px\n    }\n\n    .mode-switch {\n        margin-top: 18px;\n        width: max-content\n    }\n\n    .layout {\n        grid-template-columns: 1fr\n    }\n\n    .panel {\n        padding: 20px\n    }\n\n    .room-illustration {\n        display: none\n    }\n\n    .palette {\n        grid-template-columns: repeat(8, 1fr)\n    }\n\n    .game-footer {\n        font-size: 11px\n    }\n\n    .dialogue {\n        font-size: 14px;\n        gap: 8px;\n        padding: 12px;\n        grid-template-columns: 30px 1fr\n    }\n\n    .portrait {\n        font-size: 25px\n    }\n\n    .footer {\n        align-items: start\n    }\n\n    .footer span:last-child {\n        text-align: right\n    }\n\n    .shell {\n        padding: 0 14px\n    }\n\n    .hint-card {\n        margin-top: 14px\n    }\n\n    .panel h2 {\n        margin-top: 4px\n    }\n\n    .controls {\n        margin-bottom: 4px\n    }\n}\n\n@media(prefers-reduced-motion:reduce) {\n    button {\n        transition: none\n    }\n}\n.save-slots{display:grid;gap:12px;margin:20px 0}.save-slot{border:1px solid var(--line);padding:12px;border-radius:8px}.save-slot strong,.save-slot small{display:block}.save-slot small{color:var(--muted);margin:4px 0 10px}.save-slot button{width:100%}#saveFeedback{min-height:1.5em;margin-bottom:14px;color:var(--gold)}\n";
+  const offlineExportStyles = ":root {\n    --bg: #11141d;\n    --panel: #1a1e2a;\n    --line: #34394b;\n    --ink: #f4efdf;\n    --muted: #a9aec1;\n    --accent: #d3bcff;\n    --gold: #efcb84;\n    --green: #b3d4b1\n}\n\n* {\n    box-sizing: border-box\n}\n\nbody {\n    margin: 0;\n    background: var(--bg);\n    color: var(--ink);\n    font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif\n}\n\nbutton,\ninput,\ntextarea,\nselect {\n    font: inherit\n}\n\nbutton {\n    cursor: pointer\n}\n\nbutton:disabled {\n    opacity: .4;\n    cursor: default\n}\n\nbutton:focus-visible,\ninput:focus-visible,\ntextarea:focus-visible,\nselect:focus-visible,\na:focus-visible {\n    outline: 3px solid var(--gold);\n    outline-offset: 3px\n}\n\nbutton {\n    border: 1px solid var(--line);\n    border-radius: 8px;\n    background: #252a3a;\n    color: var(--ink);\n    padding: 9px 14px;\n    transition: background .12s\n}\n\nbutton:hover:not(:disabled) {\n    background: #35394c\n}\n\n.primary {\n    background: var(--accent);\n    border-color: var(--accent);\n    color: #221b34;\n    font-weight: 700\n}\n\n.primary:hover:not(:disabled) {\n    background: #e0ceff\n}\n\n.quiet {\n    background: transparent\n}\n\n.mono {\n    font-family: ui-monospace, SFMono-Regular, Consolas, monospace\n}\n\n.muted {\n    color: var(--muted)\n}\n\n[hidden] {\n    display: none !important\n}\n\n.shell {\n    max-width: 1200px;\n    margin: auto;\n    padding: 0 32px\n}\n\nheader {\n    height: 92px;\n    border-bottom: 1px solid var(--line);\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 16px\n}\n\n.brand {\n    display: flex;\n    align-items: center;\n    gap: 12px\n}\n\n.brandmark {\n    width: 30px;\n    height: 36px;\n    position: relative\n}\n\n.brandmark:before {\n    content: \"\";\n    position: absolute;\n    inset: 6px 4px;\n    background: var(--gold);\n    clip-path: polygon(30% 0, 70% 0, 70% 20%, 100% 20%, 100% 85%, 0 85%, 0 20%, 30% 20%)\n}\n\n.brandmark:after {\n    content: \"\";\n    position: absolute;\n    inset: 13px 11px 12px;\n    background: #fff3cc\n}\n\n.brand strong {\n    font-size: 19px;\n    letter-spacing: -.5px\n}\n\n.eyebrow {\n    font-size: 10px;\n    text-transform: uppercase;\n    letter-spacing: 2px;\n    color: var(--muted)\n}\n\n.header-actions {\n    display: flex;\n    gap: 10px;\n    align-items: center\n}\n\n.intro {\n    padding: 30px 0 24px;\n    display: flex;\n    justify-content: space-between;\n    gap: 20px;\n    align-items: end\n}\n\nh1 {\n    font-size: 30px;\n    letter-spacing: -1px;\n    line-height: 1.15;\n    margin: 0 0 8px\n}\n\np {\n    margin: 0\n}\n\n.mode-switch {\n    display: flex;\n    background: #090c13;\n    border: 1px solid var(--line);\n    padding: 4px;\n    border-radius: 10px;\n    flex-shrink: 0\n}\n\n.mode-switch button {\n    border: 0;\n    background: transparent;\n    min-width: 102px\n}\n\n.mode-switch button[aria-pressed=\"true\"] {\n    background: #343044;\n    color: #e5d5ff\n}\n\n.layout {\n    display: grid;\n    grid-template-columns: minmax(0, 1fr) 290px;\n    gap: 24px;\n    align-items: start\n}\n\n.game-frame {\n    background: #080a10;\n    border: 1px solid var(--line);\n    border-radius: 14px;\n    overflow: hidden;\n    box-shadow: 0 22px 65px #0003\n}\n\n.room-bar {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    padding: 12px 17px;\n    background: #1b1f2a;\n    font-size: 12px;\n    gap: 10px\n}\n\n.room-label {\n    display: flex;\n    align-items: center;\n    gap: 9px\n}\n\n.dot {\n    width: 7px;\n    height: 7px;\n    background: var(--green);\n    border-radius: 50%\n}\n\n.room-bar .hint {\n    font-size: 10px;\n    letter-spacing: 1px;\n    color: #aaa6bc\n}\n\n.stage {\n    position: relative;\n    width: 100%;\n    aspect-ratio: 4/3;\n    background: #191322\n}\n\ncanvas {\n    display: block;\n    width: 100%;\n    height: 100%;\n    image-rendering: pixelated;\n    touch-action: none;\n    outline: none\n}\n\ncanvas:focus-visible {\n    box-shadow: inset 0 0 0 3px var(--gold)\n}\n\n.dialogue {\n    position: absolute;\n    left: 3%;\n    right: 3%;\n    bottom: 4%;\n    min-height: 24%;\n    background: #101118f5;\n    border: 2px solid #eee6d7;\n    box-shadow: 0 0 0 5px #15121e;\n    display: grid;\n    grid-template-columns: 46px 1fr;\n    gap: 12px;\n    padding: 16px 18px;\n    font-family: ui-monospace, Consolas, monospace;\n    font-size: clamp(12px, 1.4vw, 17px);\n    line-height: 1.5;\n    pointer-events: none\n}\n\n.portrait {\n    font-size: 32px;\n    color: var(--gold);\n    padding-top: 15px\n}\n\n.speaker {\n    font: 700 10px system-ui, sans-serif;\n    text-transform: uppercase;\n    letter-spacing: 2px;\n    color: var(--gold);\n    margin-bottom: 5px\n}\n\n.next {\n    display: block;\n    text-align: right;\n    color: #b9b4c8;\n    font-size: 10px;\n    margin-top: 8px\n}\n\n.game-footer {\n    padding: 12px 17px;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 12px;\n    border-top: 1px solid #2c2b3b;\n    color: var(--muted);\n    font-size: 12px\n}\n\n.game-footer strong {\n    color: var(--ink);\n    font-weight: 500\n}\n\n.key {\n    display: inline-grid;\n    place-items: center;\n    min-width: 22px;\n    height: 23px;\n    padding: 0 5px;\n    font: 12px ui-monospace, monospace;\n    border: 1px solid #535164;\n    border-bottom-width: 3px;\n    border-radius: 4px;\n    color: var(--ink);\n    background: #242332\n}\n\n.controls {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    margin: 16px 0 0;\n    gap: 14px\n}\n\n.dpad {\n    display: grid;\n    grid-template-columns: 36px 36px 36px;\n    grid-template-rows: 30px 30px;\n    gap: 4px\n}\n\n.dpad button {\n    padding: 0;\n    touch-action: none;\n    user-select: none;\n    -webkit-user-select: none\n}\n\n.dpad [data-dir=\"up\"] {\n    grid-column: 2\n}\n\n.dpad [data-dir=\"left\"] {\n    grid-column: 1;\n    grid-row: 2\n}\n\n.dpad [data-dir=\"down\"] {\n    grid-column: 2;\n    grid-row: 2\n}\n\n.dpad [data-dir=\"right\"] {\n    grid-column: 3;\n    grid-row: 2\n}\n\n.controls-right {\n    display: flex;\n    gap: 8px;\n    align-items: center;\n    flex-wrap: wrap;\n    justify-content: flex-end\n}\n\n.controls-right button {\n    min-height: 42px\n}\n\n.panel {\n    background: var(--panel);\n    border: 1px solid var(--line);\n    border-radius: 12px;\n    padding: 22px\n}\n\n.panel h2 {\n    font-size: 18px;\n    letter-spacing: -.4px;\n    margin: 7px 0 14px\n}\n\n.panel p {\n    font-size: 13px;\n    color: var(--muted)\n}\n\n.room-illustration {\n    height: 82px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin-bottom: 10px;\n    color: var(--gold)\n}\n\n.room-illustration svg {\n    width: 80px;\n    height: 65px;\n    image-rendering: pixelated\n}\n\n.task {\n    border-top: 1px solid var(--line);\n    margin-top: 20px;\n    padding-top: 17px;\n    display: flex;\n    gap: 11px\n}\n\n.task-icon {\n    color: var(--gold);\n    font-size: 21px\n}\n\n.task strong {\n    display: block;\n    font-size: 13px;\n    margin-bottom: 4px\n}\n\n.small-note {\n    font-size: 12px;\n    color: var(--muted);\n    margin-top: 18px;\n    line-height: 1.7\n}\n\n.hint-card {\n    border: 1px dashed #494357;\n    padding: 14px;\n    border-radius: 8px;\n    margin-top: 20px\n}\n\n.hint-card button {\n    margin-top: 12px;\n    width: 100%\n}\n\nlabel {\n    font-size: 12px;\n    color: var(--muted);\n    display: block;\n    margin: 14px 0 5px\n}\n\ninput,\nselect,\ntextarea {\n    width: 100%;\n    border: 1px solid #44465a;\n    background: #121620;\n    color: var(--ink);\n    padding: 9px;\n    border-radius: 6px;\n    font-size: 13px\n}\n\ntextarea {\n    resize: vertical;\n    min-height: 110px;\n    line-height: 1.6\n}\n\nselect {\n    padding-right: 22px\n}\n\n.palette {\n    display: grid;\n    grid-template-columns: repeat(4, 1fr);\n    gap: 6px;\n    margin: 10px 0 15px\n}\n\n.tile-button {\n    padding: 8px 2px 5px;\n    font-size: 10px;\n    display: flex;\n    gap: 5px;\n    flex-direction: column;\n    align-items: center;\n    border: 1px solid var(--line);\n    border-radius: 6px\n}\n\n.tile-button[aria-pressed=\"true\"] {\n    border-color: var(--accent);\n    background: #39304b;\n    color: #eee0ff\n}\n\n.swatch {\n    width: 22px;\n    height: 22px;\n    border: 2px solid #ffffff30;\n    display: block;\n    image-rendering: pixelated\n}\n\n.tool-row {\n    display: flex;\n    gap: 6px;\n    margin: 10px 0\n}\n\n.tool-row button {\n    flex: 1;\n    padding: 8px 5px;\n    font-size: 11px\n}\n\n.tool-row button[aria-pressed=\"true\"] {\n    border-color: var(--gold);\n    color: var(--gold)\n}\n\n.room-tools {\n    display: flex;\n    gap: 6px;\n    align-items: center\n}\n\n.room-tools select {\n    flex: 1;\n    min-width: 0\n}\n\n.room-tools button {\n    padding: 8px 12px\n}\n\n.builder-note {\n    font-size: 11px !important\n}\n\n.footer {\n    padding: 28px 0 24px;\n    font-size: 11px;\n    color: #9399ad;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 16px\n}\n\n.footer-dot {\n    color: var(--green);\n    margin-right: 5px\n}\n\n.toast {\n    position: fixed;\n    bottom: 20px;\n    left: 50%;\n    transform: translateX(-50%);\n    max-width: min(520px, 90vw);\n    background: #e8ddff;\n    color: #211b31;\n    padding: 12px 18px;\n    border-radius: 9px;\n    box-shadow: 0 8px 40px #0006;\n    z-index: 10;\n    font-size: 13px\n}\n\ndialog {\n    max-height: calc(100dvh - 32px);\n    overflow: auto;\n    background: var(--panel);\n    color: var(--ink);\n    border: 1px solid #5c526f;\n    border-radius: 16px;\n    padding: 30px;\n    max-width: 490px;\n    width: calc(100% - 32px)\n}\n\ndialog::backdrop {\n    background: #060810b0\n}\n\ndialog h2 {\n    margin: 6px 0 16px;\n    font-size: 24px;\n    letter-spacing: -.5px\n}\n\ndialog ol {\n    padding-left: 22px\n}\n\ndialog li {\n    margin: 13px 0;\n    color: #c6c5d4\n}\n\ndialog strong {\n    color: var(--ink)\n}\n\ndialog .primary {\n    width: 100%;\n    margin-top: 14px\n}\n\n.editor-caption {\n    padding: 12px 0;\n    color: var(--muted);\n    font-size: 12px\n}\n\n.chip {\n    display: inline-flex;\n    border: 1px solid #4a405b;\n    color: #d7c1f7;\n    border-radius: 20px;\n    padding: 3px 9px;\n    font-size: 10px;\n    letter-spacing: .3px\n}\n\n.helptext {\n    font-size: 12px;\n    color: var(--muted);\n    margin-top: 12px\n}\n\n@media(max-width:900px) {\n    .shell {\n        padding: 0 20px\n    }\n\n    .layout {\n        grid-template-columns: minmax(0, 1fr) 245px;\n        gap: 16px\n    }\n\n    .panel {\n        padding: 16px\n    }\n\n    h1 {\n        font-size: 26px\n    }\n\n    .header-actions button {\n        padding: 9px 11px\n    }\n}\n\n@media(max-width:720px) {\n    header {\n        height: 76px\n    }\n\n    .brand .eyebrow {\n        display: none\n    }\n\n    .brand strong {\n        font-size: 16px\n    }\n\n    .header-actions {\n        gap: 6px\n    }\n\n    .header-actions button {\n        font-size: 12px\n    }\n\n    .brandmark {\n        width: 25px\n    }\n\n    .intro {\n        display: block;\n        padding: 24px 0 18px\n    }\n\n    .intro p {\n        font-size: 13px\n    }\n\n    .mode-switch {\n        margin-top: 18px;\n        width: max-content\n    }\n\n    .layout {\n        grid-template-columns: 1fr\n    }\n\n    .panel {\n        padding: 20px\n    }\n\n    .room-illustration {\n        display: none\n    }\n\n    .palette {\n        grid-template-columns: repeat(8, 1fr)\n    }\n\n    .game-footer {\n        font-size: 11px\n    }\n\n    .dialogue {\n        font-size: 14px;\n        gap: 8px;\n        padding: 12px;\n        grid-template-columns: 30px 1fr\n    }\n\n    .portrait {\n        font-size: 25px\n    }\n\n    .footer {\n        align-items: start\n    }\n\n    .footer span:last-child {\n        text-align: right\n    }\n\n    .shell {\n        padding: 0 14px\n    }\n\n    .hint-card {\n        margin-top: 14px\n    }\n\n    .panel h2 {\n        margin-top: 4px\n    }\n\n    .controls {\n        margin-bottom: 4px\n    }\n}\n\n@media(prefers-reduced-motion:reduce) {\n    button {\n        transition: none\n    }\n}\n.save-slots{display:grid;gap:12px;margin:20px 0}.save-slot{border:1px solid var(--line);padding:12px;border-radius:8px}.save-slot strong,.save-slot small{display:block}.save-slot small{color:var(--muted);margin:4px 0 10px}.save-slot button{width:100%}#saveFeedback{min-height:1.5em;margin-bottom:14px;color:var(--gold)}\n";
   const $ = id => document.getElementById(id);
   const canvas = $('game'), ctx = canvas.getContext('2d');
   const W = 16, H = 12, T = 40;
@@ -71,8 +71,18 @@
     return points === undefined || (Array.isArray(points) && points.length <= W * H && points.every(point =>
       point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H));
   }
+  const objectFields = ['npcs', 'trees', 'savePoints', 'spikes', 'jumpPads', 'particlePoints', 'glitchPoints'];
+  const objectLayer = object => object.renderLayer || 'normal';
+  function validDrawStyle(object) {
+    return object && (object.renderLayer === undefined || ['normal', 'back', 'ground'].includes(object.renderLayer));
+  }
+  function validGlitchStyle(point) {
+    return (point.shape === undefined || point.shape === 'pillar') &&
+      (point.height === undefined || (Number.isInteger(point.height) && point.height >= 1 && point.height <= 12)) &&
+      (point.width === undefined || (Number.isInteger(point.width) && point.width >= 1 && point.width <= 4));
+  }
   function validProject(p) {
-    return p && p.version === 2 && p.id === 'two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length >= 2 && p.rooms.length <= 20 && p.rooms.every(r => r && ['hideGoldenDoor','hideHole'].every(key => r[key] === undefined || typeof r[key] === 'boolean') && (r.backgroundColor === undefined || validColor(r.backgroundColor)) && (r.jumpPads === undefined || (Array.isArray(r.jumpPads) && r.jumpPads.length <= W * H && r.jumpPads.every(pad => pad && ['x','targetX'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < W) && ['y','targetY'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < H) && (pad.targetRoom !== undefined || pad.x !== pad.targetX || pad.y !== pad.targetY) && (pad.targetRoom === undefined || (Number.isInteger(pad.targetRoom) && pad.targetRoom >= 0 && pad.targetRoom < p.rooms.length)) && (pad.launchX === undefined || (Number.isInteger(pad.launchX) && pad.launchX >= 0 && pad.launchX < W)) && (pad.launchY === undefined || (Number.isInteger(pad.launchY) && pad.launchY >= 0 && pad.launchY < H))))) && (r.spikes === undefined || (Array.isArray(r.spikes) && r.spikes.length <= W * H && r.spikes.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.tileColors === undefined || (r.tileColors && typeof r.tileColors === 'object' && !Array.isArray(r.tileColors) && Object.keys(r.tileColors).length <= W * H && Object.entries(r.tileColors).every(([key, color]) => /^\d{1,2},\d{1,2}$/.test(key) && validColor(color)))) && (r.trees === undefined || (Array.isArray(r.trees) && r.trees.length <= 48 && r.trees.every(point => point && validTreeStyle(point) && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validParticlePoints(r.particlePoints) && validParticlePoints(r.glitchPoints) && (r.savePoints === undefined || (Array.isArray(r.savePoints) && r.savePoints.length <= W * H && r.savePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validNpcs(r.npcs) && typeof r.name === 'string' && r.name.length <= 32 && ['room', 'garden', 'castle', 'dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length === H && r.map.every(row => Array.isArray(row) && row.length === W && row.every(t => Number.isInteger(t) && t >= 0 && t < tiles.length)) && ['spawn', 'flowey'].every(k => r[k] && Number.isInteger(r[k].x) && Number.isInteger(r[k].y) && r[k].x >= 0 && r[k].x < W && r[k].y >= 0 && r[k].y < H) && Array.isArray(r.dialogue) && r.dialogue.length <= 100 && r.dialogue.every(s => typeof s === 'string' && s.length <= 1200) && Number.isInteger(r.target) && r.target >= -1 && r.target < p.rooms.length && (!r.doorLinks || (typeof r.doorLinks === 'object' && !Array.isArray(r.doorLinks) && Object.entries(r.doorLinks).every(([key, v]) => /^\d+,\d+$/.test(key) && Number.isInteger(v) && v >= 0 && v < p.rooms.length))));
+    return p && p.version === 2 && p.id === 'two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length >= 2 && p.rooms.length <= 20 && p.rooms.every(r => r && objectFields.every(field => r[field] === undefined || (Array.isArray(r[field]) && r[field].every(validDrawStyle))) && (r.glitchPoints === undefined || r.glitchPoints.every(validGlitchStyle)) && ['hideGoldenDoor','hideHole'].every(key => r[key] === undefined || typeof r[key] === 'boolean') && (r.backgroundColor === undefined || validColor(r.backgroundColor)) && (r.jumpPads === undefined || (Array.isArray(r.jumpPads) && r.jumpPads.length <= W * H && r.jumpPads.every(pad => pad && ['x','targetX'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < W) && ['y','targetY'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < H) && (pad.targetRoom !== undefined || pad.x !== pad.targetX || pad.y !== pad.targetY) && (pad.targetRoom === undefined || (Number.isInteger(pad.targetRoom) && pad.targetRoom >= 0 && pad.targetRoom < p.rooms.length)) && (pad.launchX === undefined || (Number.isInteger(pad.launchX) && pad.launchX >= 0 && pad.launchX < W)) && (pad.launchY === undefined || (Number.isInteger(pad.launchY) && pad.launchY >= 0 && pad.launchY < H))))) && (r.spikes === undefined || (Array.isArray(r.spikes) && r.spikes.length <= W * H && r.spikes.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.tileColors === undefined || (r.tileColors && typeof r.tileColors === 'object' && !Array.isArray(r.tileColors) && Object.keys(r.tileColors).length <= W * H && Object.entries(r.tileColors).every(([key, color]) => /^\d{1,2},\d{1,2}$/.test(key) && validColor(color)))) && (r.trees === undefined || (Array.isArray(r.trees) && r.trees.length <= 48 && r.trees.every(point => point && validTreeStyle(point) && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validParticlePoints(r.particlePoints) && validParticlePoints(r.glitchPoints) && (r.savePoints === undefined || (Array.isArray(r.savePoints) && r.savePoints.length <= W * H && r.savePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validNpcs(r.npcs) && typeof r.name === 'string' && r.name.length <= 32 && ['room', 'garden', 'castle', 'dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length === H && r.map.every(row => Array.isArray(row) && row.length === W && row.every(t => Number.isInteger(t) && t >= 0 && t < tiles.length)) && ['spawn', 'flowey'].every(k => r[k] && Number.isInteger(r[k].x) && Number.isInteger(r[k].y) && r[k].x >= 0 && r[k].x < W && r[k].y >= 0 && r[k].y < H) && Array.isArray(r.dialogue) && r.dialogue.length <= 100 && r.dialogue.every(s => typeof s === 'string' && s.length <= 1200) && Number.isInteger(r.target) && r.target >= -1 && r.target < p.rooms.length && (!r.doorLinks || (typeof r.doorLinks === 'object' && !Array.isArray(r.doorLinks) && Object.entries(r.doorLinks).every(([key, v]) => /^\d+,\d+$/.test(key) && Number.isInteger(v) && v >= 0 && v < p.rooms.length))));
   }
   function echoChamber() {
     const map = blankMap(); for (let x = 0; x < W; x++)map[1][x] = 1;
@@ -766,8 +776,8 @@
   $('loadGameButton').onclick = () => openProgressMenu('load');
   $('closeSaveDialog').onclick = () => $('saveDialog').close();
   $('saveDialog').addEventListener('close', () => { keys.clear(); canvas.focus({ preventScroll: true }); });
-  function drawSavePoint(time) {
-    for (const tile of roomSavePoints()) {
+  function drawSavePoint(time, layer = 'normal') {
+    for (const tile of roomSavePoints().filter(point => objectLayer(point) === layer)) {
     const point = { x: tile.x * T + 20, y: tile.y * T + 20 };
     const pulse = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : Math.sin(time * 3) * 2;
     ctx.save(); ctx.translate(Math.round(point.x), Math.round(point.y - 18 + pulse));
@@ -918,25 +928,70 @@
     const npc = { id: 'frog-' + Date.now().toString(36) + '-' + (++npcSequence), sprite: 'frog', name: 'Froggit', x, y, speech: ['* Ribbit.', '* Hello there.'] };
     (current().npcs ??= []).push(npc); selectedNpcId = npc.id; save(); updateNpcUI(); selectTool('npcSelect'); toast('Froggit placed. Edit its speech in the NPC panel.');
   }
-  function selectTool(value) { if (value !== 'jumpPad') pendingPad = null; tool = value; $('deleteTool').setAttribute('aria-pressed', String(value === 'delete')); $('jumpPadTool').setAttribute('aria-pressed', String(value === 'jumpPad')); $('spikeTool').setAttribute('aria-pressed', String(value === 'spike')); $('editTool').setAttribute('aria-pressed', String(value === 'edit')); $('treeTool').setAttribute('aria-pressed', String(value === 'tree')); $('particleTool').setAttribute('aria-pressed', String(value === 'particles')); $('glitchParticleTool').setAttribute('aria-pressed', String(value === 'glitchParticles')); $('savePointTool').setAttribute('aria-pressed', String(value === 'savePoint')); document.querySelectorAll('.tile-button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.tile) === value))); $('floweyTool').setAttribute('aria-pressed', String(value === 'flowey')); $('spawnTool').setAttribute('aria-pressed', String(value === 'spawn')); $('npcTool').setAttribute('aria-pressed', String(value === 'npc')); $('npcSelectTool').setAttribute('aria-pressed', String(value === 'npcSelect')); $('npcMove').setAttribute('aria-pressed', String(value === 'npcMove')); }
+  function selectTool(value) { if (value !== 'jumpPad') pendingPad = null; tool = value; $('deleteTool').setAttribute('aria-pressed', String(value === 'delete')); $('jumpPadTool').setAttribute('aria-pressed', String(value === 'jumpPad')); $('spikeTool').setAttribute('aria-pressed', String(value === 'spike')); $('editTool').setAttribute('aria-pressed', String(value === 'edit')); $('treeTool').setAttribute('aria-pressed', String(value === 'tree')); $('particleTool').setAttribute('aria-pressed', String(value === 'particles')); $('glitchParticleTool').setAttribute('aria-pressed', String(value === 'glitchParticles')); $('glitchPillarTool').setAttribute('aria-pressed', String(value === 'glitchPillar')); $('objectsBehindTool').setAttribute('aria-pressed', String(value === 'objectsBehind')); $('behindGroundTool').setAttribute('aria-pressed', String(value === 'behindGround')); $('savePointTool').setAttribute('aria-pressed', String(value === 'savePoint')); document.querySelectorAll('.tile-button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.tile) === value))); $('floweyTool').setAttribute('aria-pressed', String(value === 'flowey')); $('spawnTool').setAttribute('aria-pressed', String(value === 'spawn')); $('npcTool').setAttribute('aria-pressed', String(value === 'npc')); $('npcSelectTool').setAttribute('aria-pressed', String(value === 'npcSelect')); $('npcMove').setAttribute('aria-pressed', String(value === 'npcMove')); }
   tiles.forEach(t => { const b = document.createElement('button'); b.className = 'tile-button'; b.dataset.tile = t.id; b.setAttribute('aria-pressed', String(t.id === 0)); b.title = t.label + (t.solid ? ' · blocks walking' : ''); const swatch = document.createElement('span'); swatch.className = 'swatch'; swatch.style.background = t.color; swatch.setAttribute('aria-hidden', 'true'); b.append(swatch, document.createTextNode(t.label)); b.onclick = () => selectTool(t.id); $('palette').append(b); });
+  function roomObjectGroups() {
+    const r = current();
+    return [['glitchPoints', r.glitchPoints || [], 'Glitch particles'], ['particlePoints', r.particlePoints || [], 'Particles'],
+      ['trees', roomTrees(), 'Tree'], ['npcs', roomNpcs(), 'NPC'], ['savePoints', roomSavePoints(), 'Save point'],
+      ['spikes', roomSpikes(), 'Spike'], ['jumpPads', r.jumpPads || [], 'Jump pad']];
+  }
+  function objectsAt(x, y) {
+    return roomObjectGroups().flatMap(([field, objects, label]) => objects.flatMap((object, index) =>
+      object.x === x && object.y === y ? [{ field, index, object, label: object.shape === 'pillar' ? 'Glitch pillar' : label }] : []));
+  }
+  function writeObject(target, update) {
+    const objects = roomObjectGroups().find(([field]) => field === target.field)[1];
+    current()[target.field] = objects.map((object, index) => index === target.index ? { ...object, ...update } : { ...object });
+  }
+  function changeObjectLayer(x, y, layer) {
+    const target = objectsAt(x, y)[0];
+    if (!target) { toast('Click the base tile of a placed object.'); return; }
+    if (!stroke.changed) { remember(); stroke.changed = true; }
+    const next = objectLayer(target.object) === layer ? 'normal' : layer;
+    writeObject(target, { renderLayer: next });
+    toast(target.label + ': ' + ({ normal: 'normal layer', back: 'behind objects', ground: 'behind ground' })[next] + '.');
+  }
   let editingObject = null;
-  $('editTool').onclick = () => { selectTool('edit'); toast('Click a tile to edit its color, or a tree trunk to edit its colors and candy.'); };
-  function openObjectEditor(x, y) {
-    const tree = roomTrees().find(tree => tree.x === x && tree.y === y);
-    editingObject = { x, y, tree: !!tree, resetColors: false };
-    $('objectEditTitle').textContent = tree ? 'Edit tree' : 'Edit tile';
-    $('treeEditFields').hidden = !tree; $('tileColorFields').hidden = !!tree;
+  $('editTool').onclick = () => { selectTool('edit'); toast('Click an object base or tile to edit its appearance and layer.'); };
+  function updateObjectEditor() {
+    const { x, y } = editingObject;
+    const target = objectsAt(x, y).find(entry => entry.field === $('editObjectTarget').value);
+    editingObject.target = target; editingObject.resetColors = false;
+    const tree = target?.field === 'trees', pillar = target?.object.shape === 'pillar';
+    $('objectEditTitle').textContent = 'Edit ' + (target?.label.toLowerCase() || 'tile');
+    $('treeEditFields').hidden = !tree; $('tileColorFields').hidden = !!target;
+    $('objectLayerFields').hidden = !target; $('glitchPillarFields').hidden = !pillar;
+    $('resetObjectColors').hidden = !!target && !tree;
     $('editCandyCount').disabled = !tree;
+    $('editGlitchHeight').disabled = $('editGlitchWidth').disabled = !pillar;
+    setEditorLayer(target ? objectLayer(target.object) : 'normal');
     if (tree) {
-      $('editCanopyColor').value = tree.canopyColor || '#160d39';
-      $('editAccentColor').value = tree.accentColor || '#ef004b';
-      $('editTrunkColor').value = tree.trunkColor || '#140d38';
-      $('editCandyCount').value = tree.candy ?? 2;
+      const object = target.object;
+      $('editCanopyColor').value = object.canopyColor || '#160d39';
+      $('editAccentColor').value = object.accentColor || '#ef004b';
+      $('editTrunkColor').value = object.trunkColor || '#140d38';
+      $('editCandyCount').value = object.candy ?? 2;
       const taken = treeHarvests[roomIndex + ':' + x + ',' + y] || 0;
       $('editCandyNote').textContent = 'Total supply for this tree. Already picked in this adventure: ' + taken + '.';
-    } else $('editTileColor').value = current().tileColors?.[x + ',' + y] || (current().theme === 'dark' ? (current().map[y][x] === 1 ? '#a349a4' : '#000000') : tiles[current().map[y][x]].color);
-    keys.clear(); $('objectEditDialog').showModal();
+    } else if (pillar) {
+      $('editGlitchHeight').value = target.object.height ?? 8;
+      $('editGlitchWidth').value = target.object.width ?? 1;
+    } else if (!target) $('editTileColor').value = current().tileColors?.[x + ',' + y] || (current().theme === 'dark' ? (current().map[y][x] === 1 ? '#a349a4' : '#000000') : tiles[current().map[y][x]].color);
+  }
+  function setEditorLayer(layer) {
+    editingObject.layer = layer;
+    for (const [id, value] of [['editLayerNormal', 'normal'], ['editLayerBack', 'back'], ['editLayerGround', 'ground']]) $(id).setAttribute('aria-pressed', String(layer === value));
+  }
+  for (const [id, value] of [['editLayerNormal', 'normal'], ['editLayerBack', 'back'], ['editLayerGround', 'ground']]) $(id).onclick = () => setEditorLayer(value);
+  $('editObjectTarget').onchange = updateObjectEditor;
+  function openObjectEditor(x, y) {
+    editingObject = { x, y };
+    $('editObjectTarget').replaceChildren();
+    for (const target of [...objectsAt(x, y), { field: 'tile', label: 'Ground / tile' }]) {
+      const option = document.createElement('option'); option.value = target.field; option.textContent = target.label; $('editObjectTarget').append(option);
+    }
+    updateObjectEditor(); keys.clear(); $('objectEditDialog').showModal();
   }
   $('resetObjectColors').onclick = () => {
     if (!editingObject) return;
@@ -949,16 +1004,19 @@
   $('objectEditDialog').addEventListener('close', () => { editingObject = null; keys.clear(); canvas.focus({ preventScroll: true }); });
   $('objectEditForm').onsubmit = e => {
     e.preventDefault(); if (!editingObject) return;
-    const { x, y, tree, resetColors } = editingObject;
-    const candy = Number($('editCandyCount').value);
+    const { x, y, target, layer, resetColors } = editingObject;
+    const tree = target?.field === 'trees', pillar = target?.object.shape === 'pillar';
+    const candy = Number($('editCandyCount').value), height = Number($('editGlitchHeight').value), width = Number($('editGlitchWidth').value);
     if (tree && (!Number.isInteger(candy) || candy < 0 || candy > 6)) return;
+    if (pillar && !validGlitchStyle({ height, width })) return;
     remember();
-    if (tree) {
-      current().trees = roomTrees().map(point => ({ ...point }));
-      const target = current().trees.find(point => point.x === x && point.y === y);
-      target.candy = candy;
-      if (resetColors) for (const key of ['canopyColor', 'accentColor', 'trunkColor']) delete target[key];
-      else { target.canopyColor = $('editCanopyColor').value; target.accentColor = $('editAccentColor').value; target.trunkColor = $('editTrunkColor').value; }
+    if (target) {
+      writeObject(target, { renderLayer: layer, ...(tree ? { candy } : {}), ...(pillar ? { height, width } : {}) });
+      if (tree) {
+        const object = current().trees[target.index];
+        if (resetColors) for (const key of ['canopyColor', 'accentColor', 'trunkColor']) delete object[key];
+        else { object.canopyColor = $('editCanopyColor').value; object.accentColor = $('editAccentColor').value; object.trunkColor = $('editTrunkColor').value; }
+      }
     } else {
       current().tileColors = { ...current().tileColors };
       if (resetColors) delete current().tileColors[x + ',' + y];
@@ -971,6 +1029,9 @@
   $('spikeTool').onclick = () => { selectTool('spike'); toast('Click a clear tile to place a spike. Click it again to remove it.'); };
   $('treeTool').onclick = () => { selectTool('tree'); toast('Click a clear tile to plant a tree. Click a trunk tile again to remove it.'); };
   $('glitchParticleTool').onclick = () => { selectTool('glitchParticles'); toast('Click anywhere to place a glitch. Click it again to remove it.'); };
+  $('glitchPillarTool').onclick = () => { selectTool('glitchPillar'); toast('Click to place a tall glitch pillar. Edit its base to change its size.'); };
+  $('objectsBehindTool').onclick = () => { selectTool('objectsBehind'); toast('Click an object base to put it behind other objects. Click again to restore it.'); };
+  $('behindGroundTool').onclick = () => { selectTool('behindGround'); toast('Click an object base to put it behind the ground. Click again to restore it.'); };
   $('particleTool').onclick = () => { selectTool('particles'); toast('Click a tile to add particles. Click a marked tile again to remove them.'); };
   $('savePointTool').onclick = () => { selectTool('savePoint'); toast('Click a clear tile to add a save point. Click a star to remove it.'); };
   $('npcTool').onclick = () => selectTool('npc');
@@ -1063,6 +1124,7 @@
       else { r.spikes.push({ x, y }); toast('Spike placed.'); }
       return;
     }
+    if (tool === 'objectsBehind' || tool === 'behindGround') { changeObjectLayer(x, y, tool === 'objectsBehind' ? 'back' : 'ground'); return; }
     if (tool === 'edit') { openObjectEditor(x, y); return; }
     if (tool === 'tree') {
       const trees = roomTrees(), existing = trees.findIndex(tree => tree.x === x && tree.y === y);
@@ -1078,12 +1140,12 @@
       else { r.trees.push({ x, y }); toast('Tree planted.'); }
       return;
     }
-    if (tool === 'glitchParticles') {
+    if (tool === 'glitchParticles' || tool === 'glitchPillar') {
       const points = r.glitchPoints || [], existing = points.findIndex(point => point.x === x && point.y === y);
       if (!stroke.changed) { remember(); stroke.changed = true; }
       r.glitchPoints = points.map(point => ({ ...point }));
       if (existing >= 0) { r.glitchPoints.splice(existing, 1); toast('Glitch removed.'); }
-      else { r.glitchPoints.push({ x, y }); toast('Glitch placed. Save build to keep your edits.'); }
+      else { r.glitchPoints.push({ x, y, ...(tool === 'glitchPillar' ? { shape: 'pillar', height: 8, width: 1 } : {}) }); toast('Glitch placed. Save build to keep your edits.'); }
       return;
     }
     if (tool === 'particles') {
@@ -1525,8 +1587,8 @@
       ctx.restore();
     }
   }
-  function drawJumpPads() {
-    for (const pad of current().jumpPads || []) {
+  function drawJumpPads(layer = 'normal') {
+    for (const pad of (current().jumpPads || []).filter(point => objectLayer(point) === layer)) {
       const x = pad.x * T + 20, y = pad.y * T + 20;
       if (pad.targetRoom !== undefined && pad.targetRoom !== roomIndex) {
         ctx.save(); ctx.shadowColor = '#ffb52e'; ctx.shadowBlur = 12;
@@ -1539,7 +1601,7 @@
       ctx.moveTo(-12,-6);ctx.lineTo(0,-6);ctx.lineTo(0,-13);ctx.lineTo(15,0);ctx.lineTo(0,13);ctx.lineTo(0,6);ctx.lineTo(-12,6);ctx.closePath();ctx.fill();ctx.restore();
       if (mode === 'build' && tool === 'jumpPad') { ctx.strokeStyle = '#ff839b';ctx.strokeRect(pad.x*T+1,pad.y*T+1,38,38); }
     }
-    if (mode === 'build' && tool === 'jumpPad' && pendingPad?.roomIndex === roomIndex) { ctx.strokeStyle = '#efcb84';ctx.lineWidth=2;ctx.strokeRect(pendingPad.x*T+1,pendingPad.y*T+1,38,38); }
+    if (layer === 'normal' && mode === 'build' && tool === 'jumpPad' && pendingPad?.roomIndex === roomIndex) { ctx.strokeStyle = '#efcb84';ctx.lineWidth=2;ctx.strokeRect(pendingPad.x*T+1,pendingPad.y*T+1,38,38); }
   }
   // Embed the supplied door so downloaded games keep the original artwork offline.
   const goldenDoorImage = new Image();
@@ -1609,7 +1671,9 @@
   }
   function drawIslands() {
     if (current().scene !== 'darkJumpIslands') return;
-    ctx.save();ctx.fillStyle='#000000';ctx.shadowColor='#d09afa';ctx.shadowBlur=13;
+    ctx.save(); ctx.beginPath();
+    for (let y=0;y<H;y++) for (let x=0;x<W;x++) if (current().map[y][x] !== 10) ctx.rect(x*T,y*T,T,T);
+    ctx.clip();ctx.fillStyle='#000000';ctx.shadowColor='#d09afa';ctx.shadowBlur=13;
     for (const [x,y,r] of jumpIslandPlatforms) { ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill(); }
     ctx.shadowBlur=0;ctx.fillRect(0,200,110,40);ctx.fillRect(540,320,100,40);ctx.restore();
   }
@@ -1908,8 +1972,8 @@
     }
     lastSpikeContact = contact;
   }
-  function drawSpikes() {
-    for (const point of roomSpikes()) {
+  function drawSpikes(layer = 'normal') {
+    for (const point of roomSpikes().filter(point => objectLayer(point) === layer)) {
       const x = point.x * T, y = point.y * T;
       rect(x + 3, y + 29, 34, 6, '#553648');
       for (let i = 0; i < 3; i++) {
@@ -1957,10 +2021,10 @@
     polygon([[-27,-99],[-19,-102],[-14,-96],[-9,-96],[-13,-90],[-20,-90],[-23,-85],[-28,-90]],canopy,accent);
     ctx.restore();
   }
-  function drawPlacedParticles(time, foreground) {
+  function drawPlacedParticles(time, foreground, layer = 'normal') {
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save();
-    for (const point of current().particlePoints || []) {
+    for (const point of (current().particlePoints || []).filter(point => objectLayer(point) === layer)) {
       const cx = point.x * T + 20, cy = point.y * T + 20;
       for (let i = 0; i < 12; i++) {
         if ((i % 4 === 0) !== foreground) continue;
@@ -1992,11 +2056,36 @@
     { color: '#747fff', points: [[10,-17],[20,22],[15,72]] },
     { color: '#c5c6ce', points: [[-3,49],[-7,-8],[22,-88],[39,-88],[59,-61]] }
   ];
-  function drawGlitchParticles(time, foreground) {
+  function drawGlitchPillar(point, t, foreground) {
+    const width = (point.width ?? 1) * T, height = (point.height ?? 8) * T;
+    const left = point.x*T+20-width/2, bottom = point.y*T+T, top = bottom-height;
+    const seed = point.x*1.73+point.y*2.41, tick = Math.floor(t*7+seed);
+    ctx.save(); ctx.beginPath(); ctx.rect(left, top, width, height); ctx.clip();
+    // Repeated angular strands form one continuous column; each band jitters independently.
+    for (let band = 0; band < Math.ceil(height/52)+1; band++) {
+      for (const [i, strand] of glitchStrands.entries()) {
+        if (mode !== 'build' && (i%3 === 0) !== foreground) continue;
+        const shift = reducedParticleMotion.matches ? 0 : Math.sin(tick*2.7+band*3.4+i)*4;
+        const rise = (t*14+band*52)% (height+52);
+        ctx.strokeStyle = strand.color; ctx.globalAlpha = .8; ctx.beginPath();
+        for (const [j,[px,py]] of strand.points.entries()) {
+          const x = Math.round(left+width/2+px*width/230+shift)+.5;
+          const y = Math.round(bottom-rise+py*.45)+.5;
+          if (!j) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = .6;
+        rect(left+((band*17+i*11+tick*2)%Math.max(1,width)),bottom-rise+i*3,2+i%3,2,strand.color);
+      }
+    }
+    ctx.restore();
+  }
+  function drawGlitchParticles(time, foreground, layer = 'normal') {
     if (mode === 'build' && foreground) return;
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save(); ctx.lineWidth = 1; ctx.lineJoin = 'miter';
-    for (const point of current().glitchPoints || []) {
+    for (const point of (current().glitchPoints || []).filter(point => objectLayer(point) === layer)) {
+      if (point.shape === 'pillar') { drawGlitchPillar(point, t, foreground); continue; }
       const cx = point.x*T+20, cy = point.y*T+20, seed = point.x*1.73+point.y*2.41;
       const tick = Math.floor(t*5+seed), pulse = 1+Math.sin(t*1.8+seed)*.08;
       for (const [i,strand] of glitchStrands.entries()) {
@@ -2021,6 +2110,30 @@
           pixelText('GLITCH',cx-18,cy+31,'#ffe877',9);
         }
       }
+    }
+    ctx.restore();
+  }
+  function drawLayerObjects(layer, time) {
+    drawPlacedParticles(time, false, layer); drawPlacedParticles(time, true, layer);
+    drawGlitchParticles(time, false, layer); drawGlitchParticles(time, true, layer);
+    drawSpikes(layer); drawJumpPads(layer); drawSavePoint(time, layer);
+    const actors = roomTrees().filter(object => objectLayer(object) === layer).map(tree => ({ y: tree.y,
+      draw: () => drawDarkTree({ ...tree, x: tree.x*T+20, y: tree.y*T+20 }) }));
+    for (const npc of roomNpcs().filter(object => objectLayer(object) === layer)) actors.push({ y: npc.y, draw: () => drawNpc(npc) });
+    actors.sort((a,b) => a.y-b.y).forEach(actor => actor.draw());
+  }
+  function drawObjectMarkers() {
+    if (mode !== 'build' || !['edit','delete','objectsBehind','behindGround','glitchPillar'].includes(tool)) return;
+    ctx.save(); ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    for (const [,objects] of roomObjectGroups()) for (const object of objects) {
+      const layer = objectLayer(object), x = object.x*T, y = object.y*T;
+      ctx.strokeStyle = layer === 'ground' ? '#25c9df' : layer === 'back' ? '#ffae42' : '#b45cdb';
+      ctx.strokeRect(x+2,y+2,36,36);
+      if (object.shape === 'pillar') {
+        const w=(object.width??1)*T, h=(object.height??8)*T;
+        ctx.strokeRect(x+20-w/2,y+T-h,w,h);
+      }
+      if (['objectsBehind','behindGround'].includes(tool)) pixelText(layer === 'ground' ? 'GROUND' : layer === 'back' ? 'BEHIND' : 'NORMAL', x+2,y+12,ctx.strokeStyle,8);
     }
     ctx.restore();
   }
@@ -2379,20 +2492,23 @@
       const strength = 3 * cameraShakeTime / .22;
       ctx.translate(Math.round(Math.sin(time * 95) * strength), Math.round(Math.cos(time * 113) * strength));
     }
-    drawIslands();
-    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawGlitchParticles(time, false); drawSpikes(); drawCoreCollapse(); drawJumpPads(); drawSavePoint(time);
+    // Empty space and walls are the backdrop. Ground hides only objects assigned beneath it.
+    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++) if ([1,10].includes(r.map[y][x])) drawTile(r.map[y][x], x*T, y*T, r.theme);
+    drawLayerObjects('ground', time); drawIslands();
+    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++) if (![1,10].includes(r.map[y][x])) drawTile(r.map[y][x], x*T, y*T, r.theme);
+    drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawLayerObjects('back', time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawGlitchParticles(time, false); drawSpikes(); drawCoreCollapse(); drawJumpPads(); drawSavePoint(time);
     const flower = floweyPosition();
     if (mode === 'play' && padJump) {
-      for (const npc of roomNpcs()) drawNpc(npc);
+      for (const npc of roomNpcs().filter(object => objectLayer(object) === 'normal')) drawNpc(npc);
       drawPadJump(time);
     } else if (mode === 'play' && holeFall) {
       drawHoleFall(time);
     } else if (mode === 'play' && dive) {
-      for (const npc of roomNpcs()) drawNpc(npc);
+      for (const npc of roomNpcs().filter(object => objectLayer(object) === 'normal')) drawNpc(npc);
       drawDive(time);
     } else if (mode === 'play') {
-      const actors = [{ y: player.y, draw: () => drawPlayer(player.x, player.y, time) }, ...partyFriends().map(n => ({ y: n.y, draw: () => drawFountainFriend(n, time) })), ...roomNpcs().map(n => ({ y: n.y * T + 24, draw: () => drawNpc(n) }))];
-      for (const tile of roomTrees()) { const tree = { ...tile, x: tile.x * T + 20, y: tile.y * T + 20 }; actors.push({ y: tree.y, draw: () => drawDarkTree(tree) }); }
+      const actors = [{ y: player.y, draw: () => drawPlayer(player.x, player.y, time) }, ...partyFriends().map(n => ({ y: n.y, draw: () => drawFountainFriend(n, time) })), ...roomNpcs().filter(object => objectLayer(object) === 'normal').map(n => ({ y: n.y * T + 24, draw: () => drawNpc(n) }))];
+      for (const tile of roomTrees().filter(object => objectLayer(object) === 'normal')) { const tree = { ...tile, x: tile.x * T + 20, y: tile.y * T + 20 }; actors.push({ y: tree.y, draw: () => drawDarkTree(tree) }); }
       if (flower) actors.push({ y: flower.y, draw: () => drawFlowey(flower.x, flower.y, time) }); actors.sort((a, b) => a.y - b.y).forEach(a => a.draw());
       if (story.teamJoined && facingFountain() && !dialogue && !buster) pixelText('C / Z · I. C.', 282, 212, '#ead8ff', 11);
       if (nearbyCandyTree() && !dialogue && !buster) pixelText('C / Z · G. CANDY', player.x - 48, player.y - 68, '#ffd9ee', 10);
@@ -2400,22 +2516,22 @@
       const friend = nearFountainFriend(); if (friend && !dialogue && !buster && story.discussion < 0) pixelText('Z', friend.x - 4, friend.y - 75, '#fff0c7', 14);
       if (flower && nearFlowey() && !dialogue && !buster && story.emerging < 0 && story.discussion < 0) { rect(flower.x - 12, flower.y - 67, 24, 17, '#f2e5c7'); rect(flower.x - 3, flower.y - 50, 6, 4, '#f2e5c7'); pixelText('Z', flower.x - 4, flower.y - 54, '#34283d', 12); }
     } else {
-      for (const tile of roomTrees()) {
+      for (const tile of roomTrees().filter(object => objectLayer(object) === 'normal')) {
         drawDarkTree({ ...tile, x: tile.x * T + 20, y: tile.y * T + 20 });
         if (tool === 'tree' || tool === 'edit') { ctx.strokeStyle = '#efcb84'; ctx.lineWidth = 2; ctx.strokeRect(tile.x * T + 2, tile.y * T + 2, 36, 36); }
       }
       for (const friend of fountainFriends()) drawFountainFriend(friend, time);
-      for (const npc of roomNpcs()) drawNpc(npc);
+      for (const npc of roomNpcs().filter(object => objectLayer(object) === 'normal')) drawNpc(npc);
       if (flower) drawFlowey(flower.x, flower.y, time); ctx.strokeStyle = '#e0d2ff24'; ctx.lineWidth = 1; ctx.beginPath(); for (let x = 0; x <= W; x++) { ctx.moveTo(x * T + .5, 0); ctx.lineTo(x * T + .5, 480); } for (let y = 0; y <= H; y++) { ctx.moveTo(0, y * T + .5); ctx.lineTo(640, y * T + .5); } ctx.stroke();
       const sx = r.spawn.x * T, sy = r.spawn.y * T; rect(sx + 5, sy + 8, 30, 22, '#c4ddb8'); pixelText('GO', sx + 12, sy + 24, '#243632', 12);
       if (hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < H) { rect(hover.x * T, hover.y * T, T, T, '#eedbff35'); ctx.strokeStyle = '#f0d6ff'; ctx.lineWidth = 2; ctx.strokeRect(hover.x * T + 1, hover.y * T + 1, 38, 38); }
     }
     if (mode === 'play') { drawDarkWorldParticles(time, true); drawPlacedParticles(time, true); drawGlitchParticles(time, true); }
-    drawBuster();
+    drawObjectMarkers(); drawBuster();
     if (mode === 'play' && dive?.phase === 'flowey' && dive.age > 1.15) rect(0, 0, 640, 480, 'rgba(8,9,18,' + Math.min(1, (dive.age - 1.15) / .9) + ')');
     ctx.restore();
     if (fade > 0) rect(0, 0, 640, 480, `rgba(17,20,29,${Math.min(1, fade / .32)})`);
-    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'edit' ? 'Click a tile to edit its color, or a marked tree trunk to edit its colors and candy.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
+    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'objectsBehind' ? 'Click an object base to toggle behind other objects / normal.' : tool === 'behindGround' ? 'Click an object base to toggle behind the ground / normal.' : tool === 'glitchPillar' ? 'Click to place a glitch pillar; use Edit on its base to adjust its size.' : tool === 'edit' ? 'Click an object base or tile to edit its appearance and layer.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
   }
   function frame(now) { const dt = Math.min((now - lastTime) / 1000 || 0, .035); lastTime = now; if (!document.hidden) { update(dt); render(now / 1000); } requestAnimationFrame(frame); }
   positionPlayer(current()); updateRoomUI();

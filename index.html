@@ -115,6 +115,10 @@
                     <p class="builder-note">Click a tile to add drifting purple particles. Click it again with this tool to remove them.</p>
                     <div class="tool-row"><button id="glitchParticleTool" aria-pressed="false">✧ Glitch particles</button></div>
                     <p class="builder-note">Click a tile to place animated, tangled color streaks. Click it again with this tool to remove them.</p>
+                    <div class="tool-row"><button id="glitchPillarTool" aria-pressed="false">Glitch pillar</button></div>
+                    <p class="builder-note">Click to place a tall pillar of animated glitch particles. Use Edit on its base to change its height and width.</p>
+                    <div class="tool-row"><button id="objectsBehindTool" aria-pressed="false">Objects behind</button><button id="behindGroundTool" aria-pressed="false">Behind ground</button></div>
+                    <p class="builder-note">Choose a button, then click an object's base. Click again to restore its normal layer. Hidden objects stay marked while using these tools. Edit lets you choose between objects sharing a tile.</p>
                     <div class="tool-row"><button id="deleteTool" aria-pressed="false">⌫ Delete</button><button id="editTool" aria-pressed="false">✎ Edit</button><button id="treeTool" aria-pressed="false">♣ Place tree</button></div>
                     <p class="builder-note">Click a clear tile to plant a tree. Click its trunk tile again to remove it.</p>
                     <div class="tool-row"><button id="spikeTool" aria-pressed="false">▲ Place spike</button></div>
@@ -218,6 +222,15 @@
 <dialog id="objectEditDialog" aria-labelledby="objectEditTitle">
 <form id="objectEditForm">
 <h2 id="objectEditTitle">Edit tile</h2>
+<label for="editObjectTarget">Object on this tile</label><select id="editObjectTarget"></select>
+<div id="objectLayerFields" hidden>
+<label>Draw layer</label><div class="tool-row"><button type="button" id="editLayerNormal" aria-pressed="true">Normal</button><button type="button" id="editLayerBack" aria-pressed="false">Objects behind</button><button type="button" id="editLayerGround" aria-pressed="false">Behind ground</button></div>
+<p class="helptext">Layers change appearance. Walking, damage, and interactions stay the same.</p>
+</div>
+<div id="glitchPillarFields" hidden>
+<label for="editGlitchHeight">Pillar height (tiles)</label><input id="editGlitchHeight" type="number" min="1" max="12" step="1" value="8">
+<label for="editGlitchWidth">Pillar width (tiles)</label><input id="editGlitchWidth" type="number" min="1" max="4" step="1" value="1">
+</div>
 <div id="tileColorFields"><label for="editTileColor">Tile color</label><input id="editTileColor" type="color" value="#a349a4"></div>
 <div id="treeEditFields" hidden>
 <label for="editCanopyColor">Foliage color</label><input id="editCanopyColor" type="color" value="#160d39">
