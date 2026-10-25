@@ -316,11 +316,22 @@
     for (let y = 10; y < H; y++) { source.map[y][14] = 0; source.map[y][15] = 6; source.doorLinks['15,' + y] = destination; }
     return p;
   }
+  function addFurnaceChamber(p) {
+    if (p.rooms.some(room => room.scene === 'darkFurnace') || p.rooms.length >= 20) return p;
+    const previous = p.rooms.findIndex(room => room.scene === 'darkGoldenHall'); if (previous < 0) return p;
+    const map = Array.from({ length: H }, () => Array(W).fill(1));
+    for (let y = 7; y <= 9; y++) for (let x = 3; x <= 12; x++) map[y][x] = 0;
+    map[8][3] = 6;
+    p.rooms.push({ name: 'The Furnace Chamber', scene: 'darkFurnace', theme: 'dark', map,
+      spawn: { x: 5, y: 8 }, flowey: { x: 4, y: 8 }, npcs: [], dialogue: [], target: previous,
+      doorLinks: { '3,8': previous } });
+    return p;
+  }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
   if (!validProject(project)) project = defaults();
   try { const stored = JSON.parse(localStorage.getItem(keyName)); if (validProject(stored) && stored.updatedAt > project.updatedAt) project = stored; } catch (e) { /* File URLs may not provide browser storage. Downloads still work. */ }
-  project = addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project))))))))));
+  project = addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project)))))))))));
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
   const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false };
@@ -415,7 +426,7 @@
     return slots;
   }
   function openProgressMenu(action) {
-    if (holeFall || padJump || $('holeChoiceDialog').open) return;
+    if (holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     if (death) { toast('Use Try again to continue after your party falls.'); return; }
     if (mode !== 'play' || isImportantCutscene()) { toast('Finish this cutscene before loading a game.'); return; }
     keys.clear(); player.moving = false;
@@ -457,9 +468,9 @@
   }
   function restoreProgress(slot) {
     if (!validProgress(slot)) { $('saveFeedback').textContent = 'This save cannot be loaded.'; return; }
-    death = null; holeFall = null; padJump = null; pendingPad = null; lastPadContact = null; $('holeChoiceDialog').close(); $('gameOverDialog').close();
+    death = null; holeFall = null; padJump = null; pendingPad = null; lastPadContact = null; $('goldenDoorChoiceDialog').close(); $('holeChoiceDialog').close(); $('gameOverDialog').close();
     clearTimeout(saveTimer); endStroke(); closeDialogue();
-    project = addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(clone(slot.project)))))))); roomIndex = slot.roomIndex;
+    project = addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(clone(slot.project))))))))); roomIndex = slot.roomIndex;
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
@@ -514,7 +525,7 @@
   }
   $('candyTarget').onchange = e => { candyTarget = e.target.value; updateInventoryMenu(); $('inventoryFeedback').textContent = ''; };
   function toggleInventory() {
-    if (death || holeFall || padJump || $('holeChoiceDialog').open) return;
+    if (death || holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     if ($('inventoryDialog').open) { $('inventoryDialog').close(); return; }
     if ($('helpDialog').open || $('saveDialog').open || $('objectEditDialog').open) { toast('Close the current menu, then press O for inventory.'); return; }
     keys.clear(); player.moving = false; selectedItem = '';
@@ -582,6 +593,7 @@
     chapterUI();
   }
   function chapterUI() {
+    if (current().scene === 'darkFurnace') { $('taskTitle').textContent='Explore the furnace chamber';$('taskDescription').textContent='An enormous machine glows above the lava. Follow the orange stone walkway, or head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
     if (current().scene === 'darkGoldenHall') { $('taskTitle').textContent='Approach the golden door';$('taskDescription').textContent='Follow the outlined walkway toward the towering golden door.';$('storySummary').textContent='The purple gives way to black. Golden vines curl around a towering, silent doorway.';return; }
     if (current().scene === 'darkWindingPassage') { $('taskTitle').textContent='Follow the winding path';$('taskDescription').textContent='Go up, cross the bridge above the gap, then follow the right-hand passage down.';$('storySummary').textContent='The path folds around a purple chasm. A soft glow marks the way ahead.';return; }
     if (current().scene === 'darkJumpIslands') { $('taskTitle').textContent='Cross the leaping isles';$('taskDescription').textContent='Step onto the glowing red arrows to jump between the platforms.';$('storySummary').textContent='Three round islands float in the purple dark. Jump pads point the way across.';return; }
@@ -611,7 +623,7 @@
     roomIndex = index; lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
   }
   function defaultRoomBackground(room = current()) {
-    return room.scene === 'darkGoldenHall' ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
+    return ['darkGoldenHall','darkFurnace'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
   }
   function roomBackground(room = current()) { return room.backgroundColor || defaultRoomBackground(room); }
   $('roomBackgroundColor').onchange = e => {
@@ -636,7 +648,7 @@
     if (roomIndex !== 1 && tool === 'flowey') selectTool(0); updateNpcUI(); storyUI();
   }
   function setMode(next) {
-    if (holeFall || padJump || $('holeChoiceDialog').open) return;
+    if (holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     if (death) { toast('Use Try again to continue after your party falls.'); return; }
     if (dive) { toast('Finish this I. C. before opening Build.'); return; }
     endStroke(); clearTimeout(saveTimer); save();
@@ -890,7 +902,7 @@
   const dirKeys = { ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down', ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
   canvas.addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey) { if (mode === 'build' && e.key.toLowerCase() === 'z') { e.preventDefault(); $('undoButton').click(); } return; }
-    if (death || holeFall || padJump || $('holeChoiceDialog').open || mode !== 'play' || $('saveDialog').open || $('inventoryDialog').open) return;
+    if (death || holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open) || mode !== 'play' || $('saveDialog').open || $('inventoryDialog').open) return;
     if (dirKeys[e.key]) { e.preventDefault(); keys.add(dirKeys[e.key]); }
     if (['z', 'Z', 'Enter', ' '].includes(e.key)) { e.preventDefault(); if (!e.repeat) talk(); }
     if (['x', 'X', 'Escape'].includes(e.key)) { e.preventDefault(); if (dialogue && (importantKinds.has(dialogue.kind) || ['intro', 'worlds'].includes(dialogue.kind))) advanceDialogue(); else closeDialogue(); }
@@ -899,7 +911,7 @@
   document.addEventListener('keydown', e => {
     if (!['c', 'C', 'l', 'L'].includes(e.key) || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
     const typing = node => node && (/^(INPUT|TEXTAREA|SELECT)$/.test(node.tagName) || node.isContentEditable || node.closest?.('[contenteditable="true"],[contenteditable=""]'));
-    if (death || holeFall || padJump || $('holeChoiceDialog').open || mode !== 'play' || $('helpDialog').open || $('saveDialog').open || $('inventoryDialog').open || typing(e.target) || typing(document.activeElement)) return;
+    if (death || holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open) || mode !== 'play' || $('helpDialog').open || $('saveDialog').open || $('inventoryDialog').open || typing(e.target) || typing(document.activeElement)) return;
     e.preventDefault(); if (e.repeat) return;
     canvas.focus({ preventScroll: true }); if (e.key.toLowerCase() === 'l') skipDialogue(); else inspectObject();
   });
@@ -1020,7 +1032,7 @@
     return true;
   }
   function inspectObject() {
-    if (death || holeFall || padJump || $('holeChoiceDialog').open) return;
+    if (death || holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     if (mode !== 'play' || buster || (dive && dive.phase !== 'hesitate') || $('helpDialog').open || story.emerging >= 0 || story.discussion >= 0) return;
     if (dialogue) { advanceDialogue(); return; }
     if (inspectGoldenDoor()) return;
@@ -1048,7 +1060,7 @@
   function announcePage() { const page = dialogue.lines[dialogue.index]; announce((page.speaker === 'Narrator' ? '' : page.speaker + ': ') + page.text); }
   function openDialogue(lines, kind = 'chat', customSpeaker = null) { keys.clear(); player.moving = false; dialogue = { lines: dialoguePages(lines, customSpeaker), index: 0, shown: 0, kind }; $('dialogue').hidden = false; announcePage(); renderDialogue(); }
   function talk() {
-    if (death || holeFall || padJump || $('holeChoiceDialog').open) return;
+    if (death || holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     if (mode !== 'play' || buster || (dive && dive.phase !== 'hesitate')) return; if (dialogue) { advanceDialogue(); return; } if (story.emerging >= 0 || story.discussion >= 0) return;
     if (inspectGoldenDoor()) return;
     if (nearHole()) { offerHoleJump(); return; }
@@ -1093,7 +1105,7 @@
       (story.discussion >= 0 && current().scene === 'fountain');
   }
   function skipDialogue() {
-    if (mode !== 'play' || $('holeChoiceDialog').open || $('helpDialog').open || $('saveDialog').open || $('inventoryDialog').open) return;
+    if (mode !== 'play' || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open) || $('helpDialog').open || $('saveDialog').open || $('inventoryDialog').open) return;
     if (isImportantCutscene()) { toast('I. C. — this important cutscene cannot be skipped.'); return; }
     if (story.emerging >= 0) {
       story.emerging = -1; story.reveal = 1; openDialogue(project.rooms[1].dialogue, 'intro');
@@ -1112,7 +1124,7 @@
     else if (dialogue.index < dialogue.lines.length - 1) { dialogue.index++; dialogue.shown = 0; announcePage(); }
     else {
       const kind = dialogue.kind; closeDialogue();
-      if (kind === 'goldenDoors') { story.goldenDoorExplained = true; storyUI(); }
+      if (kind === 'goldenDoors') { story.goldenDoorExplained = true; storyUI(); openGoldenDoorChoice(); }
       if (kind === 'fountainDive') startFountainDive();
       if (kind === 'floweyHesitate' && dive) { dive.phase = 'flowey'; dive.age = 0; announce('Flowey jumps in last.'); }
       if (kind === 'intro') recruitFlowey();
@@ -1233,7 +1245,7 @@
       inline.textContent = "'use strict';\n(" + startGame.toString() + ")();";
       gameScript.replaceWith(inline);
     }
-    copy.querySelector('#holeChoiceDialog').removeAttribute('open');copy.querySelector('#gameOverDialog').removeAttribute('open');copy.querySelector('#inventoryDialog').removeAttribute('open');copy.querySelector('#objectEditDialog').removeAttribute('open');copy.querySelector('#saveDialog').removeAttribute('open');copy.querySelector('#helpDialog').removeAttribute('open'); copy.querySelector('#dialogue').hidden = true; copy.querySelector('#toast').hidden = true;
+    copy.querySelector('#goldenDoorChoiceDialog').removeAttribute('open');copy.querySelector('#holeChoiceDialog').removeAttribute('open');copy.querySelector('#gameOverDialog').removeAttribute('open');copy.querySelector('#inventoryDialog').removeAttribute('open');copy.querySelector('#objectEditDialog').removeAttribute('open');copy.querySelector('#saveDialog').removeAttribute('open');copy.querySelector('#helpDialog').removeAttribute('open'); copy.querySelector('#dialogue').hidden = true; copy.querySelector('#toast').hidden = true;
     const blob = new Blob(['<!doctype html>\n' + copy.outerHTML], { type: 'text/html;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = 'Two-Worlds-My-Game.html'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000); toast('Your game copy is downloading. Keep it somewhere you can find it.');
   };
@@ -1314,10 +1326,26 @@
       '[Ralsey] * Whatever is on the other side, we will face it together.'
     ], 'goldenDoors');
   }
+  function openGoldenDoorChoice() {
+    if (death || mode !== 'play' || !nearGoldenDoor() || $('goldenDoorChoiceDialog').open) return;
+    keys.clear(); player.moving = false; $('goldenDoorChoiceDialog').showModal();
+    announce('Enter the golden doors? Choose Enter or Stay here.');
+  }
+  function stayAtGoldenDoors() {
+    $('goldenDoorChoiceDialog').close(); keys.clear(); canvas.focus({ preventScroll: true });
+  }
+  $('stayAtGoldenDoorButton').onclick = stayAtGoldenDoors;
+  $('goldenDoorChoiceDialog').addEventListener('cancel', e => { e.preventDefault(); stayAtGoldenDoors(); });
+  $('enterGoldenDoorButton').onclick = () => {
+    const destination = project.rooms.findIndex(room => room.scene === 'darkFurnace');
+    if (destination < 0) { toast('The furnace room could not be added because this game has reached its room limit.'); return; }
+    $('goldenDoorChoiceDialog').close(); keys.clear(); changeRoom(destination, true);
+    announce('Your party enters the furnace chamber.');
+  };
   function inspectGoldenDoor() {
     if (!nearGoldenDoor() || nearSavePoint()) return false;
     if (story.teamJoined && story.joined && !story.goldenDoorExplained) { openGoldenDoorConversation(); return true; }
-    openDialogue(['[Narrator] * An ornate golden door towers above you.'], 'inspect'); return true;
+    openGoldenDoorChoice(); return true;
   }
   function drawIslands() {
     if (current().scene !== 'darkJumpIslands') return;
@@ -1329,7 +1357,7 @@
     return current().scene === 'darkGlowPassage' && !current().hideHole && Math.hypot(player.x - 420, player.y - 140) < distance;
   }
   function offerHoleJump() {
-    if (mode !== 'play' || death || dialogue || holeFall || $('holeChoiceDialog').open) return;
+    if (mode !== 'play' || death || dialogue || holeFall || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     keys.clear(); player.moving = false; $('holeChoiceDialog').showModal();
     announce('Flowey: If we fall, we cant go back! Choose Jump or Go back.');
   }
@@ -1381,7 +1409,7 @@
     return partyNames.filter(memberInParty).every(name => partyHP[name] <= 0);
   }
   function beginDeath() {
-    if (death || holeFall || padJump || $('holeChoiceDialog').open) return;
+    if (death || holeFall || padJump || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open)) return;
     death = { age: 0, menuShown: false }; keys.clear(); player.moving = false;
     cameraShakeTime = 0; closeDialogue(); $('toast').hidden = true;
     announce('Your party has fallen.');
@@ -1431,7 +1459,7 @@
     }
     cameraShakeTime = Math.max(0, cameraShakeTime - dt);
     fade = Math.max(0, fade - dt); doorCooldown = Math.max(0, doorCooldown - dt);
-    if (mode !== 'play' || $('holeChoiceDialog').open || $('helpDialog').open || $('saveDialog').open || $('inventoryDialog').open) return;
+    if (mode !== 'play' || ($('holeChoiceDialog').open || $('goldenDoorChoiceDialog').open) || $('helpDialog').open || $('saveDialog').open || $('inventoryDialog').open) return;
     if (padJump) { updatePadJump(dt); return; }
     if (holeFall) { updateHoleFall(dt); return; }
     if (dive && dive.phase !== 'hesitate') { updateDive(dt); return; }
@@ -1452,7 +1480,7 @@
     if (nearHole(58)) { offerHoleJump(); return; }
     updateSpikeContact(tx, ty);
     if (partyHasFallen()) { beginDeath(); return; }
-    if (!doorCooldown && current().map[ty][tx] === 6) { doorCooldown = 1; const target = current().doorLinks?.[tx + ',' + ty] ?? current().target; if (target < 0) toast('This doorway needs a destination. Choose one in Build.'); else changeRoom(target, true, current().scene === 'darkGoldenHall' && project.rooms[target]?.scene === 'darkWindingPassage' ? { x: 14, y: 10 } : current().scene === 'darkWindingPassage' && project.rooms[target]?.scene === 'darkJumpIslands' ? { x: 14, y: 8 } : current().scene === 'darkJumpIslands' && project.rooms[target]?.scene === 'darkGlowPassage' ? { x: 14, y: 9 } : project.rooms[target]?.scene === 'darkJunction' ? (current().scene === 'darkDescent' ? { x: 8, y: 10 } : current().scene === 'darkGlowPassage' ? { x: 14, y: 4 } : undefined) : undefined); }
+    if (!doorCooldown && current().map[ty][tx] === 6) { doorCooldown = 1; const target = current().doorLinks?.[tx + ',' + ty] ?? current().target; if (target < 0) toast('This doorway needs a destination. Choose one in Build.'); else changeRoom(target, true, current().scene === 'darkFurnace' && project.rooms[target]?.scene === 'darkGoldenHall' ? { x: 11, y: 10 } : current().scene === 'darkGoldenHall' && project.rooms[target]?.scene === 'darkWindingPassage' ? { x: 14, y: 10 } : current().scene === 'darkWindingPassage' && project.rooms[target]?.scene === 'darkJumpIslands' ? { x: 14, y: 8 } : current().scene === 'darkJumpIslands' && project.rooms[target]?.scene === 'darkGlowPassage' ? { x: 14, y: 9 } : project.rooms[target]?.scene === 'darkJunction' ? (current().scene === 'darkDescent' ? { x: 8, y: 10 } : current().scene === 'darkGlowPassage' ? { x: 14, y: 4 } : undefined) : undefined); }
   }
   function rect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
   function pixelText(text, x, y, color, size = 10) { ctx.fillStyle = color; ctx.font = `${size}px monospace`; ctx.fillText(text, x, y); }
@@ -1460,6 +1488,16 @@
     if (id === 10) { rect(x,y,T,T,roomBackground()); return; }
     const color = current().tileColors?.[x / T + ',' + y / T];
     if (color) { rect(x, y, T, T, color); return; }
+    if (current().scene === 'darkFurnace' && (id === 0 || id === 1 || id === 6)) {
+      if (id === 1) rect(x,y,T,T,roomBackground());
+      else {
+        rect(x,y,T,T,'#b45716');
+        for (let i=0;i<5;i++) rect(x+(i*11+y)%38,y+(i*17+x)%37,2,2,'#bb601b');
+        if (y===280) { rect(x,y,T,4,'#55131c'); for(let i=0;i<5;i++){rect(x+i*8,y+3,6,4,'#872d17');rect(x+i*8+2,y+7,3,2,'#6b2016');} }
+        if (y===360) for(let i=0;i<5;i++)rect(x+i*8,y+35,5,5,'#762016');
+      }
+      return;
+    }
     if (current().scene === 'darkGoldenHall' && (id === 0 || id === 1 || id === 6)) { rect(x,y,T,T,id === 1 ? roomBackground() : '#000000'); return; }
     if (id === 1 && current().backgroundColor && current().scene !== 'darkJumpIslands') { rect(x,y,T,T,roomBackground()); return; }
     if (current().scene === 'darkJumpIslands' && (id === 0 || id === 1 || id === 6)) return;
@@ -1498,7 +1536,7 @@
     front: i % 4 === 0
   }));
   function drawDarkWorldParticles(time, foreground) {
-    if (current().theme !== 'dark') return;
+    if (current().theme !== 'dark' || current().scene === 'darkFurnace') return;
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save();
     for (const particle of darkWorldParticles) {
@@ -1605,6 +1643,57 @@
       }
     }
     ctx.restore();
+  }
+  function drawFurnaceRoom(time) {
+    if (current().scene !== 'darkFurnace') return;
+    const t=reducedParticleMotion.matches ? 0 : time;
+    // Basalt bricks beneath the orange walkway.
+    rect(120,400,400,80,'#4b0812');
+    for(let row=0;row<5;row++)for(let col=0;col<21;col++){
+      const x=120+col*20-(row%2)*10,y=400+row*16;
+      const left=Math.max(120,x),right=Math.min(520,x+18);if(right<=left)continue;
+      rect(left,y,right-left,14,'#801c16');rect(left,y,right-left,3,'#a84419');rect(left+2,y+4,Math.max(1,right-left-4),2,'#bc571c');
+      rect(left,y+12,right-left,2,'#551019');
+    }
+    // Lava pool and its yellow-hot surface, safely above the walkway.
+    ctx.save();ctx.shadowColor='#ff2500';ctx.shadowBlur=18;
+    ctx.fillStyle='#e9090d';ctx.beginPath();ctx.ellipse(320,252,126,20,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    for(let i=0;i<16;i++){
+      const x=214+(i*37)%210,y=242+(i*11)%25;
+      rect(x+Math.sin(t*1.3+i)*3,y,12+i%4*4,3,'#ffcc20');rect(x+5,y+3,6,2,'#ffed42');
+    }
+    // The towering machine: dark burgundy panels, pipes and red-lit vents.
+    rect(222,0,196,225,'#1a1017');rect(232,0,176,218,'#3e2028');
+    for(const x of [230,390]){
+      rect(x,0,18,183,'#170e14');rect(x+3,0,12,180,'#512a31');rect(x+6,0,3,180,'#734048');
+      rect(x-8,143,34,54,'#180d14');rect(x-5,148,28,42,'#49232c');
+      for(let j=0;j<4;j++)rect(x,158+j*6,19,3,'#1b1016');
+      rect(x-3,183,25,4,'#dc0e24');
+    }
+    for(const x of [252,354]){
+      rect(x,48,34,151,'#170d13');rect(x+3,51,28,146,'#492630');
+      for(let j=0;j<4;j++){rect(x+5+j*6,54,2,138,'#201118');rect(x+5,62+j*34,25,3,'#6a343d');}
+      rect(x+7,157,20,7,'#180d13');rect(x+10,159,3,2,'#e30e28');
+    }
+    for(const [x,y,w,h] of [[218,0,44,55],[378,0,44,55],[265,0,45,32],[332,0,45,32],[295,36,51,48],[292,92,57,29]]){
+      rect(x,y,w,h,'#140c12');rect(x+3,y+3,w-6,h-6,'#512731');rect(x+7,y+7,w-14,h-14,'#180e16');
+      rect(x+4,y+h-7,w-8,3,'#783742');
+    }
+    for(const x of [218,374]){
+      rect(x,55,48,9,'#1b1015');rect(x+5,64,38,6,'#49252d');
+      rect(x+9,70,30,4,'#ed0928');rect(x+15,74,22,3,'#8a1023');
+    }
+    rect(304,84,32,10,'#6d1b2b');rect(301,94,38,5,'#f1152a');rect(307,100,27,4,'#8b0d22');
+    rect(284,167,72,42,'#2b1920');rect(286,168,68,4,'#6a343b');
+    for(let j=0;j<4;j++)rect(286,180+j*9,68,2,'#170d15');
+    for(let i=0;i<3;i++){rect(218-i*5,213+i*8,204+i*10,6,'#5e2330');rect(218-i*5,219+i*8,204+i*10,2,'#c10d24');}
+    ctx.strokeStyle='#130c12';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(299,113);ctx.lineTo(299,144);ctx.lineTo(281,162);ctx.lineTo(281,200);ctx.stroke();
+    // Small embers replace the violet motes in this hot chamber.
+    for(let i=0;i<22;i++){
+      const x=210+(i*43)%224,y=270-((t*(8+i%4)+i*19)%250);
+      ctx.globalAlpha=.25+(i%3)*.16;rect(x+Math.sin(t+i)*5,y,2,2,'#ff6b24');
+    }
+    ctx.globalAlpha=1;
   }
   function drawPassageGlow(time) {
     if (!['darkGlowPassage','darkJumpIslands','darkWindingPassage'].includes(current().scene)) return;
@@ -1812,7 +1901,7 @@
       ctx.translate(Math.round(Math.sin(time * 95) * strength), Math.round(Math.cos(time * 113) * strength));
     }
     drawIslands();
-    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
+    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
     const flower = floweyPosition();
     if (mode === 'play' && padJump) {
       drawPadJump(time);
