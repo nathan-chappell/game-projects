@@ -477,6 +477,7 @@
   project = upgradeProject(project);
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
+  let placementLayer = 'normal', layerApplyMode = false;
   const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false, coreGlitchNoticed: false };
   const maxHP = 100;
   const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
@@ -925,11 +926,24 @@
     if (roomNpcs().length >= 24) { toast('This room already has 24 NPCs.'); return; }
     if (!npcSpaceOpen(x, y)) { toast('Choose a clear tile away from other characters and doorways.'); return; }
     remember();
-    const npc = { id: 'frog-' + Date.now().toString(36) + '-' + (++npcSequence), sprite: 'frog', name: 'Froggit', x, y, speech: ['* Ribbit.', '* Hello there.'] };
+    const npc = newPlacedObject({ id: 'frog-' + Date.now().toString(36) + '-' + (++npcSequence), sprite: 'frog', name: 'Froggit', x, y, speech: ['* Ribbit.', '* Hello there.'] });
     (current().npcs ??= []).push(npc); selectedNpcId = npc.id; save(); updateNpcUI(); selectTool('npcSelect'); toast('Froggit placed. Edit its speech in the NPC panel.');
   }
-  function selectTool(value) { if (value !== 'jumpPad') pendingPad = null; tool = value; $('deleteTool').setAttribute('aria-pressed', String(value === 'delete')); $('jumpPadTool').setAttribute('aria-pressed', String(value === 'jumpPad')); $('spikeTool').setAttribute('aria-pressed', String(value === 'spike')); $('editTool').setAttribute('aria-pressed', String(value === 'edit')); $('treeTool').setAttribute('aria-pressed', String(value === 'tree')); $('particleTool').setAttribute('aria-pressed', String(value === 'particles')); $('glitchParticleTool').setAttribute('aria-pressed', String(value === 'glitchParticles')); $('glitchPillarTool').setAttribute('aria-pressed', String(value === 'glitchPillar')); $('objectsBehindTool').setAttribute('aria-pressed', String(value === 'objectsBehind')); $('behindGroundTool').setAttribute('aria-pressed', String(value === 'behindGround')); $('savePointTool').setAttribute('aria-pressed', String(value === 'savePoint')); document.querySelectorAll('.tile-button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.tile) === value))); $('floweyTool').setAttribute('aria-pressed', String(value === 'flowey')); $('spawnTool').setAttribute('aria-pressed', String(value === 'spawn')); $('npcTool').setAttribute('aria-pressed', String(value === 'npc')); $('npcSelectTool').setAttribute('aria-pressed', String(value === 'npcSelect')); $('npcMove').setAttribute('aria-pressed', String(value === 'npcMove')); }
+  function selectTool(value) { layerApplyMode = false; updatePlacementLayerUI(); if (value !== 'jumpPad') pendingPad = null; tool = value; $('deleteTool').setAttribute('aria-pressed', String(value === 'delete')); $('jumpPadTool').setAttribute('aria-pressed', String(value === 'jumpPad')); $('spikeTool').setAttribute('aria-pressed', String(value === 'spike')); $('editTool').setAttribute('aria-pressed', String(value === 'edit')); $('treeTool').setAttribute('aria-pressed', String(value === 'tree')); $('particleTool').setAttribute('aria-pressed', String(value === 'particles')); $('glitchParticleTool').setAttribute('aria-pressed', String(value === 'glitchParticles')); $('glitchPillarTool').setAttribute('aria-pressed', String(value === 'glitchPillar')); $('savePointTool').setAttribute('aria-pressed', String(value === 'savePoint')); document.querySelectorAll('.tile-button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.tile) === value))); $('floweyTool').setAttribute('aria-pressed', String(value === 'flowey')); $('spawnTool').setAttribute('aria-pressed', String(value === 'spawn')); $('npcTool').setAttribute('aria-pressed', String(value === 'npc')); $('npcSelectTool').setAttribute('aria-pressed', String(value === 'npcSelect')); $('npcMove').setAttribute('aria-pressed', String(value === 'npcMove')); }
   tiles.forEach(t => { const b = document.createElement('button'); b.className = 'tile-button'; b.dataset.tile = t.id; b.setAttribute('aria-pressed', String(t.id === 0)); b.title = t.label + (t.solid ? ' · blocks walking' : ''); const swatch = document.createElement('span'); swatch.className = 'swatch'; swatch.style.background = t.color; swatch.setAttribute('aria-hidden', 'true'); b.append(swatch, document.createTextNode(t.label)); b.onclick = () => selectTool(t.id); $('palette').append(b); });
+  function updatePlacementLayerUI() {
+    $('objectsBehindTool').setAttribute('aria-pressed', String(placementLayer === 'back'));
+    $('behindGroundTool').setAttribute('aria-pressed', String(placementLayer === 'ground'));
+    $('buildLayerStatus').textContent = 'New objects: ' + ({ normal: 'Normal', back: 'Objects behind', ground: 'Behind ground' })[placementLayer];
+  }
+  function selectPlacementLayer(layer) {
+    placementLayer = placementLayer === layer ? 'normal' : layer;
+    layerApplyMode = true; updatePlacementLayerUI();
+    toast('Layer selected: ' + ({ normal: 'Normal', back: 'Objects behind', ground: 'Behind ground' })[placementLayer] + '. Choose an object tool to place it, or click an existing object to change its layer.');
+  }
+  function newPlacedObject(object) {
+    return placementLayer === 'normal' ? object : { ...object, renderLayer: placementLayer };
+  }
   function roomObjectGroups() {
     const r = current();
     return [['glitchPoints', r.glitchPoints || [], 'Glitch particles'], ['particlePoints', r.particlePoints || [], 'Particles'],
@@ -947,6 +961,9 @@
   function changeObjectLayer(x, y, layer) {
     const target = objectsAt(x, y)[0];
     if (!target) { toast('Click the base tile of a placed object.'); return; }
+    stroke.layerCells ??= new Set();
+    const key = x + ',' + y; if (stroke.layerCells.has(key)) return;
+    stroke.layerCells.add(key);
     if (!stroke.changed) { remember(); stroke.changed = true; }
     const next = objectLayer(target.object) === layer ? 'normal' : layer;
     writeObject(target, { renderLayer: next });
@@ -1030,8 +1047,8 @@
   $('treeTool').onclick = () => { selectTool('tree'); toast('Click a clear tile to plant a tree. Click a trunk tile again to remove it.'); };
   $('glitchParticleTool').onclick = () => { selectTool('glitchParticles'); toast('Click anywhere to place a glitch. Click it again to remove it.'); };
   $('glitchPillarTool').onclick = () => { selectTool('glitchPillar'); toast('Click to place a tall glitch pillar. Edit its base to change its size.'); };
-  $('objectsBehindTool').onclick = () => { selectTool('objectsBehind'); toast('Click an object base to put it behind other objects. Click again to restore it.'); };
-  $('behindGroundTool').onclick = () => { selectTool('behindGround'); toast('Click an object base to put it behind the ground. Click again to restore it.'); };
+  $('objectsBehindTool').onclick = () => selectPlacementLayer('back');
+  $('behindGroundTool').onclick = () => selectPlacementLayer('ground');
   $('particleTool').onclick = () => { selectTool('particles'); toast('Click a tile to add particles. Click a marked tile again to remove them.'); };
   $('savePointTool').onclick = () => { selectTool('savePoint'); toast('Click a clear tile to add a save point. Click a star to remove it.'); };
   $('npcTool').onclick = () => selectTool('npc');
@@ -1100,6 +1117,7 @@
   }
   function paint(cell) {
     const { x, y } = cell, r = current(); if (x < 0 || y < 0 || x >= W || y >= H) return;
+    if (layerApplyMode && objectsAt(x, y).length) { changeObjectLayer(x, y, placementLayer); return; }
     if (tool === 'delete') { deleteAt(x, y); return; }
     if (tool === 'jumpPad') {
       const pads = r.jumpPads || [], existing = pads.findIndex(pad => pad.x === x && pad.y === y);
@@ -1110,7 +1128,7 @@
       if (!pendingPad) { pendingPad = { x, y, roomIndex }; toast('Now click the landing spot.'); return; }
       if (pendingPad.roomIndex !== roomIndex) { pendingPad = null; toast('Place the pad and landing in the same room.'); return; }
       if (pendingPad.x === x && pendingPad.y === y) { toast('Choose a different landing tile.'); return; }
-      remember(); r.jumpPads = [...pads, { x: pendingPad.x, y: pendingPad.y, targetX: x, targetY: y }];
+      remember(); r.jumpPads = [...pads, newPlacedObject({ x: pendingPad.x, y: pendingPad.y, targetX: x, targetY: y })];
       pendingPad = null; stroke.changed = true; toast('Jump pad ready!'); return;
     }
     if (tool === 'spike') {
@@ -1121,10 +1139,9 @@
       if (!stroke.changed) { remember(); stroke.changed = true; }
       r.spikes = spikes.map(point => ({ ...point }));
       if (existing >= 0) { r.spikes.splice(existing, 1); toast('Spike removed.'); }
-      else { r.spikes.push({ x, y }); toast('Spike placed.'); }
+      else { r.spikes.push(newPlacedObject({ x, y })); toast('Spike placed.'); }
       return;
     }
-    if (tool === 'objectsBehind' || tool === 'behindGround') { changeObjectLayer(x, y, tool === 'objectsBehind' ? 'back' : 'ground'); return; }
     if (tool === 'edit') { openObjectEditor(x, y); return; }
     if (tool === 'tree') {
       const trees = roomTrees(), existing = trees.findIndex(tree => tree.x === x && tree.y === y);
@@ -1137,7 +1154,7 @@
       if (!stroke.changed) { remember(); stroke.changed = true; }
       r.trees = trees.map(tree => ({ ...tree }));
       if (existing >= 0) { r.trees.splice(existing, 1); toast('Tree removed.'); }
-      else { r.trees.push({ x, y }); toast('Tree planted.'); }
+      else { r.trees.push(newPlacedObject({ x, y })); toast('Tree planted.'); }
       return;
     }
     if (tool === 'glitchParticles' || tool === 'glitchPillar') {
@@ -1145,7 +1162,7 @@
       if (!stroke.changed) { remember(); stroke.changed = true; }
       r.glitchPoints = points.map(point => ({ ...point }));
       if (existing >= 0) { r.glitchPoints.splice(existing, 1); toast('Glitch removed.'); }
-      else { r.glitchPoints.push({ x, y, ...(tool === 'glitchPillar' ? { shape: 'pillar', height: 8, width: 1 } : {}) }); toast('Glitch placed. Save build to keep your edits.'); }
+      else { r.glitchPoints.push(newPlacedObject({ x, y, ...(tool === 'glitchPillar' ? { shape: 'pillar', height: 8, width: 1 } : {}) })); toast('Glitch placed. Save build to keep your edits.'); }
       return;
     }
     if (tool === 'particles') {
@@ -1153,7 +1170,7 @@
       if (!stroke.changed) { remember(); stroke.changed = true; }
       r.particlePoints = points.map(point => ({ ...point }));
       if (existing >= 0) { r.particlePoints.splice(existing, 1); toast('Particles removed.'); }
-      else { r.particlePoints.push({ x, y }); toast('Particles placed.'); }
+      else { r.particlePoints.push(newPlacedObject({ x, y })); toast('Particles placed.'); }
       return;
     }
     if (tool === 'savePoint') {
@@ -1162,7 +1179,7 @@
       if (!cellOpen(r, x, y)) { toast('Choose a clear floor tile for a save point.'); return; }
       if (!stroke.changed) { remember(); stroke.changed = true; }
       r.savePoints = points.map(point => ({ ...point }));
-      r.savePoints.push({ x, y }); toast('Save point placed.');
+      r.savePoints.push(newPlacedObject({ x, y })); toast('Save point placed.');
       return;
     }
     if (['npc', 'npcMove', 'npcSelect'].includes(tool)) { editNpcCell(x, y); return; }
@@ -2123,7 +2140,7 @@
     actors.sort((a,b) => a.y-b.y).forEach(actor => actor.draw());
   }
   function drawObjectMarkers() {
-    if (mode !== 'build' || !['edit','delete','objectsBehind','behindGround','glitchPillar'].includes(tool)) return;
+    if (mode !== 'build' || (!layerApplyMode && placementLayer === 'normal' && !['edit','delete','glitchPillar'].includes(tool))) return;
     ctx.save(); ctx.lineWidth = 1; ctx.setLineDash([3,3]);
     for (const [,objects] of roomObjectGroups()) for (const object of objects) {
       const layer = objectLayer(object), x = object.x*T, y = object.y*T;
@@ -2133,7 +2150,7 @@
         const w=(object.width??1)*T, h=(object.height??8)*T;
         ctx.strokeRect(x+20-w/2,y+T-h,w,h);
       }
-      if (['objectsBehind','behindGround'].includes(tool)) pixelText(layer === 'ground' ? 'GROUND' : layer === 'back' ? 'BEHIND' : 'NORMAL', x+2,y+12,ctx.strokeStyle,8);
+      if (layerApplyMode || placementLayer !== 'normal') pixelText(layer === 'ground' ? 'GROUND' : layer === 'back' ? 'BEHIND' : 'NORMAL', x+2,y+12,ctx.strokeStyle,8);
     }
     ctx.restore();
   }
@@ -2531,7 +2548,7 @@
     if (mode === 'play' && dive?.phase === 'flowey' && dive.age > 1.15) rect(0, 0, 640, 480, 'rgba(8,9,18,' + Math.min(1, (dive.age - 1.15) / .9) + ')');
     ctx.restore();
     if (fade > 0) rect(0, 0, 640, 480, `rgba(17,20,29,${Math.min(1, fade / .32)})`);
-    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'objectsBehind' ? 'Click an object base to toggle behind other objects / normal.' : tool === 'behindGround' ? 'Click an object base to toggle behind the ground / normal.' : tool === 'glitchPillar' ? 'Click to place a glitch pillar; use Edit on its base to adjust its size.' : tool === 'edit' ? 'Click an object base or tile to edit its appearance and layer.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
+    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'glitchPillar' ? 'Click to place a glitch pillar; use Edit on its base to adjust its size.' : tool === 'edit' ? 'Click an object base or tile to edit its appearance and layer.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
   }
   function frame(now) { const dt = Math.min((now - lastTime) / 1000 || 0, .035); lastTime = now; if (!document.hidden) { update(dt); render(now / 1000); } requestAnimationFrame(frame); }
   positionPlayer(current()); updateRoomUI();
