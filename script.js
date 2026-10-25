@@ -385,6 +385,18 @@
     }
     return p;
   }
+  function addCoreFallSpike(room) {
+    // Existing Build placements (including an explicitly empty list) take priority.
+    if (room.spikes === undefined) {
+      room.spikes = [];
+      for (const [x,y] of [[8,5],[7,5],[8,4],[7,4]]) {
+        if (tiles[room.map[y][x]].solid || room.map[y][x] === 6 ||
+            ['npcs','trees','savePoints','jumpPads'].some(key => room[key]?.some(point => point.x === x && point.y === y)) ||
+            Math.hypot(room.spawn.x-x,room.spawn.y-y) < 2.5) continue;
+        room.spikes.push({ x, y }); break;
+      }
+    }
+  }
   function addLowerCore(p) {
     const entry = p.rooms.find(room => room.scene === 'coreEntrance');
     if (!entry) return p;
@@ -408,21 +420,29 @@
     }
     entry.doorLinks = Object.fromEntries(Object.entries(entry.doorLinks || {}).filter(([,target]) => target !== outside));
     if (entry.target === outside) entry.target = -1;
-    // Existing Build placements (including an explicitly empty list) take priority.
-    if (entry.spikes === undefined) {
-      entry.spikes = [];
-      for (const [x,y] of [[8,5],[7,5],[8,4],[7,4]]) {
-        if (tiles[entry.map[y][x]].solid || entry.map[y][x] === 6 ||
-            ['npcs','trees','savePoints','jumpPads'].some(key => entry[key]?.some(point => point.x === x && point.y === y)) ||
-            Math.hypot(entry.spawn.x-x,entry.spawn.y-y) < 2.5) continue;
-        entry.spikes.push({ x, y }); break;
-      }
-    }
+    addCoreFallSpike(entry);
     entry.coreFloorFallVersion = 1;
     return p;
   }
+  function addDeeperCore(p) {
+    const lower = p.rooms.find(room => room.scene === 'coreLower');
+    if (!lower) return p;
+    if (!p.rooms.some(room => room.scene === 'coreDepths')) {
+      if (p.rooms.length >= 20) return p;
+      const map = Array.from({ length: H }, () => Array(W).fill(1));
+      for (let y = 2; y <= 10; y++) for (let x = 6; x <= 9; x++) map[y][x] = 0;
+      for (let y = 8; y <= 10; y++) for (let x = 3; x <= 12; x++) map[y][x] = 0;
+      p.rooms.push({ name: 'CORE — Deep Chamber', scene: 'coreDepths', theme: 'dark', map,
+        spawn: { x: 8, y: 9 }, flowey: { x: 7, y: 9 }, npcs: [], dialogue: [],
+        savePoints: [{ x: 4, y: 8 }], target: -1, doorLinks: {} });
+    }
+    if (lower.coreFloorFallVersion !== 1) {
+      addCoreFallSpike(lower); lower.coreFloorFallVersion = 1;
+    }
+    return p;
+  }
   function upgradeProject(p) {
-    return addLowerCore(addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p)))))))))))));
+    return addDeeperCore(addLowerCore(addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p))))))))))))));
   }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
@@ -645,7 +665,7 @@
     return name === 'Kris' || (name === 'Flowey' ? story.joined : story.teamJoined);
   }
   function isLateStoryRoom(room) {
-    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || ['coreEntrance','coreLower'].includes(room.scene));
+    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || ['coreEntrance','coreLower','coreDepths'].includes(room.scene));
   }
   function partyStageForRoom(room, index) {
     if (isLateStoryRoom(room) || (index >= 2 && !room.scene)) return 2;
@@ -772,7 +792,8 @@
     chapterUI();
   }
   function chapterUI() {
-    if (current().scene === 'coreLower') { $('taskTitle').textContent='Below the CORE';$('taskDescription').textContent='Explore the lower chamber. The golden star lets you save your progress.';$('storySummary').textContent='The floor gave way beneath the party. The entrance above is out of reach.';return; }
+    if (current().scene === 'coreDepths') { $('taskTitle').textContent='Deeper into the CORE';$('taskDescription').textContent='Explore the deep chamber. Save at the golden star to remember this landing.';$('storySummary').textContent='Another floor collapsed. The party has fallen farther beneath the CORE.';return; }
+    if (current().scene === 'coreLower') { $('taskTitle').textContent='Below the CORE';$('taskDescription').textContent='Explore the lower chamber. Its spike is surrounded by unstable flooring. The golden star lets you save your progress.';$('storySummary').textContent='The floor gave way beneath the party. The entrance above is out of reach.';return; }
     if (current().scene === 'coreEntrance') { $('taskTitle').textContent='Inside the CORE';$('taskDescription').textContent='Explore the metal walkway. The floor near the spike looks unstable.';$('storySummary').textContent='The bounce pad carried everyone into the CORE. Warning lights flicker along the pipes.';return; }
     if (current().scene === 'darkFurnace') { $('taskTitle').textContent=story.coreExplained ? 'Enter the CORE' : 'Explore the furnace chamber';$('taskDescription').textContent='Pass Froggit and step onto the glowing bounce pad on the right to launch into the CORE. Head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
     if (current().scene === 'darkGoldenHall') { $('taskTitle').textContent='Approach the golden door';$('taskDescription').textContent='Follow the outlined walkway toward the towering golden door.';$('storySummary').textContent='The purple gives way to black. Golden vines curl around a towering, silent doorway.';return; }
@@ -804,7 +825,7 @@
     roomIndex = index; preparePartyForRoom(); lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
   }
   function defaultRoomBackground(room = current()) {
-    return ['darkGoldenHall','darkFurnace','coreEntrance','coreLower'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
+    return ['darkGoldenHall','darkFurnace','coreEntrance','coreLower','coreDepths'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
   }
   function roomBackground(room = current()) { return room.backgroundColor || defaultRoomBackground(room); }
   $('roomBackgroundColor').onchange = e => {
@@ -1604,7 +1625,7 @@
         const destination = holeFall.targetRoom; holeFall = null;
         if (changeRoom(destination, true)) {
           canvas.focus({ preventScroll: true });
-          toast('Everyone landed in the lower CORE chamber.'); announce('The whole party landed below the CORE.');
+          toast('Everyone landed in ' + current().name + '.'); announce('The whole party landed in ' + current().name + '.');
         }
         return;
       }
@@ -1640,10 +1661,11 @@
     });
   }
   function tryCoreSpikeFall() {
-    if (current().scene !== 'coreEntrance') return false;
+    const destination = { coreEntrance: 'coreLower', coreLower: 'coreDepths' }[current().scene];
+    if (!destination) return false;
     const spike = roomSpikes().find(point => Math.hypot(player.x-(point.x*T+20),player.y-(point.y*T+20)) < 58);
     if (!spike) return false;
-    const targetRoom = project.rooms.findIndex(room => room.scene === 'coreLower');
+    const targetRoom = project.rooms.findIndex(room => room.scene === destination);
     if (targetRoom < 0 || !findStart(project.rooms[targetRoom])) return false;
     holeFall = { kind: 'core', age: 0, targetRoom, x: player.x, y: player.y,
       actors: [{ name: 'Kris', x: player.x, y: player.y },
@@ -1769,7 +1791,7 @@
     if (id === 10) { rect(x,y,T,T,roomBackground()); return; }
     const color = current().tileColors?.[x / T + ',' + y / T];
     if (color) { rect(x, y, T, T, color); return; }
-    if (['coreEntrance','coreLower'].includes(current().scene) && [0,1,6].includes(id)) {
+    if (['coreEntrance','coreLower','coreDepths'].includes(current().scene) && [0,1,6].includes(id)) {
       if (id === 1) { rect(x,y,T,T,roomBackground()); return; }
       rect(x,y,T,T,'#323549'); rect(x+2,y+2,36,36,'#5a607a');
       rect(x+3,y+3,34,2,'#8991a8'); rect(x+3,y+36,34,2,'#252939');
@@ -1828,7 +1850,7 @@
     front: i % 4 === 0
   }));
   function drawDarkWorldParticles(time, foreground) {
-    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance', 'coreLower'].includes(current().scene)) return;
+    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance', 'coreLower', 'coreDepths'].includes(current().scene)) return;
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save();
     for (const particle of darkWorldParticles) {
@@ -1979,8 +2001,8 @@
     ctx.restore();
   }
   function drawCoreEntrance(time) {
-    if (!['coreEntrance','coreLower'].includes(current().scene)) return;
-    const lower = current().scene === 'coreLower';
+    if (!['coreEntrance','coreLower','coreDepths'].includes(current().scene)) return;
+    const lower = current().scene !== 'coreEntrance';
     const t = reducedParticleMotion.matches ? 0 : time;
     // Steel catwalks sit between red-lit generators and coolant pipes.
     for (const x of [136, 424]) {
@@ -1997,7 +2019,7 @@
       for (const y of [100,260]) { rect(x-20,y,16,8,'#658494');rect(x+80,y,16,8,'#658494'); }
     }
     rect(252,20,136,52,'#2b3045');rect(256,24,128,44,'#5a617e');rect(260,28,120,36,'#121c29');
-    pixelText(lower ? 'LOWER CORE' : 'C O R E',lower ? 268 : 282,51,'#baf8ed',lower ? 12 : 16);
+    pixelText(current().scene === 'coreDepths' ? 'DEEP CORE' : lower ? 'LOWER CORE' : 'C O R E',lower ? 268 : 282,51,'#baf8ed',lower ? 12 : 16);
     if (lower) {
       rect(276,78,88,8,'#1c2131');
       for(let i=0;i<7;i++)rect(280+i*12,80,6,4,'#696e81');
