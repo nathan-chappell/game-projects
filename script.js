@@ -67,8 +67,12 @@
     return (tree.candy === undefined || (Number.isInteger(tree.candy) && tree.candy >= 0 && tree.candy <= 6)) &&
       ['canopyColor', 'accentColor', 'trunkColor'].every(key => tree[key] === undefined || validColor(tree[key]));
   }
+  function validParticlePoints(points) {
+    return points === undefined || (Array.isArray(points) && points.length <= W * H && points.every(point =>
+      point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H));
+  }
   function validProject(p) {
-    return p && p.version === 2 && p.id === 'two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length >= 2 && p.rooms.length <= 20 && p.rooms.every(r => r && ['hideGoldenDoor','hideHole'].every(key => r[key] === undefined || typeof r[key] === 'boolean') && (r.backgroundColor === undefined || validColor(r.backgroundColor)) && (r.jumpPads === undefined || (Array.isArray(r.jumpPads) && r.jumpPads.length <= W * H && r.jumpPads.every(pad => pad && ['x','targetX'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < W) && ['y','targetY'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < H) && (pad.targetRoom !== undefined || pad.x !== pad.targetX || pad.y !== pad.targetY) && (pad.targetRoom === undefined || (Number.isInteger(pad.targetRoom) && pad.targetRoom >= 0 && pad.targetRoom < p.rooms.length)) && (pad.launchX === undefined || (Number.isInteger(pad.launchX) && pad.launchX >= 0 && pad.launchX < W)) && (pad.launchY === undefined || (Number.isInteger(pad.launchY) && pad.launchY >= 0 && pad.launchY < H))))) && (r.spikes === undefined || (Array.isArray(r.spikes) && r.spikes.length <= W * H && r.spikes.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.tileColors === undefined || (r.tileColors && typeof r.tileColors === 'object' && !Array.isArray(r.tileColors) && Object.keys(r.tileColors).length <= W * H && Object.entries(r.tileColors).every(([key, color]) => /^\d{1,2},\d{1,2}$/.test(key) && validColor(color)))) && (r.trees === undefined || (Array.isArray(r.trees) && r.trees.length <= 48 && r.trees.every(point => point && validTreeStyle(point) && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.particlePoints === undefined || (Array.isArray(r.particlePoints) && r.particlePoints.length <= W * H && r.particlePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.savePoints === undefined || (Array.isArray(r.savePoints) && r.savePoints.length <= W * H && r.savePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validNpcs(r.npcs) && typeof r.name === 'string' && r.name.length <= 32 && ['room', 'garden', 'castle', 'dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length === H && r.map.every(row => Array.isArray(row) && row.length === W && row.every(t => Number.isInteger(t) && t >= 0 && t < tiles.length)) && ['spawn', 'flowey'].every(k => r[k] && Number.isInteger(r[k].x) && Number.isInteger(r[k].y) && r[k].x >= 0 && r[k].x < W && r[k].y >= 0 && r[k].y < H) && Array.isArray(r.dialogue) && r.dialogue.length <= 100 && r.dialogue.every(s => typeof s === 'string' && s.length <= 1200) && Number.isInteger(r.target) && r.target >= -1 && r.target < p.rooms.length && (!r.doorLinks || (typeof r.doorLinks === 'object' && !Array.isArray(r.doorLinks) && Object.entries(r.doorLinks).every(([key, v]) => /^\d+,\d+$/.test(key) && Number.isInteger(v) && v >= 0 && v < p.rooms.length))));
+    return p && p.version === 2 && p.id === 'two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length >= 2 && p.rooms.length <= 20 && p.rooms.every(r => r && ['hideGoldenDoor','hideHole'].every(key => r[key] === undefined || typeof r[key] === 'boolean') && (r.backgroundColor === undefined || validColor(r.backgroundColor)) && (r.jumpPads === undefined || (Array.isArray(r.jumpPads) && r.jumpPads.length <= W * H && r.jumpPads.every(pad => pad && ['x','targetX'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < W) && ['y','targetY'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < H) && (pad.targetRoom !== undefined || pad.x !== pad.targetX || pad.y !== pad.targetY) && (pad.targetRoom === undefined || (Number.isInteger(pad.targetRoom) && pad.targetRoom >= 0 && pad.targetRoom < p.rooms.length)) && (pad.launchX === undefined || (Number.isInteger(pad.launchX) && pad.launchX >= 0 && pad.launchX < W)) && (pad.launchY === undefined || (Number.isInteger(pad.launchY) && pad.launchY >= 0 && pad.launchY < H))))) && (r.spikes === undefined || (Array.isArray(r.spikes) && r.spikes.length <= W * H && r.spikes.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.tileColors === undefined || (r.tileColors && typeof r.tileColors === 'object' && !Array.isArray(r.tileColors) && Object.keys(r.tileColors).length <= W * H && Object.entries(r.tileColors).every(([key, color]) => /^\d{1,2},\d{1,2}$/.test(key) && validColor(color)))) && (r.trees === undefined || (Array.isArray(r.trees) && r.trees.length <= 48 && r.trees.every(point => point && validTreeStyle(point) && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validParticlePoints(r.particlePoints) && validParticlePoints(r.glitchPoints) && (r.savePoints === undefined || (Array.isArray(r.savePoints) && r.savePoints.length <= W * H && r.savePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validNpcs(r.npcs) && typeof r.name === 'string' && r.name.length <= 32 && ['room', 'garden', 'castle', 'dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length === H && r.map.every(row => Array.isArray(row) && row.length === W && row.every(t => Number.isInteger(t) && t >= 0 && t < tiles.length)) && ['spawn', 'flowey'].every(k => r[k] && Number.isInteger(r[k].x) && Number.isInteger(r[k].y) && r[k].x >= 0 && r[k].x < W && r[k].y >= 0 && r[k].y < H) && Array.isArray(r.dialogue) && r.dialogue.length <= 100 && r.dialogue.every(s => typeof s === 'string' && s.length <= 1200) && Number.isInteger(r.target) && r.target >= -1 && r.target < p.rooms.length && (!r.doorLinks || (typeof r.doorLinks === 'object' && !Array.isArray(r.doorLinks) && Object.entries(r.doorLinks).every(([key, v]) => /^\d+,\d+$/.test(key) && Number.isInteger(v) && v >= 0 && v < p.rooms.length))));
   }
   function echoChamber() {
     const map = blankMap(); for (let x = 0; x < W; x++)map[1][x] = 1;
@@ -820,7 +824,7 @@
     const npc = { id: 'frog-' + Date.now().toString(36) + '-' + (++npcSequence), sprite: 'frog', name: 'Froggit', x, y, speech: ['* Ribbit.', '* Hello there.'] };
     (current().npcs ??= []).push(npc); selectedNpcId = npc.id; save(); updateNpcUI(); selectTool('npcSelect'); toast('Froggit placed. Edit its speech in the NPC panel.');
   }
-  function selectTool(value) { if (value !== 'jumpPad') pendingPad = null; tool = value; $('deleteTool').setAttribute('aria-pressed', String(value === 'delete')); $('jumpPadTool').setAttribute('aria-pressed', String(value === 'jumpPad')); $('spikeTool').setAttribute('aria-pressed', String(value === 'spike')); $('editTool').setAttribute('aria-pressed', String(value === 'edit')); $('treeTool').setAttribute('aria-pressed', String(value === 'tree')); $('particleTool').setAttribute('aria-pressed', String(value === 'particles')); $('savePointTool').setAttribute('aria-pressed', String(value === 'savePoint')); document.querySelectorAll('.tile-button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.tile) === value))); $('floweyTool').setAttribute('aria-pressed', String(value === 'flowey')); $('spawnTool').setAttribute('aria-pressed', String(value === 'spawn')); $('npcTool').setAttribute('aria-pressed', String(value === 'npc')); $('npcSelectTool').setAttribute('aria-pressed', String(value === 'npcSelect')); $('npcMove').setAttribute('aria-pressed', String(value === 'npcMove')); }
+  function selectTool(value) { if (value !== 'jumpPad') pendingPad = null; tool = value; $('deleteTool').setAttribute('aria-pressed', String(value === 'delete')); $('jumpPadTool').setAttribute('aria-pressed', String(value === 'jumpPad')); $('spikeTool').setAttribute('aria-pressed', String(value === 'spike')); $('editTool').setAttribute('aria-pressed', String(value === 'edit')); $('treeTool').setAttribute('aria-pressed', String(value === 'tree')); $('particleTool').setAttribute('aria-pressed', String(value === 'particles')); $('glitchParticleTool').setAttribute('aria-pressed', String(value === 'glitchParticles')); $('savePointTool').setAttribute('aria-pressed', String(value === 'savePoint')); document.querySelectorAll('.tile-button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.tile) === value))); $('floweyTool').setAttribute('aria-pressed', String(value === 'flowey')); $('spawnTool').setAttribute('aria-pressed', String(value === 'spawn')); $('npcTool').setAttribute('aria-pressed', String(value === 'npc')); $('npcSelectTool').setAttribute('aria-pressed', String(value === 'npcSelect')); $('npcMove').setAttribute('aria-pressed', String(value === 'npcMove')); }
   tiles.forEach(t => { const b = document.createElement('button'); b.className = 'tile-button'; b.dataset.tile = t.id; b.setAttribute('aria-pressed', String(t.id === 0)); b.title = t.label + (t.solid ? ' · blocks walking' : ''); const swatch = document.createElement('span'); swatch.className = 'swatch'; swatch.style.background = t.color; swatch.setAttribute('aria-hidden', 'true'); b.append(swatch, document.createTextNode(t.label)); b.onclick = () => selectTool(t.id); $('palette').append(b); });
   let editingObject = null;
   $('editTool').onclick = () => { selectTool('edit'); toast('Click a tile to edit its color, or a tree trunk to edit its colors and candy.'); };
@@ -872,6 +876,7 @@
   $('jumpPadTool').onclick = () => { selectTool('jumpPad'); toast('Click a clear tile for the pad, then click its landing spot.'); };
   $('spikeTool').onclick = () => { selectTool('spike'); toast('Click a clear tile to place a spike. Click it again to remove it.'); };
   $('treeTool').onclick = () => { selectTool('tree'); toast('Click a clear tile to plant a tree. Click a trunk tile again to remove it.'); };
+  $('glitchParticleTool').onclick = () => { selectTool('glitchParticles'); toast('Click anywhere to place a glitch. Click it again to remove it.'); };
   $('particleTool').onclick = () => { selectTool('particles'); toast('Click a tile to add particles. Click a marked tile again to remove them.'); };
   $('savePointTool').onclick = () => { selectTool('savePoint'); toast('Click a clear tile to add a save point. Click a star to remove it.'); };
   $('npcTool').onclick = () => selectTool('npc');
@@ -911,7 +916,7 @@
     const r = current(), key = x + ',' + y;
     stroke.deletedCells ??= new Set(); if (stroke.deletedCells.has(key)) return;
     stroke.deletedCells.add(key);
-    const collections = [['npcs', roomNpcs()], ['trees', roomTrees()], ['savePoints', roomSavePoints()], ['spikes', roomSpikes()], ['jumpPads', r.jumpPads || []], ['particlePoints', r.particlePoints || []]];
+    const collections = [['npcs', roomNpcs()], ['trees', roomTrees()], ['savePoints', roomSavePoints()], ['spikes', roomSpikes()], ['jumpPads', r.jumpPads || []], ['particlePoints', r.particlePoints || []], ['glitchPoints', r.glitchPoints || []]];
     for (const [field, objects] of collections) {
       const index = objects.findIndex(object => object.x === x && object.y === y);
       if (index < 0) continue;
@@ -977,6 +982,14 @@
       r.trees = trees.map(tree => ({ ...tree }));
       if (existing >= 0) { r.trees.splice(existing, 1); toast('Tree removed.'); }
       else { r.trees.push({ x, y }); toast('Tree planted.'); }
+      return;
+    }
+    if (tool === 'glitchParticles') {
+      const points = r.glitchPoints || [], existing = points.findIndex(point => point.x === x && point.y === y);
+      if (!stroke.changed) { remember(); stroke.changed = true; }
+      r.glitchPoints = points.map(point => ({ ...point }));
+      if (existing >= 0) { r.glitchPoints.splice(existing, 1); toast('Glitch removed.'); }
+      else { r.glitchPoints.push({ x, y }); toast('Glitch placed. Save build to keep your edits.'); }
       return;
     }
     if (tool === 'particles') {
@@ -1808,6 +1821,48 @@
     }
     ctx.restore();
   }
+  // Angular strands follow the red/yellow/blue/gray sketch around a shared center.
+  const glitchStrands = [
+    { color: '#ff3649', points: [[-97,-3],[-81,-22],[-49,-34],[-40,-34],[9,-3],[28,35],[15,-25],[-23,-82],[-40,-85],[-28,-40],[-13,-15],[-17,10]] },
+    { color: '#ff3046', points: [[-9,2],[25,-38],[53,-51],[59,-53]] },
+    { color: '#ffe433', points: [[-86,76],[-94,33],[12,-3],[101,-15]] },
+    { color: '#fff042', points: [[-58,56],[2,9],[48,-37],[54,-14],[61,36]] },
+    { color: '#5967ff', points: [[14,72],[34,70],[72,58],[104,45],[127,26]] },
+    { color: '#747fff', points: [[10,-17],[20,22],[15,72]] },
+    { color: '#c5c6ce', points: [[-3,49],[-7,-8],[22,-88],[39,-88],[59,-61]] }
+  ];
+  function drawGlitchParticles(time, foreground) {
+    if (mode === 'build' && foreground) return;
+    const t = reducedParticleMotion.matches ? 0 : time;
+    ctx.save(); ctx.lineWidth = 1; ctx.lineJoin = 'miter';
+    for (const point of current().glitchPoints || []) {
+      const cx = point.x*T+20, cy = point.y*T+20, seed = point.x*1.73+point.y*2.41;
+      const tick = Math.floor(t*5+seed), pulse = 1+Math.sin(t*1.8+seed)*.08;
+      for (const [i,strand] of glitchStrands.entries()) {
+        if (mode !== 'build' && (i%3 === 0) !== foreground) continue;
+        const shift = reducedParticleMotion.matches ? 0 : Math.sin(tick*2.7+i*4.1)*2;
+        ctx.globalAlpha = .8; ctx.strokeStyle = strand.color; ctx.beginPath();
+        for (const [j,[px,py]] of strand.points.entries()) {
+          const wobble = Math.sin(t*2.2+j*1.9+i+seed)*(j%2 ? 2 : 4);
+          const x = Math.round(cx+px*.43*pulse+shift+wobble)+.5;
+          const y = Math.round(cy+py*.43*pulse+Math.cos(t*1.6+j+seed)*2)+.5;
+          if (!j) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        // A short detached sliver jitters beside each colored strand.
+        const [px,py] = strand.points[1];
+        ctx.globalAlpha = .55; rect(cx+px*.43+shift*2,cy+py*.43+5,3+i%3,1,strand.color);
+      }
+      if (!foreground) {
+        ctx.globalAlpha = .8; rect(cx-1,cy-2,2,4,'#ecedff');
+        if (mode === 'build' && tool === 'glitchParticles') {
+          ctx.strokeStyle = '#ffe433';ctx.setLineDash([3,3]);ctx.strokeRect(cx-18,cy-18,36,36);ctx.setLineDash([]);
+          pixelText('GLITCH',cx-18,cy+31,'#ffe877',9);
+        }
+      }
+    }
+    ctx.restore();
+  }
   function drawCoreEntrance(time) {
     if (current().scene !== 'coreEntrance') return;
     const t = reducedParticleMotion.matches ? 0 : time;
@@ -2110,7 +2165,7 @@
       ctx.translate(Math.round(Math.sin(time * 95) * strength), Math.round(Math.cos(time * 113) * strength));
     }
     drawIslands();
-    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
+    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawGlitchParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
     const flower = floweyPosition();
     if (mode === 'play' && padJump) {
       for (const npc of roomNpcs()) drawNpc(npc);
@@ -2140,12 +2195,12 @@
       const sx = r.spawn.x * T, sy = r.spawn.y * T; rect(sx + 5, sy + 8, 30, 22, '#c4ddb8'); pixelText('GO', sx + 12, sy + 24, '#243632', 12);
       if (hover && hover.x >= 0 && hover.y >= 0 && hover.x < W && hover.y < H) { rect(hover.x * T, hover.y * T, T, T, '#eedbff35'); ctx.strokeStyle = '#f0d6ff'; ctx.lineWidth = 2; ctx.strokeRect(hover.x * T + 1, hover.y * T + 1, 38, 38); }
     }
-    if (mode === 'play') { drawDarkWorldParticles(time, true); drawPlacedParticles(time, true); }
+    if (mode === 'play') { drawDarkWorldParticles(time, true); drawPlacedParticles(time, true); drawGlitchParticles(time, true); }
     drawBuster();
     if (mode === 'play' && dive?.phase === 'flowey' && dive.age > 1.15) rect(0, 0, 640, 480, 'rgba(8,9,18,' + Math.min(1, (dive.age - 1.15) / .9) + ')');
     ctx.restore();
     if (fade > 0) rect(0, 0, 640, 480, `rgba(17,20,29,${Math.min(1, fade / .32)})`);
-    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'edit' ? 'Click a tile to edit its color, or a marked tree trunk to edit its colors and candy.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
+    $('gameHint').textContent = mode === 'build' ? (tool === 'delete' ? 'Click or drag to delete objects and floor. Undo restores deletions.' : tool === 'jumpPad' ? (pendingPad ? 'Click the landing spot for this jump pad.' : 'Click a clear tile to place a jump pad; click an existing pad to remove it.') : tool === 'spike' ? 'Click a clear tile to place a spike; click it again to remove it.' : tool === 'edit' ? 'Click a tile to edit its color, or a marked tree trunk to edit its colors and candy.' : tool === 'tree' ? 'Click a clear tile to plant a tree; click a marked trunk tile to remove it.' : tool === 'glitchParticles' ? 'Click a tile to place an animated glitch; click it again to remove it.' : tool === 'particles' ? 'Click a tile to add particles; click a marked tile to remove them.' : tool === 'savePoint' ? 'Click a clear tile to add a save point; click a star to remove it.' : ['npc', 'npcMove', 'npcSelect'].includes(tool) ? (tool === 'npc' ? 'Click a clear tile to place Froggit.' : tool === 'npcMove' ? 'Click a clear tile to move the selected NPC.' : 'Click an NPC to edit its speech.') : tool === 'flowey' ? 'Click a clear tile to place Flowey.' : tool === 'spawn' ? 'Click a clear tile to set the starting spot.' : 'Painting: ' + tiles[tool].label + ' · click or drag') : (nearSavePoint() && !dialogue && !dive ? 'C / Z / Enter to save your game' : dive && dive.phase !== 'hesitate' ? 'I. C. · Into the fountain...' : buster ? 'I. C. · Rude Buster!' : dialogue ? (importantKinds.has(dialogue.kind) ? 'I. C. · C / Z / Enter to continue' : 'C / Z / Enter to continue · L to skip') : story.discussion >= 0 ? (current().scene === 'fountain' ? 'I. C. · Your friends are struggling against the fountain...' : 'A strange light pulses above the altar...') : story.emerging >= 0 ? 'Something is growing between the stones...' : story.teamJoined && facingFountain() ? 'C / Z to enter the fountain · I. C.' : nearbyCandyTree() ? 'C / Z / Enter to take G. Candy from the tree' : nearbyNpc() ? 'C / Z to talk to ' + nearbyNpc().name + '.' : nearFountainFriend() ? 'Press Z to talk to ' + nearFountainFriend().name + '.' : nearFlowey() ? 'Press Z to talk to Flowey.' : story.teamJoined ? 'Your party is following · Z talk · C inspect' : story.joined ? 'Flowey is following · Z talk · C inspect' : 'Arrow keys / W A S D to walk · C to inspect');
   }
   function frame(now) { const dt = Math.min((now - lastTime) / 1000 || 0, .035); lastTime = now; if (!document.hidden) { update(dt); render(now / 1000); } requestAnimationFrame(frame); }
   positionPlayer(current()); updateRoomUI();
