@@ -92,7 +92,13 @@
                 </section>
                 <section class="panel" id="buildPanel" hidden>
                     <div class="eyebrow">room workshop</div>
-                    <h2>Make a place of your own.</h2><label for="roomSelect">Your rooms</label>
+                    <h2>Make a place of your own.</h2>
+                    <button class="primary" id="saveBuildButton" style="width:100%">Save build</button>
+                    <p class="helptext" id="saveStatus" role="status" aria-live="polite">Save your rooms and objects in this browser.</p>
+                    <div class="tool-row"><button id="downloadBuildButton">Download backup</button><button id="restoreBuildButton">Restore backup</button></div>
+                    <input id="buildFileInput" type="file" accept=".json,application/json" aria-label="Choose a build backup" hidden>
+                    <p class="builder-note">Build saves keep your room edits. Save points keep your adventure progress. Download a backup to keep a copy outside this browser.</p>
+                    <label for="roomSelect">Your rooms</label>
                     <div class="room-tools"><select id="roomSelect"></select><button id="addRoom"
                             aria-label="Add a new room">+</button></div><label for="roomTitle">Room name</label><input
                         id="roomTitle" maxlength="32" autocomplete="off">
@@ -140,7 +146,6 @@
                         conversation</label><textarea id="floweyWords" maxlength="6000" spellcheck="true"></textarea>
                     <p class="builder-note">Edit conversations in rooms 2, 3 and 4. One line per page; use [Kris],
                         [Flowey], [Ralsey] or [Susie] for the speaker. Restart the story to replay them.</p>
-                    <p class="helptext" id="saveStatus">Download your game to keep a copy.</p>
                 </section>
             </aside>
         </main>
@@ -166,13 +171,13 @@
             <li><strong>Build.</strong> Pick a tile and paint. Place Flowey in room 2, choose your starting spot, or
                 write new dialogue. Use Place NPC to add Froggit; select it to edit its name and speech. Face it and
                 press C or Z to talk. Doors connect the rooms you choose.</li>
-            <li><strong>Keep it.</strong> “Download game” saves a new HTML file with all your edits. Double-click it to
+            <li><strong>Keep it.</strong> Use “Save build” to keep your rooms separately from adventure saves. “Download backup” keeps a build file you can bring back with “Restore backup.” “Download game” saves a new HTML file with all your edits. Double-click it to
                 play again, even offline.</li>
         </ol>
         <p class="helptext">This file has a map editor, not a built-in AI chatbot. For bigger changes, describe what you
             want in our chat. Nothing in this game is sent anywhere.</p>
         <p class="helptext">Walking and talking also work with the buttons below the game. Browser storage may remember
-            edits, but downloading a copy is the reliable way to keep them.</p><button class="primary"
+            edits. Download a build backup to keep another copy.</p><button class="primary"
             id="closeHelp">Let's begin →</button>
     </dialog>
     <dialog id="goldenDoorChoiceDialog" aria-labelledby="goldenDoorChoiceTitle">

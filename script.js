@@ -20,6 +20,15 @@
   ];
   const clone = v => JSON.parse(JSON.stringify(v));
   const keyName = 'two-worlds-castle-project-v1';
+  const buildKey = 'little-lantern-build-save-v1';
+  function validBuild(build) {
+    return build && build.format === 'little-lantern-build' && build.version === 1 &&
+      Number.isFinite(build.savedAt) && validProject(build.project);
+  }
+  function readSavedBuild() {
+    try { const build = JSON.parse(localStorage.getItem(buildKey)); return validBuild(build) ? build : null; }
+    catch { return null; }
+  }
   function blankMap() { return Array.from({ length: H }, (_, y) => Array.from({ length: W }, (_, x) => x === 0 || y === 0 || x === W - 1 || y === H - 1 ? 1 : 0)); }
   function defaults() {
     const chamber = blankMap(), hall = blankMap();
@@ -374,11 +383,16 @@
     }
     return p;
   }
+  function upgradeProject(p) {
+    return addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p))))))))))));
+  }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
   if (!validProject(project)) project = defaults();
   try { const stored = JSON.parse(localStorage.getItem(keyName)); if (validProject(stored) && stored.updatedAt > project.updatedAt) project = stored; } catch (e) { /* File URLs may not provide browser storage. Downloads still work. */ }
-  project = addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project))))))))))));
+  const savedBuild = readSavedBuild();
+  if (savedBuild) project = savedBuild.project;
+  project = upgradeProject(project);
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
   const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false };
@@ -400,7 +414,57 @@
   const current = () => project.rooms[roomIndex];
   const announce = t => { $('announcement').textContent = t; };
   function toast(t) { $('toast').textContent = t; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').hidden = true, 3500); }
-  function save() { project.updatedAt = Date.now(); try { localStorage.setItem(keyName, JSON.stringify(project)); $('saveStatus').textContent = 'Edits remembered in this browser. Download a copy to keep them.'; } catch (e) { $('saveStatus').textContent = 'Download your game to keep your edits.'; } }
+  function buildSnapshot() { return { format: 'little-lantern-build', version: 1, savedAt: Date.now(), project: clone(project) }; }
+  function save() {
+    project.updatedAt = Date.now();
+    try {
+      // Keep the edited world separate from snapshots stored in adventure slots.
+      if (mode === 'build') localStorage.setItem(buildKey, JSON.stringify(buildSnapshot()));
+      localStorage.setItem(keyName, JSON.stringify(project));
+      $('saveStatus').textContent = 'Build saved in this browser · ' + new Date(project.updatedAt).toLocaleTimeString();
+      return true;
+    } catch {
+      $('saveStatus').textContent = 'Could not save in this browser. Download a backup to keep your edits.';
+      return false;
+    }
+  }
+  function finishBuildEdits() {
+    document.activeElement?.blur(); endStroke(); clearTimeout(saveTimer);
+  }
+  $('saveBuildButton').onclick = () => {
+    if (mode !== 'build') return;
+    finishBuildEdits();
+    if (save()) { toast('Build saved! Your room edits will be kept when you load an adventure.'); announce('Build saved in this browser.'); }
+    else toast('Your build could not be saved. Use Download backup to keep it.');
+  };
+  $('downloadBuildButton').onclick = () => {
+    if (mode !== 'build') return;
+    finishBuildEdits(); save();
+    const blob = new Blob([JSON.stringify(buildSnapshot(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = 'LittleLantern-Build.json'; document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000); toast('Build backup downloaded. Use Restore backup to bring it back.');
+  };
+  $('restoreBuildButton').onclick = () => { if (mode === 'build') $('buildFileInput').click(); };
+  $('buildFileInput').onchange = async e => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file || mode !== 'build') return;
+    try {
+      if (file.size > 1024 * 1024) throw new Error('Backup too large');
+      const build = JSON.parse(await file.text());
+      if (!validBuild(build)) throw new Error('Invalid build backup');
+      if (mode !== 'build') return;
+      const restored = upgradeProject(clone(build.project));
+      if (!validProject(restored)) throw new Error('Invalid updated build');
+      finishBuildEdits();
+      const scene = current().scene, previousIndex = roomIndex;
+      remember(); project = restored;
+      const matchingRoom = scene ? project.rooms.findIndex(room => room.scene === scene) : previousIndex;
+      roomIndex = matchingRoom >= 0 && matchingRoom < project.rooms.length ? matchingRoom : 0;
+      pendingPad = null; selectedNpcId = null; keys.clear();
+      const kept = save(); updateRoomUI(); canvas.focus({ preventScroll: true });
+      toast(kept ? 'Build backup restored. Your adventure slots were kept. Undo can bring back the previous build.' : 'Build restored for this session. Browser storage is unavailable; keep your backup file.');
+    } catch { toast('This file is not a valid Little Lantern build backup. Your build and adventure saves were kept.'); }
+  };
   const progressKey = 'little-lantern-save-slots-v1';
   const progressFlags = ['met', 'joined', 'explained', 'foundFountain', 'fountainWorse', 'teamJoined', 'dived'];
   function roomSavePoints(r = current(), index = roomIndex) {
@@ -497,7 +561,7 @@
           try {
             const point = closestSavePoint(current(), roomIndex, player);
             if (!point) throw new Error('Save point unavailable');
-            // Capture the map too: later editor changes cannot invalidate this adventure.
+            // Keep a map fallback for browsers without a newer edited build.
             const snapshot = { version: 1, savedAt: Date.now(), project: clone(project), roomIndex, savePoint: { x: point.x, y: point.y }, partyHP: freshPartyHP(), inventory: clone(inventory), treeHarvests: clone(treeHarvests),
               player: { x: player.x, y: player.y, facing: player.facing },
               story: { ...Object.fromEntries(progressFlags.map(key => [key, story[key]])), goldenDoorExplained: story.goldenDoorExplained, coreExplained: story.coreExplained, coreFroggitWarned: story.coreFroggitWarned } };
@@ -515,9 +579,17 @@
   }
   function restoreProgress(slot) {
     if (!validProgress(slot)) { $('saveFeedback').textContent = 'This save cannot be loaded.'; return; }
+    const build = readSavedBuild();
+    const world = upgradeProject(clone(build ? build.project : project.updatedAt > slot.project.updatedAt ? project : slot.project));
+    const savedRoom = slot.project.rooms[slot.roomIndex];
+    const destination = savedRoom.scene ? world.rooms.findIndex(room => room.scene === savedRoom.scene) : slot.roomIndex;
+    if (destination < 0 || destination >= world.rooms.length || (!savedRoom.scene && slot.roomIndex >= 2 && world.rooms[destination].scene)) {
+      $('saveFeedback').textContent = 'This adventure needs a room missing from your build. Restore its build backup first.';
+      toast($('saveFeedback').textContent); return;
+    }
     death = null; holeFall = null; padJump = null; pendingPad = null; lastPadContact = null; $('goldenDoorChoiceDialog').close(); $('holeChoiceDialog').close(); $('gameOverDialog').close();
     clearTimeout(saveTimer); endStroke(); closeDialogue();
-    project = addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(clone(slot.project)))))))))); roomIndex = slot.roomIndex;
+    project = world; roomIndex = destination;
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
