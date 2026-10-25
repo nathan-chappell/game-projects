@@ -1442,8 +1442,22 @@ dialog .primary {
     }
     return p;
   }
+  function addGlitchWorld(p) {
+    const deep = p.rooms.find(room => room.scene === 'coreDepths');
+    if (!deep) return p;
+    if (!p.rooms.some(room => room.scene === 'glitchWorld')) {
+      if (p.rooms.length >= 20) return p;
+      const map = Array.from({ length: H }, (_,y) => Array(W).fill(y >= 4 && y <= 8 ? 0 : 1));
+      p.rooms.push({ name: 'Glitch World', scene: 'glitchWorld', theme: 'dark', map,
+        spawn: { x: 8, y: 6 }, flowey: { x: 7, y: 6 }, npcs: [], dialogue: [], target: -1, doorLinks: {} });
+    }
+    if (deep.coreFloorFallVersion !== 1) {
+      addCoreFallSpike(deep); deep.coreFloorFallVersion = 1;
+    }
+    return p;
+  }
   function upgradeProject(p) {
-    return addDeeperCore(addLowerCore(addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p))))))))))))));
+    return addGlitchWorld(addDeeperCore(addLowerCore(addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(p)))))))))))))));
   }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
@@ -1666,7 +1680,7 @@ dialog .primary {
     return name === 'Kris' || (name === 'Flowey' ? story.joined : story.teamJoined);
   }
   function isLateStoryRoom(room) {
-    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || ['coreEntrance','coreLower','coreDepths'].includes(room.scene));
+    return typeof room.scene === 'string' && (room.scene.startsWith('dark') || ['coreEntrance','coreLower','coreDepths','glitchWorld'].includes(room.scene));
   }
   function partyStageForRoom(room, index) {
     if (isLateStoryRoom(room) || (index >= 2 && !room.scene)) return 2;
@@ -1793,7 +1807,8 @@ dialog .primary {
     chapterUI();
   }
   function chapterUI() {
-    if (current().scene === 'coreDepths') { $('taskTitle').textContent='Deeper into the CORE';$('taskDescription').textContent='Explore the deep chamber. Save at the golden star to remember this landing.';$('storySummary').textContent='Another floor collapsed. The party has fallen farther beneath the CORE.';return; }
+    if (current().scene === 'glitchWorld') { $('taskTitle').textContent='Glitch World';$('taskDescription').textContent='Follow the gray walkway through the white silence. Everyone made it through the fall.';$('storySummary').textContent='The endless fall is over. The CORE has vanished, leaving a white world and a single gray road.';return; }
+    if (current().scene === 'coreDepths') { $('taskTitle').textContent='Deeper into the CORE';$('taskDescription').textContent='The floor near this spike looks unstable too. Save at the golden star before exploring.';$('storySummary').textContent='Another floor collapsed. The party has fallen farther beneath the CORE.';return; }
     if (current().scene === 'coreLower') { $('taskTitle').textContent='Below the CORE';$('taskDescription').textContent='Explore the lower chamber. Its spike is surrounded by unstable flooring. The golden star lets you save your progress.';$('storySummary').textContent='The floor gave way beneath the party. The entrance above is out of reach.';return; }
     if (current().scene === 'coreEntrance') { $('taskTitle').textContent='Inside the CORE';$('taskDescription').textContent='Explore the metal walkway. The floor near the spike looks unstable.';$('storySummary').textContent='The bounce pad carried everyone into the CORE. Warning lights flicker along the pipes.';return; }
     if (current().scene === 'darkFurnace') { $('taskTitle').textContent=story.coreExplained ? 'Enter the CORE' : 'Explore the furnace chamber';$('taskDescription').textContent='Pass Froggit and step onto the glowing bounce pad on the right to launch into the CORE. Head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
@@ -1826,6 +1841,7 @@ dialog .primary {
     roomIndex = index; preparePartyForRoom(); lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
   }
   function defaultRoomBackground(room = current()) {
+    if (room.scene === 'glitchWorld') return '#ffffff';
     return ['darkGoldenHall','darkFurnace','coreEntrance','coreLower','coreDepths'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
   }
   function roomBackground(room = current()) { return room.backgroundColor || defaultRoomBackground(room); }
@@ -2621,10 +2637,11 @@ dialog .primary {
   };
   function updateHoleFall(dt) {
     holeFall.age += dt; player.moving = false;
-    if (holeFall.age >= 1.8) {
-      if (holeFall.kind === 'core') {
-        const destination = holeFall.targetRoom; holeFall = null;
+    if (holeFall.age >= (holeFall.kind === 'glitch' ? 10 : 1.8)) {
+      if (holeFall.kind === 'core' || holeFall.kind === 'glitch') {
+        const destination = holeFall.targetRoom, glitch = holeFall.kind === 'glitch'; holeFall = null;
         if (changeRoom(destination, true)) {
+          if (glitch) fade = 0;
           canvas.focus({ preventScroll: true });
           toast('Everyone landed in ' + current().name + '.'); announce('The whole party landed in ' + current().name + '.');
         }
@@ -2639,7 +2656,7 @@ dialog .primary {
     holeFall.actors.forEach((actor, index) => {
       const t = Math.max(0, Math.min(1, (holeFall.age - index * .16) / .9));
       if (t >= 1) return;
-      if (holeFall.kind === 'core') {
+      if (holeFall.kind === 'core' || holeFall.kind === 'glitch') {
         const converge = Math.min(1,t*3), sink = reducedParticleMotion.matches ? 0 : t*t*100;
         ctx.save();
         if (t > .35) { ctx.beginPath(); ctx.rect(0,0,640,holeFall.y+18); ctx.clip(); }
@@ -2662,21 +2679,25 @@ dialog .primary {
     });
   }
   function tryCoreSpikeFall() {
-    const destination = { coreEntrance: 'coreLower', coreLower: 'coreDepths' }[current().scene];
+    const destination = { coreEntrance: 'coreLower', coreLower: 'coreDepths', coreDepths: 'glitchWorld' }[current().scene];
     if (!destination) return false;
     const spike = roomSpikes().find(point => Math.hypot(player.x-(point.x*T+20),player.y-(point.y*T+20)) < 58);
     if (!spike) return false;
     const targetRoom = project.rooms.findIndex(room => room.scene === destination);
     if (targetRoom < 0 || !findStart(project.rooms[targetRoom])) return false;
-    holeFall = { kind: 'core', age: 0, targetRoom, x: player.x, y: player.y,
+    holeFall = { kind: destination === 'glitchWorld' ? 'glitch' : 'core', age: 0, targetRoom, x: player.x, y: player.y,
       actors: [{ name: 'Kris', x: player.x, y: player.y },
         ...(story.joined ? [{ name: 'Flowey', x: follower.x, y: follower.y }] : []),
         ...(story.teamJoined ? companions.map(member => ({ name: member.name, x: member.x, y: member.y })) : [])] };
+    if (holeFall.kind === 'glitch') {
+      const frame = document.createElement('canvas'); frame.width = 640; frame.height = 480;
+      frame.getContext('2d').drawImage(canvas,0,0); holeFall.worldFrame = frame;
+    }
     closeDialogue(); player.moving = false; cameraShakeTime = .22;
     announce('The floor near the spike breaks! The whole party falls.'); return true;
   }
   function drawCoreCollapse() {
-    if (holeFall?.kind !== 'core') return;
+    if (!['core','glitch'].includes(holeFall?.kind)) return;
     const { x,y,age } = holeFall, radius = reducedParticleMotion.matches ? 38 : 14+Math.min(1,age/.35)*24;
     ctx.save();ctx.strokeStyle='#91b4c4';ctx.lineWidth=2;ctx.fillStyle='#05060c';
     ctx.beginPath();
@@ -2792,6 +2813,9 @@ dialog .primary {
     if (id === 10) { rect(x,y,T,T,roomBackground()); return; }
     const color = current().tileColors?.[x / T + ',' + y / T];
     if (color) { rect(x, y, T, T, color); return; }
+    if (current().scene === 'glitchWorld' && [0,1,6].includes(id)) {
+      rect(x,y,T,T,id === 1 ? roomBackground() : '#c3c3c3'); return;
+    }
     if (['coreEntrance','coreLower','coreDepths'].includes(current().scene) && [0,1,6].includes(id)) {
       if (id === 1) { rect(x,y,T,T,roomBackground()); return; }
       rect(x,y,T,T,'#323549'); rect(x+2,y+2,36,36,'#5a607a');
@@ -2851,7 +2875,7 @@ dialog .primary {
     front: i % 4 === 0
   }));
   function drawDarkWorldParticles(time, foreground) {
-    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance', 'coreLower', 'coreDepths'].includes(current().scene)) return;
+    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance', 'coreLower', 'coreDepths', 'glitchWorld'].includes(current().scene)) return;
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save();
     for (const particle of darkWorldParticles) {
@@ -3298,8 +3322,56 @@ dialog .primary {
     else if (player.facing === 'left') { rect(x - 12, y - 31, 4, 4, '#71a7ce'); }
     else if (player.facing === 'right') { rect(x + 9, y - 31, 4, 4, '#71a7ce'); }
   }
+  function drawGlitchDescent() {
+    const age = holeFall.age, phase = age-1.3, still = reducedParticleMotion.matches;
+    const t = still ? 0 : phase, intensity = Math.min(1,phase/5);
+    ctx.save();ctx.imageSmoothingEnabled=false;rect(0,0,640,480,'#080910');
+    // The real room tears into scrolling strips before dissolving into the void.
+    const worldAlpha = Math.max(0,1-phase/4)*.6;
+    if (holeFall.worldFrame && worldAlpha > 0) {
+      ctx.globalAlpha=worldAlpha;
+      for(let i=0;i<12;i++) {
+        const shift = still ? 0 : Math.round(Math.sin(Math.floor(t*6)+i*3.1)*(12+intensity*90));
+        const y=((i*40-t*150)%480+480)%480;
+        ctx.drawImage(holeFall.worldFrame,0,i*40,640,40,shift,y,640,40);
+      }
+    }
+    const colors=['#ff3c59','#ffe433','#637bff','#b6c0d6'];
+    for(let i=0;i<38;i++) {
+      const x=(i*83+17)%640, y=((i*61-t*(220+i%3*45))%540+540)%540-40;
+      ctx.globalAlpha=.12+(i%4)*.05;rect(x,y,i%3+1,20+i%6*9,colors[i%4]);
+      if(i%6===0)rect(x-10,y+12,25+i%4*12,2,colors[(i+1)%4]);
+    }
+    // Tangled color strands drift upward around the falling party.
+    for(let side=0;side<2;side++) {
+      const cx=100+side*430, cy=((side*240+390-t*80)%580+580)%580-50;
+      for(const [i,strand] of glitchStrands.entries()) {
+        ctx.globalAlpha=.45;ctx.strokeStyle=strand.color;ctx.lineWidth=1;ctx.beginPath();
+        for(const [j,[px,py]] of strand.points.entries()) {
+          const x=cx+px*.4+(still?0:Math.sin(Math.floor(t*5)+i+j)*4);
+          const y=cy+py*.4;if(!j)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+      }
+    }
+    holeFall.actors.forEach((actor,i)=>{
+      const jitter=still?0:Math.sin(Math.floor(t*7)+i*4)*intensity*5;
+      const x=235+i*58+Math.sin(t*.8+i)*10+jitter, y=190+i*35+Math.sin(t*1.7+i*2)*18;
+      ctx.save();ctx.globalAlpha=1;ctx.translate(Math.round(x),Math.round(y));
+      ctx.rotate(still?0:Math.sin(t*1.4+i)*.1);
+      if(actor.name==='Kris')drawPlayer(0,0,t);
+      else if(actor.name==='Flowey')drawFlowey(0,0,t);
+      else drawFountainFriend({name:actor.name,x:0,y:0},t);
+      ctx.restore();
+    });
+    ctx.globalAlpha=1;
+    // Fade into the white destination without a flash back to the CORE.
+    if(age>9)rect(0,0,640,480,'rgba(255,255,255,'+Math.min(1,age-9)+')');
+    ctx.restore();$('gameHint').textContent='The party keeps falling...';
+  }
   function render(time) {
     if (death) { drawDeath(); return; }
+    if (mode === 'play' && holeFall?.kind === 'glitch' && holeFall.age >= 1.3) { drawGlitchDescent(); return; }
     ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, 640, 480); const r = current();
     // Shake the scene briefly; keep the surrounding UI and fade overlay steady.
     rect(0, 0, 640, 480, roomBackground(r));
