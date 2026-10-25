@@ -1053,7 +1053,7 @@ dialog .primary {
       ['canopyColor', 'accentColor', 'trunkColor'].every(key => tree[key] === undefined || validColor(tree[key]));
   }
   function validProject(p) {
-    return p && p.version === 2 && p.id === 'two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length >= 2 && p.rooms.length <= 20 && p.rooms.every(r => r && ['hideGoldenDoor','hideHole'].every(key => r[key] === undefined || typeof r[key] === 'boolean') && (r.backgroundColor === undefined || validColor(r.backgroundColor)) && (r.jumpPads === undefined || (Array.isArray(r.jumpPads) && r.jumpPads.length <= W * H && r.jumpPads.every(pad => pad && ['x','targetX'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < W) && ['y','targetY'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < H) && (pad.x !== pad.targetX || pad.y !== pad.targetY)))) && (r.spikes === undefined || (Array.isArray(r.spikes) && r.spikes.length <= W * H && r.spikes.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.tileColors === undefined || (r.tileColors && typeof r.tileColors === 'object' && !Array.isArray(r.tileColors) && Object.keys(r.tileColors).length <= W * H && Object.entries(r.tileColors).every(([key, color]) => /^\d{1,2},\d{1,2}$/.test(key) && validColor(color)))) && (r.trees === undefined || (Array.isArray(r.trees) && r.trees.length <= 48 && r.trees.every(point => point && validTreeStyle(point) && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.particlePoints === undefined || (Array.isArray(r.particlePoints) && r.particlePoints.length <= W * H && r.particlePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.savePoints === undefined || (Array.isArray(r.savePoints) && r.savePoints.length <= W * H && r.savePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validNpcs(r.npcs) && typeof r.name === 'string' && r.name.length <= 32 && ['room', 'garden', 'castle', 'dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length === H && r.map.every(row => Array.isArray(row) && row.length === W && row.every(t => Number.isInteger(t) && t >= 0 && t < tiles.length)) && ['spawn', 'flowey'].every(k => r[k] && Number.isInteger(r[k].x) && Number.isInteger(r[k].y) && r[k].x >= 0 && r[k].x < W && r[k].y >= 0 && r[k].y < H) && Array.isArray(r.dialogue) && r.dialogue.length <= 100 && r.dialogue.every(s => typeof s === 'string' && s.length <= 1200) && Number.isInteger(r.target) && r.target >= -1 && r.target < p.rooms.length && (!r.doorLinks || (typeof r.doorLinks === 'object' && !Array.isArray(r.doorLinks) && Object.entries(r.doorLinks).every(([key, v]) => /^\d+,\d+$/.test(key) && Number.isInteger(v) && v >= 0 && v < p.rooms.length))));
+    return p && p.version === 2 && p.id === 'two-worlds-castle-v1' && Number.isFinite(p.updatedAt) && Array.isArray(p.rooms) && p.rooms.length >= 2 && p.rooms.length <= 20 && p.rooms.every(r => r && ['hideGoldenDoor','hideHole'].every(key => r[key] === undefined || typeof r[key] === 'boolean') && (r.backgroundColor === undefined || validColor(r.backgroundColor)) && (r.jumpPads === undefined || (Array.isArray(r.jumpPads) && r.jumpPads.length <= W * H && r.jumpPads.every(pad => pad && ['x','targetX'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < W) && ['y','targetY'].every(key => Number.isInteger(pad[key]) && pad[key] >= 0 && pad[key] < H) && (pad.targetRoom !== undefined || pad.x !== pad.targetX || pad.y !== pad.targetY) && (pad.targetRoom === undefined || (Number.isInteger(pad.targetRoom) && pad.targetRoom >= 0 && pad.targetRoom < p.rooms.length)) && (pad.launchX === undefined || (Number.isInteger(pad.launchX) && pad.launchX >= 0 && pad.launchX < W)) && (pad.launchY === undefined || (Number.isInteger(pad.launchY) && pad.launchY >= 0 && pad.launchY < H))))) && (r.spikes === undefined || (Array.isArray(r.spikes) && r.spikes.length <= W * H && r.spikes.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.tileColors === undefined || (r.tileColors && typeof r.tileColors === 'object' && !Array.isArray(r.tileColors) && Object.keys(r.tileColors).length <= W * H && Object.entries(r.tileColors).every(([key, color]) => /^\d{1,2},\d{1,2}$/.test(key) && validColor(color)))) && (r.trees === undefined || (Array.isArray(r.trees) && r.trees.length <= 48 && r.trees.every(point => point && validTreeStyle(point) && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.particlePoints === undefined || (Array.isArray(r.particlePoints) && r.particlePoints.length <= W * H && r.particlePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && (r.savePoints === undefined || (Array.isArray(r.savePoints) && r.savePoints.length <= W * H && r.savePoints.every(point => point && Number.isInteger(point.x) && point.x >= 0 && point.x < W && Number.isInteger(point.y) && point.y >= 0 && point.y < H))) && validNpcs(r.npcs) && typeof r.name === 'string' && r.name.length <= 32 && ['room', 'garden', 'castle', 'dark'].includes(r.theme) && Array.isArray(r.map) && r.map.length === H && r.map.every(row => Array.isArray(row) && row.length === W && row.every(t => Number.isInteger(t) && t >= 0 && t < tiles.length)) && ['spawn', 'flowey'].every(k => r[k] && Number.isInteger(r[k].x) && Number.isInteger(r[k].y) && r[k].x >= 0 && r[k].x < W && r[k].y >= 0 && r[k].y < H) && Array.isArray(r.dialogue) && r.dialogue.length <= 100 && r.dialogue.every(s => typeof s === 'string' && s.length <= 1200) && Number.isInteger(r.target) && r.target >= -1 && r.target < p.rooms.length && (!r.doorLinks || (typeof r.doorLinks === 'object' && !Array.isArray(r.doorLinks) && Object.entries(r.doorLinks).every(([key, v]) => /^\d+,\d+$/.test(key) && Number.isInteger(v) && v >= 0 && v < p.rooms.length))));
   }
   function echoChamber() {
     const map = blankMap(); for (let x = 0; x < W; x++)map[1][x] = 1;
@@ -1340,11 +1340,39 @@ dialog .primary {
       return;
     }
   }
+  function addCoreEntrance(p) {
+    const outside = p.rooms.findIndex(room => room.scene === 'darkFurnace');
+    if (outside < 0) return p;
+    let inside = p.rooms.findIndex(room => room.scene === 'coreEntrance');
+    if (inside < 0) {
+      if (p.rooms.length >= 20) return p;
+      const map = Array.from({ length: H }, () => Array(W).fill(1));
+      for (let y = 2; y <= 10; y++) for (let x = 6; x <= 9; x++) map[y][x] = 0;
+      for (let y = 8; y <= 10; y++) for (let x = 3; x <= 12; x++) map[y][x] = 0;
+      map[11][8] = 6;
+      inside = p.rooms.length;
+      p.rooms.push({ name: 'Inside the CORE', scene: 'coreEntrance', theme: 'dark', map,
+        spawn: { x: 8, y: 9 }, flowey: { x: 7, y: 9 }, npcs: [], dialogue: [], target: outside,
+        doorLinks: { '8,11': outside } });
+    }
+    const room = p.rooms[outside];
+    if (room.coreBounceAdded) return p;
+    room.coreBounceAdded = true;
+    room.jumpPads ??= [];
+    for (const [x, y] of [[12,8], [12,9], [12,7], [11,9], [11,7]]) {
+      if (tiles[room.map[y][x]].solid || room.map[y][x] === 6 ||
+          ['npcs', 'trees', 'spikes', 'jumpPads', 'savePoints'].some(key => room[key]?.some(point => point.x === x && point.y === y)) ||
+          [room.spawn, room.flowey].some(point => point.x === x && point.y === y)) continue;
+      room.jumpPads.push({ x, y, targetRoom: inside, targetX: 8, targetY: 9, launchX: 8, launchY: 4 });
+      break;
+    }
+    return p;
+  }
   let project;
   try { project = JSON.parse($('projectData').textContent); } catch (e) { project = null; }
   if (!validProject(project)) project = defaults();
   try { const stored = JSON.parse(localStorage.getItem(keyName)); if (validProject(stored) && stored.updatedAt > project.updatedAt) project = stored; } catch (e) { /* File URLs may not provide browser storage. Downloads still work. */ }
-  project = addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project)))))))))));
+  project = addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(addDarkWorldChapter(addFountainChapter(addEchoChapter(project))))))))))));
   let mode = 'play', roomIndex = 0, tool = 0, hover = null, stroke = null, dialogue = null;
   let selectedNpcId = null, npcSequence = 0;
   const story = { met: false, joined: false, emerging: -1, reveal: 0, discussion: -1, explained: false, foundFountain: false, fountainWorse: false, teamJoined: false, dived: false, goldenDoorExplained: false, coreExplained: false, coreFroggitWarned: false };
@@ -1483,7 +1511,7 @@ dialog .primary {
     if (!validProgress(slot)) { $('saveFeedback').textContent = 'This save cannot be loaded.'; return; }
     death = null; holeFall = null; padJump = null; pendingPad = null; lastPadContact = null; $('goldenDoorChoiceDialog').close(); $('holeChoiceDialog').close(); $('gameOverDialog').close();
     clearTimeout(saveTimer); endStroke(); closeDialogue();
-    project = addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(clone(slot.project))))))))); roomIndex = slot.roomIndex;
+    project = addCoreEntrance(addFurnaceChamber(addGoldenDoorHall(addWindingPassage(addJumpIslands(customizeHolePassage(addDarkWorldGlowPassage(addDarkWorldDescent(addDarkWorldJunction(clone(slot.project)))))))))); roomIndex = slot.roomIndex;
     partyHP = slot.partyHP ? clone(slot.partyHP) : { ...freshPartyHP(), Kris: slot.hp ?? maxHP };
     candyTarget = 'Kris'; selectedItem = '';
     inventory = normalizeInventory(slot.inventory); treeHarvests = clone(slot.treeHarvests || {});
@@ -1606,7 +1634,8 @@ dialog .primary {
     chapterUI();
   }
   function chapterUI() {
-    if (current().scene === 'darkFurnace') { $('taskTitle').textContent=story.coreExplained ? 'Explore the CORE' : 'Explore the furnace chamber';$('taskDescription').textContent='An enormous machine glows above the lava. Follow the orange stone walkway, or head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
+    if (current().scene === 'coreEntrance') { $('taskTitle').textContent='Inside the CORE';$('taskDescription').textContent='Explore the metal walkway and humming machinery. The doorway at the bottom leads back outside.';$('storySummary').textContent='The bounce pad carried everyone into the CORE. Warning lights flicker along the pipes.';return; }
+    if (current().scene === 'darkFurnace') { $('taskTitle').textContent=story.coreExplained ? 'Enter the CORE' : 'Explore the furnace chamber';$('taskDescription').textContent='Pass Froggit and step onto the glowing bounce pad on the right to launch into the CORE. Head left to return to the doors.';$('storySummary').textContent='Beyond the golden doors, cold darkness gives way to red furnace light and bubbling lava.';return; }
     if (current().scene === 'darkGoldenHall') { $('taskTitle').textContent='Approach the golden door';$('taskDescription').textContent='Follow the outlined walkway toward the towering golden door.';$('storySummary').textContent='The purple gives way to black. Golden vines curl around a towering, silent doorway.';return; }
     if (current().scene === 'darkWindingPassage') { $('taskTitle').textContent='Follow the winding path';$('taskDescription').textContent='Go up, cross the bridge above the gap, then follow the right-hand passage down.';$('storySummary').textContent='The path folds around a purple chasm. A soft glow marks the way ahead.';return; }
     if (current().scene === 'darkJumpIslands') { $('taskTitle').textContent='Cross the leaping isles';$('taskDescription').textContent='Step onto the glowing red arrows to jump between the platforms.';$('storySummary').textContent='Three round islands float in the purple dark. Jump pads point the way across.';return; }
@@ -1636,7 +1665,7 @@ dialog .primary {
     roomIndex = index; lastPadContact = null; pendingPad = null; lastSpikeContact = null; cameraShakeTime = 0; positionPlayer(next, preferred); doorCooldown = .8; fade = throughDoor ? .32 : 0; closeDialogue(); buster = null; if (story.joined) resetFollower(); scheduleEncounter(); updateRoomUI(); return true;
   }
   function defaultRoomBackground(room = current()) {
-    return ['darkGoldenHall','darkFurnace'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
+    return ['darkGoldenHall','darkFurnace','coreEntrance'].includes(room.scene) ? '#000000' : room.theme === 'dark' ? '#a349a4' : room.theme === 'garden' ? '#253c35' : room.theme === 'castle' ? '#24232e' : '#30223d';
   }
   function roomBackground(room = current()) { return room.backgroundColor || defaultRoomBackground(room); }
   $('roomBackgroundColor').onchange = e => {
@@ -1829,7 +1858,7 @@ dialog .primary {
     if (r.tileColors) delete r.tileColors[key];
     if (r.doorLinks) delete r.doorLinks[key];
     // Remove pads that would otherwise land on the erased floor.
-    if (r.jumpPads) r.jumpPads = r.jumpPads.filter(pad => pad.targetX !== x || pad.targetY !== y);
+    if (r.jumpPads) r.jumpPads = r.jumpPads.filter(pad => (pad.targetRoom !== undefined && pad.targetRoom !== roomIndex) || pad.targetX !== x || pad.targetY !== y);
   }
   function paint(cell) {
     const { x, y } = cell, r = current(); if (x < 0 || y < 0 || x >= W || y >= H) return;
@@ -2279,26 +2308,31 @@ dialog .primary {
     const contact = roomIndex + ':' + x + ',' + y;
     if (lastPadContact === contact) return false;
     lastPadContact = contact;
-    if (!cellOpen(current(), pad.targetX, pad.targetY)) { toast('This jump pad needs a clear landing spot. Fix it in Build.'); return false; }
-    padJump = { age: 0, targetX: pad.targetX, targetY: pad.targetY,
+    const targetRoom = pad.targetRoom ?? roomIndex, destination = project.rooms[targetRoom];
+    if (!destination || !cellOpen(destination, pad.targetX, pad.targetY)) { toast('This jump pad needs a clear landing spot. Fix it in Build.'); return false; }
+    padJump = { age: 0, targetRoom, targetX: pad.targetX, targetY: pad.targetY,
+      launchX: pad.launchX ?? pad.targetX, launchY: pad.launchY ?? pad.targetY,
       actors: [{ name: 'Kris', x: player.x, y: player.y }, ...(story.joined ? [{ name: 'Flowey', x: follower.x, y: follower.y }] : []),
         ...(story.teamJoined ? companions.map(member => ({ name: member.name, x: member.x, y: member.y })) : [])] };
-    keys.clear(); player.moving = false; announce('Your party leaps from the jump pad.'); return true;
+    keys.clear(); player.moving = false; announce(targetRoom !== roomIndex ? 'The bounce pad launches your party into the CORE!' : 'Your party leaps from the jump pad.'); return true;
   }
   function updatePadJump(dt) {
     padJump.age += dt;
     if (padJump.age < 1.5) return;
-    const destination = { x: padJump.targetX, y: padJump.targetY }; padJump = null;
-    positionPlayer(current(), destination); if (story.joined) resetFollower();
+    const destination = { x: padJump.targetX, y: padJump.targetY }, targetRoom = padJump.targetRoom; padJump = null;
+    if (targetRoom !== roomIndex) {
+      changeRoom(targetRoom, true, destination); toast('Everyone landed inside the CORE.');
+    } else { positionPlayer(current(), destination); if (story.joined) resetFollower(); }
     lastPadContact = roomIndex + ':' + destination.x + ',' + destination.y;
     keys.clear();
   }
   function drawPadJump(time) {
-    const target = { x: padJump.targetX * T + 20, y: padJump.targetY * T + 20 };
+    const target = { x: padJump.launchX * T + 20, y: padJump.launchY * T + 20 };
     for (const [i, actor] of padJump.actors.entries()) {
       const t = Math.max(0, Math.min(1, (padJump.age - i * .12) / .9));
-      const arc = reducedParticleMotion.matches ? 0 : Math.sin(Math.PI * t) * 70;
+      const arc = reducedParticleMotion.matches ? 0 : Math.sin(Math.PI * t) * (padJump.targetRoom !== roomIndex ? 105 : 70);
       ctx.save(); ctx.translate(actor.x + (target.x - actor.x) * t, actor.y + (target.y - actor.y) * t - arc);
+      if (padJump.targetRoom !== roomIndex) ctx.globalAlpha = Math.min(1, (1 - t) * 5);
       if (actor.name === 'Kris') drawPlayer(0,0,time);
       else if (actor.name === 'Flowey') drawFlowey(0,0,time);
       else drawFountainFriend({ name: actor.name, x: 0, y: 0 }, time);
@@ -2308,7 +2342,13 @@ dialog .primary {
   function drawJumpPads() {
     for (const pad of current().jumpPads || []) {
       const x = pad.x * T + 20, y = pad.y * T + 20;
-      ctx.save(); ctx.translate(x,y); ctx.rotate(Math.atan2(pad.targetY-pad.y,pad.targetX-pad.x));
+      if (pad.targetRoom !== undefined && pad.targetRoom !== roomIndex) {
+        ctx.save(); ctx.shadowColor = '#ffb52e'; ctx.shadowBlur = 12;
+        rect(x-18,y-5,36,17,'#553227'); rect(x-17,y-8,34,10,'#ffe377');
+        rect(x-13,y+5,26,4,'#ab602a'); ctx.restore();
+        pixelText('CORE', x-14, y+25, '#ffe377', 10);
+      }
+      ctx.save(); ctx.translate(x,y); ctx.rotate(Math.atan2((pad.launchY ?? pad.targetY)-pad.y,(pad.launchX ?? pad.targetX)-pad.x));
       ctx.shadowColor = '#ff174d'; ctx.shadowBlur = 9; ctx.fillStyle = '#f21842'; ctx.beginPath();
       ctx.moveTo(-12,-6);ctx.lineTo(0,-6);ctx.lineTo(0,-13);ctx.lineTo(15,0);ctx.lineTo(0,13);ctx.lineTo(0,6);ctx.lineTo(-12,6);ctx.closePath();ctx.fill();ctx.restore();
       if (mode === 'build' && tool === 'jumpPad') { ctx.strokeStyle = '#ff839b';ctx.strokeRect(pad.x*T+1,pad.y*T+1,38,38); }
@@ -2523,6 +2563,17 @@ dialog .primary {
     if (id === 10) { rect(x,y,T,T,roomBackground()); return; }
     const color = current().tileColors?.[x / T + ',' + y / T];
     if (color) { rect(x, y, T, T, color); return; }
+    if (current().scene === 'coreEntrance' && [0,1,6].includes(id)) {
+      if (id === 1) { rect(x,y,T,T,roomBackground()); return; }
+      rect(x,y,T,T,'#323549'); rect(x+2,y+2,36,36,'#5a607a');
+      rect(x+3,y+3,34,2,'#8991a8'); rect(x+3,y+36,34,2,'#252939');
+      for (const ox of [5,33]) for (const oy of [6,32]) rect(x+ox,y+oy,2,2,'#b4c5d5');
+      if (id === 6) {
+        rect(x+5,y,30,T,'#141b2a'); rect(x+5,y,3,T,'#8bdddc'); rect(x+32,y,3,T,'#8bdddc');
+        pixelText('EXIT',x+9,y+23,'#d0fcf1',9);
+      }
+      return;
+    }
     if (current().scene === 'darkFurnace' && (id === 0 || id === 1 || id === 6)) {
       if (id === 1) rect(x,y,T,T,roomBackground());
       else {
@@ -2571,7 +2622,7 @@ dialog .primary {
     front: i % 4 === 0
   }));
   function drawDarkWorldParticles(time, foreground) {
-    if (current().theme !== 'dark' || current().scene === 'darkFurnace') return;
+    if (current().theme !== 'dark' || ['darkFurnace', 'coreEntrance'].includes(current().scene)) return;
     const t = reducedParticleMotion.matches ? 0 : time;
     ctx.save();
     for (const particle of darkWorldParticles) {
@@ -2678,6 +2729,42 @@ dialog .primary {
       }
     }
     ctx.restore();
+  }
+  function drawCoreEntrance(time) {
+    if (current().scene !== 'coreEntrance') return;
+    const t = reducedParticleMotion.matches ? 0 : time;
+    // Steel catwalks sit between red-lit generators and coolant pipes.
+    for (const x of [136, 424]) {
+      rect(x-8,64,96,240,'#161b2c'); rect(x-4,68,88,232,'#2d334a');
+      rect(x,72,80,224,'#42455d'); rect(x+4,76,72,4,'#757b92');
+      for (let row=0;row<5;row++) {
+        const y=88+row*40;
+        rect(x+8,y,64,32,'#202538');rect(x+12,y+4,56,3,'#69718b');
+        for (let i=0;i<4;i++) rect(x+14,y+12+i*4,52,2,'#353e55');
+        rect(x+59,y+7,5,4,Math.sin(t*4+row)>0 ? '#ff5e68' : '#913b58');
+      }
+      rect(x-16,92,8,184,'#334856');rect(x-14,92,3,184,'#92c5d0');
+      rect(x+84,92,8,184,'#334856');rect(x+85,92,3,184,'#92c5d0');
+      for (const y of [100,260]) { rect(x-20,y,16,8,'#658494');rect(x+80,y,16,8,'#658494'); }
+    }
+    rect(252,20,136,52,'#2b3045');rect(256,24,128,44,'#5a617e');rect(260,28,120,36,'#121c29');
+    pixelText('C O R E',282,51,'#baf8ed',16);
+    for (const x of [252,380]) { rect(x,76,8,3,'#ff5461');rect(x,79,8,2,'#9e2547'); }
+    ctx.save(); ctx.shadowColor='#6ff5ed';ctx.shadowBlur=9;ctx.fillStyle='#8fdfdf';
+    const map=current().map;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+      if (![0,6].includes(map[y][x])) continue;
+      for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
+        const neighbor=map[y+dy]?.[x+dx];if(neighbor!==1)continue;
+        ctx.fillRect(x*T+(dx>0?38:0),y*T+(dy>0?38:0),dx?2:T,dy?2:T);
+      }
+    }
+    ctx.restore();
+    for(let i=0;i<12;i++){
+      const x=110+(i*43)%420,y=310-((i*29+t*(5+i%3))%250);
+      ctx.globalAlpha=.25+(i%3)*.12;rect(x,y,2,2,'#83d9e2');
+    }
+    ctx.globalAlpha=1;
   }
   function drawFurnaceRoom(time) {
     if (current().scene !== 'darkFurnace') return;
@@ -2898,6 +2985,15 @@ dialog .primary {
     const x = npc.x * T + 20, y = npc.y * T + 24, scale = 2, width = 22;
     rect(x - 19, y - 2, 38, 6, '#17132066');
     frogPixels.forEach((row, dy) => { for (let dx = 0; dx < row.length; dx++) { const pixel = row[dx]; if (pixel !== ' ') rect(x - width + dx * scale, y - frogPixels.length * scale + dy * scale, scale, scale, pixel === '#' ? '#18131e' : '#f4f0e7'); } });
+    if (npc.id === 'core-warning-froggit') {
+      // Raised inner brows, a downturned mouth and a bead of sweat.
+      rect(x-16,y-44,4,2,'#18131e'); rect(x-12,y-46,4,2,'#18131e');
+      rect(x+8,y-46,4,2,'#18131e'); rect(x+12,y-44,4,2,'#18131e');
+      rect(x-12,y-29,24,8,'#f4f0e7'); rect(x-6,y-28,12,2,'#18131e');
+      rect(x-10,y-26,4,2,'#18131e'); rect(x+6,y-26,4,2,'#18131e');
+      rect(x-12,y-24,2,2,'#18131e'); rect(x+10,y-24,2,2,'#18131e');
+      rect(x+24,y-42,2,4,'#99ddff'); rect(x+22,y-38,6,6,'#68b9ec'); rect(x+22,y-38,2,3,'#d8f4ff');
+    }
     if (mode === 'build' && npc.id === selectedNpcId) { ctx.strokeStyle = '#efcb84'; ctx.lineWidth = 2; ctx.strokeRect(npc.x * T + 1, npc.y * T + 1, 38, 38); pixelText('SELECTED', x - 24, y - 52, '#efcb84', 9); }
   }
   function drawFlowey(x, y, time) {
@@ -2936,9 +3032,10 @@ dialog .primary {
       ctx.translate(Math.round(Math.sin(time * 95) * strength), Math.round(Math.cos(time * 113) * strength));
     }
     drawIslands();
-    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
+    for (let y = 0; y < H; y++)for (let x = 0; x < W; x++)drawTile(r.map[y][x], x * T, y * T, r.theme); drawPassageGlow(time); drawPassageHole(); drawGoldenDoor(); drawFurnaceRoom(time); drawCoreEntrance(time); drawWindow(time); drawEcho(time); drawCrackTrail(time); drawFountain(time); drawDarkWorldParticles(time, false); drawPlacedParticles(time, false); drawSpikes(); drawJumpPads(); drawSavePoint(time);
     const flower = floweyPosition();
     if (mode === 'play' && padJump) {
+      for (const npc of roomNpcs()) drawNpc(npc);
       drawPadJump(time);
     } else if (mode === 'play' && holeFall) {
       drawHoleFall(time);
