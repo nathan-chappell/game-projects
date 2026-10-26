@@ -81,3 +81,7 @@ Lines beginning with `//` are comments for people reading JavaScript. The game s
 Keep using Build for room edits. Existing Build saves take priority over the starter rooms in `world.js`, so changing a starter room won't erase a room you've already edited. Keep a downloaded Build backup too.
 
 When you're ready to share a code change, ask Nate to help run `npm run build`. The new playable copy appears in `exports/`. You don't need to edit the generated files.
+
+## A battle setting you can read
+
+In `src/battle-rules.js`, `krisAttackDamage: 75` means one attack takes 75 HP from the enemy. `enemyHP: 1000` is the enemy’s starting health. The code subtracts the first number from the second: `1000 - 75 = 925`. Settings describe the rules; `battle.js` draws their results.

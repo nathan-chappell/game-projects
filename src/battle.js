@@ -1,5 +1,7 @@
 // The battle appearance lives here. Attack patterns and action rules can be added separately.
 import { maxHP, H, W, T } from './config.js';
+import { battleSettings, canKrisAct } from './battle-rules.js';
+import memoryURL from '../assets/proceed-memory.png?inline';
 
 export function createBattleDrawing(ctx, state, helpers) {
   const {
@@ -15,6 +17,8 @@ export function createBattleDrawing(ctx, state, helpers) {
     drawNoelleBoss,
     $,
   } = helpers;
+  const memory = new Image();
+  memory.src = memoryURL;
   const current = () => state.project.rooms[state.roomIndex];
   function drawBattleKris(x, y, scale = 1) {
     ctx.save();
@@ -88,44 +92,6 @@ export function createBattleDrawing(ctx, state, helpers) {
     ctx.restore();
   }
 
-  function drawBattleHeart(cx, cy, scale = 2) {
-    const rows = ['01100110', '11111111', '11111111', '11111111', '01111110', '00111100', '00011000'];
-    for (let y = 0; y < rows.length; y++)
-      for (let x = 0; x < rows[y].length; x++)
-        if (rows[y][x] === '1') rect(cx + (x - 4) * scale, cy + (y - 3) * scale, scale, scale, '#ff163b');
-  }
-
-  function drawSnowflake(x, y, radius) {
-    ctx.save();
-    ctx.lineCap = 'square';
-    ctx.lineJoin = 'miter';
-    for (const [color, width] of [
-      ['#e8fcff', 4],
-      ['#35b9fa', 2],
-    ]) {
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width;
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const angle = (i * Math.PI) / 3,
-          dx = Math.cos(angle),
-          dy = Math.sin(angle);
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + dx * radius, y + dy * radius);
-        for (const side of [-1, 1]) {
-          const branch = angle + side * 2.25;
-          ctx.moveTo(x + dx * radius * 0.62, y + dy * radius * 0.62);
-          ctx.lineTo(
-            x + dx * radius * 0.62 + Math.cos(branch) * radius * 0.35,
-            y + dy * radius * 0.62 + Math.sin(branch) * radius * 0.35,
-          );
-        }
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
   function drawBattlePanel(x, y, width, height) {
     rect(x, y, width, height, '#050505');
     ctx.save();
@@ -154,39 +120,52 @@ export function createBattleDrawing(ctx, state, helpers) {
   }
 
   function drawBattleMenu() {
+    const encounter = state.bossEncounter,
+      acting = canKrisAct(encounter);
     drawBattlePanel(18, 353, 350, 115);
     drawBattlePanel(378, 353, 244, 115);
-    ctx.save();
-    ctx.strokeStyle = '#fff32a';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(37, 366, 128, 27);
-    ctx.restore();
-    drawBattleHeart(48, 379, 1.5);
-    pixelText('FIGHT', 65, 386, '#fff32a', 19);
-    pixelText('×', 201, 385, '#ffffff', 25);
-    pixelText('SPARE', 227, 386, '#ffffff', 19);
-    pixelText('»', 40, 420, '#ffffff', 23);
-    pixelText('ACT', 65, 418, '#ffffff', 19);
-    ctx.save();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(202, 401);
-    ctx.lineTo(213, 401);
-    ctx.lineTo(213, 410);
-    ctx.lineTo(207, 416);
-    ctx.lineTo(202, 410);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
-    pixelText('DEFEND', 227, 418, '#ffffff', 19);
-    rect(42, 436, 11, 14, '#ffffff');
-    rect(45, 432, 5, 4, '#ffffff');
-    pixelText('ITEM', 65, 450, '#ffffff', 19);
-    drawBattleHeart(500, 414, 2);
-    drawSnowflake(431, 375, 8);
-    drawSnowflake(590, 391, 8);
-    drawSnowflake(564, 445, 9);
+    for (const [id, label, x, y] of [
+      ['attack', 'ATTACK', 65, 386],
+      ['act', 'ACT', 65, 418],
+      ['item', 'ITEM', 65, 450],
+      ['defend', 'DEFEND', 227, 418],
+    ]) {
+      const color = acting ? (encounter.selectedAction === id ? '#fff32a' : '#ffffff') : '#888888';
+      pixelText(label, x, y, color, 19);
+      if (acting && encounter.selectedAction === id) pixelText('>', x - 23, y, color, 19);
+    }
+    pixelText('SPARE', 227, 386, '#94d9ef', 19);
+    // Ice bars make the locked action visible even in the canvas menu.
+    rect(218, 373, 119, 3, '#bcefff');
+    rect(224, 382, 106, 2, '#67a5c9');
+    const title =
+      encounter.phase === 'victory'
+        ? '??? disappeared.'
+        : `${encounter.turn || 'Proceed'}${encounter.turn ? '’s turn' : '...'}`;
+    pixelText(title, 391, 377, '#ffffff', 16);
+    if (encounter.screen === 'attack' || encounter.phase === 'flowey') {
+      pixelText('???', 391, 402, '#ffffff', 18);
+      pixelText(`HP ${encounter.enemy.hp} / ${encounter.enemy.maxHP}`, 391, 423, '#ffffff', 14);
+      rect(392, 434, 208, 8, '#41232b');
+      rect(392, 434, (208 * encounter.enemy.hp) / encounter.enemy.maxHP, 8, '#e7688b');
+      if (acting) pixelText('Confirm attack', 391, 459, '#fff32a', 14);
+    } else if (encounter.screen === 'act') {
+      pixelText('PROCEED · 100% TP', 391, 404, encounter.tp >= 100 ? '#fff32a' : '#999999', 16);
+      pixelText(`Proceed: ${encounter.proceedCount} / 3`, 391, 431, '#ffffff', 14);
+      pixelText(encounter.tp >= 100 ? 'Confirm to proceed' : 'Not enough TP', 391, 455, '#cccccc', 13);
+    } else if (encounter.phase !== 'victory') {
+      pixelText('Choose an action.', 391, 410, '#ffffff', 15);
+      pixelText('Z / Enter to select', 391, 439, '#cccccc', 13);
+    }
+  }
+
+  function drawTP() {
+    const tp = Math.max(0, Math.min(100, state.bossEncounter.tp));
+    rect(6, 65, 48, 213, '#050505');
+    rect(21, 105, 12, 124, '#4d3544');
+    rect(21, 229 - (124 * tp) / 100, 12, (124 * tp) / 100, '#ffb634');
+    pixelText('TP', 13, 86, '#ffffff', 15);
+    pixelText(`${Math.floor(tp)}%`, 11, 265, '#ffca50', 14);
   }
 
   function drawBossEncounter(time) {
@@ -214,15 +193,31 @@ export function createBattleDrawing(ctx, state, helpers) {
     drawGlitchParticles(t, true);
     drawBattleKris(88, 266, 1.25);
     drawBattleFlowey(178, 265, t, 1.22);
-    drawNoelleBoss(528, 122, 140);
-    drawSnowflake(449, 177, 11);
-    drawSnowflake(434, 230, 10);
-    drawSnowflake(475, 212, 4);
+    const encounter = state.bossEncounter;
+    if (encounter.enemy.visible) {
+      ctx.save();
+      if (encounter.phase === 'vanishing')
+        ctx.globalAlpha = reducedParticleMotion.matches
+          ? 0
+          : Math.max(0, 1 - encounter.animationAge / battleSettings.disappearSeconds);
+      drawNoelleBoss(528, 122, 140);
+      ctx.restore();
+    }
+    if (encounter.hitAge !== null) pixelText('-75', 515, 110 - encounter.hitAge * 35, '#ffdc59', 24);
+    drawTP();
     drawBattleStatus('Kris', 18, '#00e5ec', t);
     drawBattleStatus('Flowey', 324, '#eef51c', t);
     drawBattleMenu();
     if (state.fade > 0) rect(0, 0, 640, 480, 'rgba(17,20,29,' + Math.min(1, state.fade / 0.32) + ')');
-    $('gameHint').textContent = state.dialogue ? 'C / Z / Enter to continue · L to skip' : "Noelle doesn't respond.";
+    if (encounter.phase === 'proceedFlash' && memory.complete && memory.naturalWidth) {
+      rect(0, 0, 640, 480, '#000000');
+      ctx.drawImage(memory, 0, 0, 640, 480);
+    }
+    $('gameHint').textContent = state.dialogue
+      ? 'C / Z / Enter to continue · L to skip'
+      : encounter.phase === 'flowey'
+        ? `${encounter.message} Flowey’s turn is next.`
+        : encounter.message;
   }
   return { drawBossEncounter };
 }

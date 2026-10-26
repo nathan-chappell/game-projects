@@ -818,3 +818,41 @@ dialog .primary {
     flex-wrap: wrap;
   }
 }
+
+.battle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.battle-actions button {
+  min-height: 44px;
+}
+.battle-actions button[aria-pressed='true'] {
+  border-color: #fff32a;
+  color: #fff32a;
+}
+.frozen-spare:disabled {
+  opacity: 1;
+  color: #9bdfff;
+  border-color: #87bdda;
+  background: #152938;
+}
+.battle-tp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.battle-tp label {
+  margin: 0;
+  color: var(--gold);
+}
+.battle-tp progress {
+  accent-color: #efb531;
+  max-width: 180px;
+}
+#battleFeedback {
+  min-height: 1.5em;
+  margin-top: 10px;
+}

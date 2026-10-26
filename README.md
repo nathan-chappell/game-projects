@@ -32,21 +32,24 @@ After stopping the development server, `npm run preview` serves the built game a
 
 ## Where things live
 
-| File                 | What it does                                                  |
-| -------------------- | ------------------------------------------------------------- |
-| `index.html`         | Page structure, buttons, menus, and the canvas                |
-| `styles.css`         | Colors, spacing, and phone layout                             |
-| `src/main.js`        | Starts the game and loads the styles                          |
-| `src/config.js`      | Tile names, movement speed, HP, and healing-item settings     |
-| `src/world.js`       | Room layouts, validation, and upgrades for older saved worlds |
-| `src/game.js`        | Game state, movement, dialogue, saving, and story scenes      |
-| `src/editor.js`      | Build tools, object editing, layers, and Undo                 |
-| `src/sprites.js`     | Character, tree, and door drawings                            |
-| `src/particles.js`   | Drifting particles and glitch pillars                         |
-| `src/battle.js`      | The Noelle encounter's appearance and HP cards                |
-| `src/export-game.js` | The in-game **Download game** button                          |
-| `assets/`            | Original image files used by the game                         |
-| `scripts/build.js`   | Uses Vite to make the self-contained HTML and ZIP             |
+| File                           | What it does                                                  |
+| ------------------------------ | ------------------------------------------------------------- |
+| `index.html`                   | Page structure, buttons, menus, and the canvas                |
+| `styles.css`                   | Colors, spacing, and phone layout                             |
+| `src/main.js`                  | Starts the game and loads the styles                          |
+| `src/config.js`                | Tile names, movement speed, HP, and healing-item settings     |
+| `src/world.js`                 | Room layouts, validation, and upgrades for older saved worlds |
+| `src/game.js`                  | Game state, movement, dialogue, saving, and story scenes      |
+| `src/editor.js`                | Build tools, object editing, layers, and Undo                 |
+| `src/sprites.js`               | Character, tree, and door drawings                            |
+| `src/particles.js`             | Drifting particles and glitch pillars                         |
+| `src/battle-rules.js`          | Attack damage, TP, turns, healing, and Proceed rules          |
+| `src/battle-controls.js`       | Battle buttons, canvas taps, and keyboard controls            |
+| `src/battle-unused-effects.js` | Archived soul and snowflake drawings for future attacks       |
+| `src/battle.js`                | The Noelle encounter's appearance and HP cards                |
+| `src/export-game.js`           | The in-game **Download game** button                          |
+| `assets/`                      | Original image files used by the game                         |
+| `scripts/build.js`             | Uses Vite to make the self-contained HTML and ZIP             |
 
 There is deliberately one shared `state` object inside `startGame()`. The editor and drawing helpers receive it as an argument, so they see the same changing values. Room data stays separate from the code that draws it. There are no circular module imports.
 
@@ -69,3 +72,9 @@ Build here first, then copy the generated `dist/` contents into that checkout's 
 Start with [START-HERE.md](START-HERE.md). You don't need to understand every file to make a useful change. Try one small edit, play with it, and see what happened.
 
 Vite reference: [getting started](https://vite.dev/guide/) and [building for production](https://vite.dev/guide/build.html).
+
+## Battle work in progress
+
+Kris acts first. Attack deals 75 HP to the 1,000-HP unknown enemy; Defend halves future projectile damage, and Item uses one carried healing item on an available teammate. SPARE stays frozen. Each successful action hands over to Flowey. Flowey’s actions, enemy attack patterns, and TP gains are still to be defined.
+
+Proceed costs 100% TP on each of three separate Kris turns. Each use briefly shows the supplied memory image; after the third, Noelle disappears. `startKrisTurn` and `addTP` are hooks for the future turns, not player shortcuts. Completed encounters are included in normal adventure saves; older saves remain compatible.

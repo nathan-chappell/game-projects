@@ -82,7 +82,25 @@
             Pick a tile, then paint the room. Use “Place Flowey” or “Set start” to move your characters.
           </p>
           <div id="bossControls" hidden class="hint-card">
-            <p>She stands silently.</p>
+            <strong id="battleTurnText" role="status">Kris’s turn</strong>
+            <div class="battle-tp">
+              <label id="battleTPText" for="battleTPBar">TP: 0%</label
+              ><progress id="battleTPBar" value="0" max="100" aria-label="Tension points"></progress>
+            </div>
+            <div id="battleActionButtons" class="battle-actions" role="group" aria-label="Kris’s actions">
+              <button id="battleAttack">Attack</button><button id="battleAct">ACT</button>
+              <button id="battleDefend">Defend</button><button id="battleItem">Item</button>
+              <button id="battleSpare" class="frozen-spare" disabled title="SPARE is frozen and cannot be used">
+                SPARE · Frozen
+              </button>
+            </div>
+            <div id="battleTargetPanel" hidden><button id="battleTargetButton">??? · HP 1000 / 1000</button></div>
+            <div id="battleActPanel" hidden>
+              <button id="battleProceedButton" disabled>Proceed · 100% TP</button>
+              <p id="battleProceedCount">Proceed: 0 / 3</p>
+            </div>
+            <button id="battleMenuBack" hidden>Back to actions</button>
+            <p id="battleFeedback" role="status" aria-live="polite"></p>
             <button id="leaveBossButton">Back to walkway</button>
           </div>
         </div>

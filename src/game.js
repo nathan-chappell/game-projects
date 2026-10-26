@@ -1,3 +1,12 @@
+import { setupBattleControls } from './battle-controls.js';
+import {
+  createEncounter,
+  startKrisTurn,
+  canKrisAct,
+  finishKrisTurn,
+  advanceBattleTime,
+  useHealingItem,
+} from './battle-rules.js';
 import { createRenderer } from './renderer.js';
 
 import { setupEditor } from './editor.js';
@@ -80,6 +89,7 @@ export function startGame() {
     coreFroggitWarned: false,
     coreGlitchNoticed: false,
     glitchArrivalSeen: false,
+    noelleGone: false,
   };
 
   state.partyHP = freshPartyHP();
@@ -350,6 +360,7 @@ export function startGame() {
       slot.player.y < 480 &&
       ['up', 'down', 'left', 'right'].includes(slot.player.facing) &&
       slot.story &&
+      (slot.story.noelleGone === undefined || typeof slot.story.noelleGone === 'boolean') &&
       (slot.story.glitchArrivalSeen === undefined || typeof slot.story.glitchArrivalSeen === 'boolean') &&
       (slot.story.coreGlitchNoticed === undefined || typeof slot.story.coreGlitchNoticed === 'boolean') &&
       (slot.story.coreFroggitWarned === undefined || typeof slot.story.coreFroggitWarned === 'boolean') &&
@@ -430,6 +441,7 @@ export function startGame() {
                 coreFroggitWarned: state.story.coreFroggitWarned,
                 coreGlitchNoticed: state.story.coreGlitchNoticed,
                 glitchArrivalSeen: state.story.glitchArrivalSeen,
+                noelleGone: state.story.noelleGone,
               },
             };
             const latest = readProgressSlots();
@@ -502,6 +514,7 @@ export function startGame() {
       coreFroggitWarned: slot.story.coreFroggitWarned ?? false,
       coreGlitchNoticed: slot.story.coreGlitchNoticed ?? false,
       glitchArrivalSeen: slot.story.glitchArrivalSeen ?? false,
+      noelleGone: slot.story.noelleGone ?? false,
       emerging: -1,
       discussion: -1,
       reveal: slot.story.met ? 1 : 0,
@@ -669,9 +682,11 @@ export function startGame() {
       : carried.length
         ? 'Select an item to see what it does.'
         : 'Collect healing items to use them here.';
-    $('useCandyButton').disabled = !item || hp >= maxHP;
-    $('useCandyButton').textContent =
-      hp >= maxHP
+    const waitingForTurn = state.bossEncounter && !canKrisAct(state.bossEncounter);
+    $('useCandyButton').disabled = !item || hp >= maxHP || !!waitingForTurn;
+    $('useCandyButton').textContent = waitingForTurn
+      ? 'Wait for Kris’s turn'
+      : hp >= maxHP
         ? state.candyTarget + ' has full HP'
         : item
           ? 'Use ' + item.name + ' on ' + state.candyTarget
@@ -683,6 +698,7 @@ export function startGame() {
     $('inventoryFeedback').textContent = '';
   };
   function toggleInventory() {
+    if (['proceedFlash', 'vanishing'].includes(state.bossEncounter?.phase)) return;
     if (state.death || state.holeFall || state.padJump || choiceDialogOpen()) return;
     if ($('inventoryDialog').open) {
       $('inventoryDialog').close();
@@ -702,6 +718,10 @@ export function startGame() {
   $('inventoryButton').onclick = toggleInventory;
   $('closeInventoryButton').onclick = () => $('inventoryDialog').close();
   $('inventoryDialog').addEventListener('close', () => {
+    if (canKrisAct(state.bossEncounter)) {
+      state.bossEncounter.screen = 'menu';
+      syncBossUI();
+    }
     state.keys.clear();
     canvas.focus({ preventScroll: true });
   });
@@ -710,16 +730,21 @@ export function startGame() {
       item = itemDefinitions[state.selectedItem];
     if (
       !$('inventoryDialog').open ||
+      (state.bossEncounter && !canKrisAct(state.bossEncounter)) ||
       !item ||
       !(state.inventory.items[state.selectedItem] > 0) ||
       hp >= maxHP ||
       !memberInParty(state.candyTarget)
     )
       return;
-    const rolledHealing = item.minHeal + Math.floor(Math.random() * (item.maxHeal - item.minHeal + 1));
-    const restored = Math.min(rolledHealing, maxHP - hp);
-    state.partyHP[state.candyTarget] += restored;
-    state.inventory.items[state.selectedItem]--;
+    const healing = useHealingItem(state.partyHP, state.inventory, state.selectedItem, state.candyTarget);
+    if (!healing) return;
+    const { restored } = healing;
+    if (state.bossEncounter) {
+      finishKrisTurn(state.bossEncounter, `${state.candyTarget} used ${item.name} and recovered ${restored} HP.`);
+      syncBossUI();
+      $('inventoryDialog').close();
+    }
     storyUI();
     updateInventoryMenu();
     $('inventoryFeedback').textContent =
@@ -1458,7 +1483,7 @@ export function startGame() {
   }
   function inspectObject() {
     if (state.death || state.holeFall || state.padJump || choiceDialogOpen()) return;
-    if (state.bossEncounter?.phase === 'waiting') return;
+    if (state.bossEncounter && !state.dialogue) return;
     if (
       state.mode !== 'play' ||
       state.buster ||
@@ -1527,7 +1552,7 @@ export function startGame() {
   }
   function talk() {
     if (state.death || state.holeFall || state.padJump || choiceDialogOpen()) return;
-    if (state.bossEncounter?.phase === 'waiting') return;
+    if (state.bossEncounter && !state.dialogue) return;
     if (state.mode !== 'play' || state.buster || (state.dive && state.dive.phase !== 'hesitate')) return;
     if (state.dialogue) {
       advanceDialogue();
@@ -1782,7 +1807,7 @@ export function startGame() {
   }
   function closeDialogue() {
     if (state.dialogue?.kind === 'bossIntro' && state.bossEncounter) {
-      state.bossEncounter.phase = 'waiting';
+      startKrisTurn(state.bossEncounter);
       syncBossUI();
     }
     if (state.dialogue?.kind === 'glitchArrival') finishGlitchComfort();
@@ -1962,6 +1987,7 @@ export function startGame() {
     state.story.coreFroggitWarned = false;
     state.story.coreGlitchNoticed = false;
     state.story.glitchArrivalSeen = false;
+    state.story.noelleGone = false;
     state.companions = [];
     state.buster = null;
     state.dive = null;
@@ -2129,9 +2155,7 @@ export function startGame() {
   }
 
   function syncBossUI() {
-    const waiting = state.mode === 'play' && state.bossEncounter?.phase === 'waiting';
-    $('bossControls').hidden = !waiting;
-    $('talkButton').disabled = $('inspectButton').disabled = !!waiting;
+    battleControls.sync();
   }
   function resetBossEncounter() {
     state.bossEncounter = null;
@@ -2172,10 +2196,11 @@ export function startGame() {
     state.story.glitchArrivalSeen = true;
     ensureGlitchWaiting();
     state.companions = [];
-    state.bossEncounter = { phase: 'intro' };
+    state.bossEncounter = createEncounter(state.story.noelleGone);
     syncBossUI();
     storyUI();
-    openDialogue(['[Kris] * Noelle, is that you?', "[Narrator] * She doesn't respond."], 'bossIntro');
+    if (!state.story.noelleGone)
+      openDialogue(['[Kris] * Noelle, is that you?', "[Narrator] * She doesn't respond."], 'bossIntro');
     canvas.focus({ preventScroll: true });
   };
   $('leaveBossButton').onclick = () => {
@@ -2505,6 +2530,10 @@ export function startGame() {
       return;
     }
     if (state.bossEncounter && !state.dialogue) {
+      if (advanceBattleTime(state.bossEncounter, dt)) {
+        if (state.bossEncounter.phase === 'victory') state.story.noelleGone = true;
+        syncBossUI();
+      }
       state.keys.clear();
       state.player.moving = false;
       return;
@@ -2636,6 +2665,13 @@ export function startGame() {
     }
     requestAnimationFrame(frame);
   }
+  const battleControls = setupBattleControls(state, {
+    $,
+    canvas,
+    openItems: toggleInventory,
+    announce,
+    onChange: syncBossUI,
+  });
   const { render, reducedParticleMotion } = createRenderer(ctx, state, {
     roomBackground,
     $,
