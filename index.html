@@ -1,264 +1,404 @@
 <!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="color-scheme" content="dark">
+  <head>
+    <!-- HTML describes the page: headings, buttons, menus, and the game canvas. -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
     <title>Two Worlds · Castle Awakening</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="shell">
-        <header>
-            <div class="brand"><span class="brandmark" aria-hidden="true"></span>
-                <div><strong>Two Worlds</strong>
-                    <div class="eyebrow">an undertale × deltarune story</div>
-                </div>
+      <header>
+        <div class="brand">
+          <span class="brandmark" aria-hidden="true"></span>
+          <div>
+            <strong>Two Worlds</strong>
+            <div class="eyebrow">an undertale × deltarune story</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="inventoryButton" aria-keyshortcuts="O">Inventory · O</button
+          ><button id="loadGameButton">Load game</button
+          ><button class="quiet" id="helpButton" aria-label="How to play and build">Help</button
+          ><button class="primary" id="downloadButton">↓ Download game</button>
+        </div>
+      </header>
+      <section class="intro">
+        <div>
+          <h1 id="pageHeading">Two worlds. One strange awakening.</h1>
+          <p class="muted" id="pageSubtitle">You are Kris. An old castle waits beyond the dark.</p>
+        </div>
+        <div class="mode-switch" aria-label="Choose play or build mode">
+          <button id="playMode" aria-pressed="true">▷ Explore</button
+          ><button id="buildMode" aria-pressed="false">▦ Build</button>
+        </div>
+      </section>
+      <main class="layout">
+        <div>
+          <div class="game-frame">
+            <div class="room-bar">
+              <div class="room-label">
+                <span class="dot" aria-hidden="true"></span><span id="roomName">The Waking Chamber</span>
+              </div>
+              <span class="hint" id="stageMode">YOUR ADVENTURE</span>
             </div>
-            <div class="header-actions"><button id="inventoryButton" aria-keyshortcuts="O">Inventory · O</button><button id="loadGameButton">Load game</button><button class="quiet" id="helpButton"
-                    aria-label="How to play and build">Help</button><button class="primary" id="downloadButton">↓
-                    Download game</button></div>
-        </header>
-        <section class="intro">
-            <div>
-                <h1 id="pageHeading">Two worlds. One strange awakening.</h1>
-                <p class="muted" id="pageSubtitle">You are Kris. An old castle waits beyond the dark.</p>
-            </div>
-            <div class="mode-switch" aria-label="Choose play or build mode"><button id="playMode" aria-pressed="true">▷
-                    Explore</button><button id="buildMode" aria-pressed="false">▦ Build</button></div>
-        </section>
-        <main class="layout">
-            <div>
-                <div class="game-frame">
-                    <div class="room-bar">
-                        <div class="room-label"><span class="dot" aria-hidden="true"></span><span id="roomName">The
-                                Waking Chamber</span></div><span class="hint" id="stageMode">YOUR ADVENTURE</span>
-                    </div>
-                    <div class="stage"><canvas id="game" width="640" height="480" tabindex="0"
-                            aria-label="Two Worlds game. Use arrow keys or W A S D to walk. Press Z or Enter to talk. Press C to inspect nearby objects. C works anywhere on the game page."></canvas>
-                        <div class="dialogue" id="dialogue" hidden>
-                            <div class="portrait" id="speakerPortrait" aria-hidden="true">✿</div>
-                            <div>
-                                <div class="speaker" id="speakerName">Flowey</div><span id="dialogueText"></span><span
-                                    class="next" id="dialogueNext">Z / Enter to continue ▾</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="game-footer"><strong id="gameHint">Click the room, then use the arrow
-                            keys.</strong><span id="locationHint" class="mono">ROOM 01 / 05</span></div>
+            <div class="stage">
+              <canvas
+                id="game"
+                width="640"
+                height="480"
+                tabindex="0"
+                aria-label="Two Worlds game. Use arrow keys or W A S D to walk. Press Z or Enter to talk. Press C to inspect nearby objects. C works anywhere on the game page."
+              ></canvas>
+              <div class="dialogue" id="dialogue" hidden>
+                <div class="portrait" id="speakerPortrait" aria-hidden="true">✿</div>
+                <div>
+                  <div class="speaker" id="speakerName">Flowey</div>
+                  <span id="dialogueText"></span><span class="next" id="dialogueNext">Z / Enter to continue ▾</span>
                 </div>
-                <div class="controls" id="playControls">
-                    <div class="dpad" aria-label="Movement controls"><button data-dir="up"
-                            aria-label="Walk up">↑</button><button data-dir="left"
-                            aria-label="Walk left">←</button><button data-dir="down"
-                            aria-label="Walk down">↓</button><button data-dir="right" aria-label="Walk right">→</button>
-                    </div>
-                    <div class="controls-right"><button id="restartButton" class="quiet">Restart story</button><button
-                            id="inspectButton">Inspect <span class="key">C</span></button><button id="talkButton">Talk
-                            <span class="key">Z</span></button></div>
-                </div>
-                <p class="editor-caption" id="editorCaption" hidden>Pick a tile, then paint the room. Use “Place Flowey”
-                    or “Set start” to move your characters.</p>
-                <div id="bossControls" hidden class="hint-card"><p>She stands silently.</p><button id="leaveBossButton">Back to walkway</button></div>
+              </div>
             </div>
-            <aside>
-                <section class="panel" id="explorePanel">
-                    <div class="eyebrow">chapter one · playing as kris</div>
-                    <h2>Castle Awakening</h2>
-                    <div class="room-illustration" aria-hidden="true"><svg viewBox="0 0 80 65"
-                            shape-rendering="crispEdges">
-                            <path fill="#507449" d="M38 36h5v23h-5zM24 48h14v6H24zM43 44h14v6H43z" />
-                            <path fill="#efc94f"
-                                d="M31 3h18v12H31zM18 12h15v16H18zM48 12h15v16H48zM22 28h14v12H22zM44 28h14v12H44zM33 34h14v10H33z" />
-                            <path fill="#fff0bc" d="M29 13h22v22H29zM25 19h30v12H25z" />
-                            <path fill="#2b2333"
-                                d="M32 20h3v6h-3zM45 20h3v6h-3zM32 29h3v3h-3zM35 32h10v2H35zM45 29h3v3h-3z" />
-                        </svg></div>
-                    <p id="storySummary">You wake among cracked stone and faded banners. Somewhere beyond the doorway,
-                        something is waiting.</p>
-                    <div class="task"><span class="task-icon" id="taskIcon" aria-hidden="true">◇</span>
-                        <div><strong id="taskTitle">Explore the old castle</strong>
-                            <p id="taskDescription">Walk through the doorway on the right.</p>
-                        </div>
-                    </div>
-                    <div class="hint-card"><span class="chip" id="partyChip">PARTY · KRIS</span><p id="inventorySummary" class="small-note">G. Candy: 0</p>
-                        <p style="margin-top:9px">A familiar world. An unfamiliar legend. Your story is only beginning.
-                        </p><button id="startBuilding">Edit your castle →</button>
-                    </div>
-                    <p class="small-note">C / Z / Enter advances dialogue. L skips ordinary dialogue; scenes marked I.
-                        C. cannot be skipped. After the fountain scene, Flowey, Ralsey and Susie follow your footsteps.
-                    </p>
-                </section>
-                <section class="panel" id="buildPanel" hidden>
-                    <div class="eyebrow">room workshop</div>
-                    <h2>Make a place of your own.</h2>
-                    <div class="tool-row"><button id="objectsBehindTool" aria-pressed="false">Objects behind</button><button id="behindGroundTool" aria-pressed="false">Behind ground</button></div>
-                    <p class="builder-note" id="buildLayerStatus" role="status">New objects: Normal</p>
-                    <p class="builder-note">Choose a layer, then an object tool. The layer stays selected as you switch tools. Click the selected layer again for Normal. To change an existing object, choose a layer and click its base, or use Edit.</p>
-                    <button class="primary" id="saveBuildButton" style="width:100%">Save build</button>
-                    <p class="helptext" id="saveStatus" role="status" aria-live="polite">Save your rooms and objects in this browser.</p>
-                    <div class="tool-row"><button id="downloadBuildButton">Download backup</button><button id="restoreBuildButton">Restore backup</button></div>
-                    <input id="buildFileInput" type="file" accept=".json,application/json" aria-label="Choose a build backup" hidden>
-                    <p class="builder-note">Build saves keep your room edits. Save points keep your adventure progress. Download a backup to keep a copy outside this browser.</p>
-                    <label for="roomSelect">Your rooms</label>
-                    <div class="room-tools"><select id="roomSelect"></select><button id="addRoom"
-                            aria-label="Add a new room">+</button></div><label for="roomTitle">Room name</label><input
-                        id="roomTitle" maxlength="32" autocomplete="off">
-<label for="roomBackgroundColor">Room background color</label><input type="color" id="roomBackgroundColor" value="#a349a4">
-<button id="resetRoomBackground" class="quiet">Reset background color</button>
-<label>Paint a tile</label>
-                    <div class="palette" id="palette" role="group" aria-label="Tile palette"></div>
-                    <div class="tool-row"><button id="floweyTool" aria-pressed="false">Place Flowey</button><button
-                            id="spawnTool" aria-pressed="false">Set start</button><button id="undoButton" disabled>↶
-                            Undo</button></div>
-                    <div class="tool-row"><button id="savePointTool" aria-pressed="false">★ Place save point</button></div>
-                    <p class="builder-note">Click a clear tile to add a save point. Click a star with this tool to remove it.</p>
-                    <div class="tool-row"><button id="particleTool" aria-pressed="false">✦ Place particles</button></div>
-                    <p class="builder-note">Click a tile to add drifting purple particles. Click it again with this tool to remove them.</p>
-                    <div class="tool-row"><button id="glitchParticleTool" aria-pressed="false">✧ Glitch particles</button></div>
-                    <p class="builder-note">Click a tile to place animated, tangled color streaks. Click it again with this tool to remove them.</p>
-                    <div class="tool-row"><button id="glitchPillarTool" aria-pressed="false">Glitch pillar</button></div>
-                    <p class="builder-note">Click to place a tall pillar of animated glitch particles. Use Edit on its base to change its height and width.</p>
-                    <div class="tool-row"><button id="deleteTool" aria-pressed="false">⌫ Delete</button><button id="editTool" aria-pressed="false">✎ Edit</button><button id="treeTool" aria-pressed="false">♣ Place tree</button></div>
-                    <p class="builder-note">Click a clear tile to plant a tree. Click its trunk tile again to remove it.</p>
-                    <div class="tool-row"><button id="spikeTool" aria-pressed="false">▲ Place spike</button></div>
-                    <p class="builder-note">Click a clear tile to place a spike. Click it again to remove it. Each step deals 10 HP to a random party member.</p>
-                    <div class="tool-row"><button id="jumpPadTool" aria-pressed="false">➜ Place jump pad</button></div>
-                    <p class="builder-note">Click a clear tile for the pad, then another clear tile for its landing spot. Click an existing pad to remove it.</p>
-                    <div class="npc-editor" style="border-top:1px solid var(--line);margin-top:18px;padding-top:4px">
-                        <label>NPCs · Froggit</label>
-                        <div class="tool-row"><button id="npcTool" aria-pressed="false"
-                                style="display:flex;align-items:center;justify-content:center;gap:6px"><svg width="32"
-                                    height="34" viewBox="0 0 26 27" aria-hidden="true" focusable="false"
-                                    style="flex-shrink:0" shape-rendering="crispEdges">
-                                    <rect width="26" height="27" rx="2" fill="#74416c" />
-                                    <path fill="#18131e"
-                                        d="M6 2h4v1h-4zM16 2h4v1h-4zM5 3h1v1h-1zM10 3h1v1h-1zM15 3h1v1h-1zM20 3h1v1h-1zM4 4h1v1h-1zM11 4h4v1h-4zM21 4h1v1h-1zM4 5h1v1h-1zM7 5h2v1h-2zM17 5h2v1h-2zM21 5h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM9 6h1v1h-1zM16 6h1v1h-1zM19 6h1v1h-1zM21 6h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM16 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM4 8h1v1h-1zM21 8h1v1h-1zM3 9h1v1h-1zM22 9h1v1h-1zM2 10h1v1h-1zM23 10h1v1h-1zM2 11h1v1h-1zM7 11h1v1h-1zM18 11h1v1h-1zM23 11h1v1h-1zM3 12h1v1h-1zM8 12h10v1h-10zM22 12h1v1h-1zM4 13h1v1h-1zM21 13h1v1h-1zM5 14h16v1h-16zM9 15h1v1h-1zM16 15h1v1h-1zM8 16h1v1h-1zM17 16h1v1h-1zM8 17h1v1h-1zM11 17h1v1h-1zM14 17h1v1h-1zM17 17h1v1h-1zM7 18h1v1h-1zM18 18h1v1h-1zM6 19h1v1h-1zM10 19h1v1h-1zM15 19h1v1h-1zM19 19h1v1h-1zM5 20h1v1h-1zM20 20h1v1h-1zM4 21h1v1h-1zM12 21h2v1h-2zM21 21h1v1h-1zM3 22h1v1h-1zM11 22h1v1h-1zM14 22h1v1h-1zM22 22h1v1h-1zM3 23h1v1h-1zM10 23h1v1h-1zM15 23h1v1h-1zM22 23h1v1h-1zM3 24h8v1h-8zM15 24h8v1h-8z" />
-                                    <path fill="#f4f0e7"
-                                        d="M6 3h4v1h-4zM16 3h4v1h-4zM5 4h6v1h-6zM15 4h6v1h-6zM5 5h2v1h-2zM9 5h8v1h-8zM19 5h2v1h-2zM5 6h1v1h-1zM7 6h2v1h-2zM10 6h6v1h-6zM17 6h2v1h-2zM20 6h1v1h-1zM5 7h1v1h-1zM7 7h2v1h-2zM10 7h6v1h-6zM17 7h2v1h-2zM20 7h1v1h-1zM5 8h16v1h-16zM4 9h18v1h-18zM3 10h20v1h-20zM3 11h4v1h-4zM8 11h10v1h-10zM19 11h4v1h-4zM4 12h4v1h-4zM18 12h4v1h-4zM5 13h16v1h-16zM10 15h6v1h-6zM9 16h8v1h-8zM9 17h2v1h-2zM12 17h2v1h-2zM15 17h2v1h-2zM8 18h10v1h-10zM7 19h3v1h-3zM11 19h4v1h-4zM16 19h3v1h-3zM6 20h14v1h-14zM5 21h7v1h-7zM14 21h7v1h-7zM4 22h7v1h-7zM15 22h7v1h-7zM4 23h6v1h-6zM16 23h6v1h-6z" />
-                                </svg><span>Place NPC</span></button><button id="npcSelectTool"
-                                aria-pressed="false">Select NPC</button></div>
-                        <p class="builder-note">Place the frog NPC on a clear tile. Select it to edit its speech.</p>
-                        <label for="npcSelect">NPCs in this room</label><select id="npcSelect"></select><label
-                            for="npcName">NPC name</label><input id="npcName" maxlength="32" autocomplete="off"
-                            disabled><label for="npcSpeech">What this NPC says</label><textarea id="npcSpeech"
-                            maxlength="6000" spellcheck="true" disabled></textarea>
-                        <p class="builder-note">One line per dialogue page. Face the NPC and press C or Z in Explore.
-                        </p>
-                        <div class="tool-row"><button id="npcMove" disabled>Move NPC</button><button id="npcRemove"
-                                disabled>Remove NPC</button></div>
-                    </div><label for="doorTarget">Other doorways lead to</label><select id="doorTarget"></select>
-                    <p class="builder-note" id="doorNote"></p><label for="floweyWords" id="dialogueLabel">Room
-                        conversation</label><textarea id="floweyWords" maxlength="6000" spellcheck="true"></textarea>
-                    <p class="builder-note">Edit conversations in rooms 2, 3 and 4. One line per page; use [Kris],
-                        [Flowey], [Ralsey] or [Susie] for the speaker. Restart the story to replay them.</p>
-                </section>
-            </aside>
-        </main>
-        <footer class="footer"><span><span class="footer-dot">●</span> No sign-in. Yours to keep.</span><span>Two
-                worlds. One story.<br>Saved copies work offline.</span></footer>
+            <div class="game-footer">
+              <strong id="gameHint">Click the room, then use the arrow keys.</strong
+              ><span id="locationHint" class="mono">ROOM 01 / 05</span>
+            </div>
+          </div>
+          <div class="controls" id="playControls">
+            <div class="dpad" aria-label="Movement controls">
+              <button data-dir="up" aria-label="Walk up">↑</button
+              ><button data-dir="left" aria-label="Walk left">←</button
+              ><button data-dir="down" aria-label="Walk down">↓</button
+              ><button data-dir="right" aria-label="Walk right">→</button>
+            </div>
+            <div class="controls-right">
+              <button id="restartButton" class="quiet">Restart story</button
+              ><button id="inspectButton">Inspect <span class="key">C</span></button
+              ><button id="talkButton">Talk <span class="key">Z</span></button>
+            </div>
+          </div>
+          <p class="editor-caption" id="editorCaption" hidden>
+            Pick a tile, then paint the room. Use “Place Flowey” or “Set start” to move your characters.
+          </p>
+          <div id="bossControls" hidden class="hint-card">
+            <p>She stands silently.</p>
+            <button id="leaveBossButton">Back to walkway</button>
+          </div>
+        </div>
+        <aside>
+          <section class="panel" id="explorePanel">
+            <div class="eyebrow">chapter one · playing as kris</div>
+            <h2>Castle Awakening</h2>
+            <div class="room-illustration" aria-hidden="true">
+              <svg viewBox="0 0 80 65" shape-rendering="crispEdges">
+                <path fill="#507449" d="M38 36h5v23h-5zM24 48h14v6H24zM43 44h14v6H43z" />
+                <path
+                  fill="#efc94f"
+                  d="M31 3h18v12H31zM18 12h15v16H18zM48 12h15v16H48zM22 28h14v12H22zM44 28h14v12H44zM33 34h14v10H33z"
+                />
+                <path fill="#fff0bc" d="M29 13h22v22H29zM25 19h30v12H25z" />
+                <path fill="#2b2333" d="M32 20h3v6h-3zM45 20h3v6h-3zM32 29h3v3h-3zM35 32h10v2H35zM45 29h3v3h-3z" />
+              </svg>
+            </div>
+            <p id="storySummary">
+              You wake among cracked stone and faded banners. Somewhere beyond the doorway, something is waiting.
+            </p>
+            <div class="task">
+              <span class="task-icon" id="taskIcon" aria-hidden="true">◇</span>
+              <div>
+                <strong id="taskTitle">Explore the old castle</strong>
+                <p id="taskDescription">Walk through the doorway on the right.</p>
+              </div>
+            </div>
+            <div class="hint-card">
+              <span class="chip" id="partyChip">PARTY · KRIS</span>
+              <p id="inventorySummary" class="small-note">G. Candy: 0</p>
+              <p style="margin-top: 9px">A familiar world. An unfamiliar legend. Your story is only beginning.</p>
+              <button id="startBuilding">Edit your castle →</button>
+            </div>
+            <p class="small-note">
+              C / Z / Enter advances dialogue. L skips ordinary dialogue; scenes marked I. C. cannot be skipped. After
+              the fountain scene, Flowey, Ralsey and Susie follow your footsteps.
+            </p>
+          </section>
+          <section class="panel" id="buildPanel" hidden>
+            <div class="eyebrow">room workshop</div>
+            <h2>Make a place of your own.</h2>
+            <div class="tool-row">
+              <button id="objectsBehindTool" aria-pressed="false">Objects behind</button
+              ><button id="behindGroundTool" aria-pressed="false">Behind ground</button>
+            </div>
+            <p class="builder-note" id="buildLayerStatus" role="status">New objects: Normal</p>
+            <p class="builder-note">
+              Choose a layer, then an object tool. The layer stays selected as you switch tools. Click the selected
+              layer again for Normal. To change an existing object, choose a layer and click its base, or use Edit.
+            </p>
+            <button class="primary" id="saveBuildButton" style="width: 100%">Save build</button>
+            <p class="helptext" id="saveStatus" role="status" aria-live="polite">
+              Save your rooms and objects in this browser.
+            </p>
+            <div class="tool-row">
+              <button id="downloadBuildButton">Download backup</button
+              ><button id="restoreBuildButton">Restore backup</button>
+            </div>
+            <input
+              id="buildFileInput"
+              type="file"
+              accept=".json,application/json"
+              aria-label="Choose a build backup"
+              hidden
+            />
+            <p class="builder-note">
+              Build saves keep your room edits. Save points keep your adventure progress. Download a backup to keep a
+              copy outside this browser.
+            </p>
+            <label for="roomSelect">Your rooms</label>
+            <div class="room-tools">
+              <select id="roomSelect"></select
+              ><button id="addRoom" aria-label="Add a new room">+</button>
+            </div>
+            <label for="roomTitle">Room name</label><input id="roomTitle" maxlength="32" autocomplete="off" />
+            <label for="roomBackgroundColor">Room background color</label
+            ><input type="color" id="roomBackgroundColor" value="#a349a4" />
+            <button id="resetRoomBackground" class="quiet">Reset background color</button>
+            <label>Paint a tile</label>
+            <div class="palette" id="palette" role="group" aria-label="Tile palette"></div>
+            <div class="tool-row">
+              <button id="floweyTool" aria-pressed="false">Place Flowey</button
+              ><button id="spawnTool" aria-pressed="false">Set start</button
+              ><button id="undoButton" disabled>↶ Undo</button>
+            </div>
+            <div class="tool-row"><button id="savePointTool" aria-pressed="false">★ Place save point</button></div>
+            <p class="builder-note">
+              Click a clear tile to add a save point. Click a star with this tool to remove it.
+            </p>
+            <div class="tool-row"><button id="particleTool" aria-pressed="false">✦ Place particles</button></div>
+            <p class="builder-note">
+              Click a tile to add drifting purple particles. Click it again with this tool to remove them.
+            </p>
+            <div class="tool-row"><button id="glitchParticleTool" aria-pressed="false">✧ Glitch particles</button></div>
+            <p class="builder-note">
+              Click a tile to place animated, tangled color streaks. Click it again with this tool to remove them.
+            </p>
+            <div class="tool-row"><button id="glitchPillarTool" aria-pressed="false">Glitch pillar</button></div>
+            <p class="builder-note">
+              Click to place a tall pillar of animated glitch particles. Use Edit on its base to change its height and
+              width.
+            </p>
+            <div class="tool-row">
+              <button id="deleteTool" aria-pressed="false">⌫ Delete</button
+              ><button id="editTool" aria-pressed="false">✎ Edit</button
+              ><button id="treeTool" aria-pressed="false">♣ Place tree</button>
+            </div>
+            <p class="builder-note">Click a clear tile to plant a tree. Click its trunk tile again to remove it.</p>
+            <div class="tool-row"><button id="spikeTool" aria-pressed="false">▲ Place spike</button></div>
+            <p class="builder-note">
+              Click a clear tile to place a spike. Click it again to remove it. Each step deals 10 HP to a random party
+              member.
+            </p>
+            <div class="tool-row"><button id="jumpPadTool" aria-pressed="false">➜ Place jump pad</button></div>
+            <p class="builder-note">
+              Click a clear tile for the pad, then another clear tile for its landing spot. Click an existing pad to
+              remove it.
+            </p>
+            <div class="npc-editor" style="border-top: 1px solid var(--line); margin-top: 18px; padding-top: 4px">
+              <label>NPCs · Froggit</label>
+              <div class="tool-row">
+                <button
+                  id="npcTool"
+                  aria-pressed="false"
+                  style="display: flex; align-items: center; justify-content: center; gap: 6px"
+                >
+                  <svg
+                    width="32"
+                    height="34"
+                    viewBox="0 0 26 27"
+                    aria-hidden="true"
+                    focusable="false"
+                    style="flex-shrink: 0"
+                    shape-rendering="crispEdges"
+                  >
+                    <rect width="26" height="27" rx="2" fill="#74416c" />
+                    <path
+                      fill="#18131e"
+                      d="M6 2h4v1h-4zM16 2h4v1h-4zM5 3h1v1h-1zM10 3h1v1h-1zM15 3h1v1h-1zM20 3h1v1h-1zM4 4h1v1h-1zM11 4h4v1h-4zM21 4h1v1h-1zM4 5h1v1h-1zM7 5h2v1h-2zM17 5h2v1h-2zM21 5h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM9 6h1v1h-1zM16 6h1v1h-1zM19 6h1v1h-1zM21 6h1v1h-1zM4 7h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM16 7h1v1h-1zM19 7h1v1h-1zM21 7h1v1h-1zM4 8h1v1h-1zM21 8h1v1h-1zM3 9h1v1h-1zM22 9h1v1h-1zM2 10h1v1h-1zM23 10h1v1h-1zM2 11h1v1h-1zM7 11h1v1h-1zM18 11h1v1h-1zM23 11h1v1h-1zM3 12h1v1h-1zM8 12h10v1h-10zM22 12h1v1h-1zM4 13h1v1h-1zM21 13h1v1h-1zM5 14h16v1h-16zM9 15h1v1h-1zM16 15h1v1h-1zM8 16h1v1h-1zM17 16h1v1h-1zM8 17h1v1h-1zM11 17h1v1h-1zM14 17h1v1h-1zM17 17h1v1h-1zM7 18h1v1h-1zM18 18h1v1h-1zM6 19h1v1h-1zM10 19h1v1h-1zM15 19h1v1h-1zM19 19h1v1h-1zM5 20h1v1h-1zM20 20h1v1h-1zM4 21h1v1h-1zM12 21h2v1h-2zM21 21h1v1h-1zM3 22h1v1h-1zM11 22h1v1h-1zM14 22h1v1h-1zM22 22h1v1h-1zM3 23h1v1h-1zM10 23h1v1h-1zM15 23h1v1h-1zM22 23h1v1h-1zM3 24h8v1h-8zM15 24h8v1h-8z"
+                    />
+                    <path
+                      fill="#f4f0e7"
+                      d="M6 3h4v1h-4zM16 3h4v1h-4zM5 4h6v1h-6zM15 4h6v1h-6zM5 5h2v1h-2zM9 5h8v1h-8zM19 5h2v1h-2zM5 6h1v1h-1zM7 6h2v1h-2zM10 6h6v1h-6zM17 6h2v1h-2zM20 6h1v1h-1zM5 7h1v1h-1zM7 7h2v1h-2zM10 7h6v1h-6zM17 7h2v1h-2zM20 7h1v1h-1zM5 8h16v1h-16zM4 9h18v1h-18zM3 10h20v1h-20zM3 11h4v1h-4zM8 11h10v1h-10zM19 11h4v1h-4zM4 12h4v1h-4zM18 12h4v1h-4zM5 13h16v1h-16zM10 15h6v1h-6zM9 16h8v1h-8zM9 17h2v1h-2zM12 17h2v1h-2zM15 17h2v1h-2zM8 18h10v1h-10zM7 19h3v1h-3zM11 19h4v1h-4zM16 19h3v1h-3zM6 20h14v1h-14zM5 21h7v1h-7zM14 21h7v1h-7zM4 22h7v1h-7zM15 22h7v1h-7zM4 23h6v1h-6zM16 23h6v1h-6z"
+                    /></svg
+                  ><span>Place NPC</span></button
+                ><button id="npcSelectTool" aria-pressed="false">Select NPC</button>
+              </div>
+              <p class="builder-note">Place the frog NPC on a clear tile. Select it to edit its speech.</p>
+              <label for="npcSelect">NPCs in this room</label
+              ><select id="npcSelect"></select
+              ><label for="npcName">NPC name</label
+              ><input id="npcName" maxlength="32" autocomplete="off" disabled /><label for="npcSpeech"
+                >What this NPC says</label
+              ><textarea id="npcSpeech" maxlength="6000" spellcheck="true" disabled></textarea>
+              <p class="builder-note">One line per dialogue page. Face the NPC and press C or Z in Explore.</p>
+              <div class="tool-row">
+                <button id="npcMove" disabled>Move NPC</button><button id="npcRemove" disabled>Remove NPC</button>
+              </div>
+            </div>
+            <label for="doorTarget">Other doorways lead to</label
+            ><select id="doorTarget"></select>
+            <p class="builder-note" id="doorNote"></p>
+            <label for="floweyWords" id="dialogueLabel">Room conversation</label
+            ><textarea id="floweyWords" maxlength="6000" spellcheck="true"></textarea>
+            <p class="builder-note">
+              Edit conversations in rooms 2, 3 and 4. One line per page; use [Kris], [Flowey], [Ralsey] or [Susie] for
+              the speaker. Restart the story to replay them.
+            </p>
+          </section>
+        </aside>
+      </main>
+      <footer class="footer">
+        <span><span class="footer-dot">●</span> No sign-in. Yours to keep.</span
+        ><span>Two worlds. One story.<br />Saved copies work offline.</span>
+      </footer>
     </div>
     <div id="toast" class="toast" role="status" hidden></div>
-    <div id="announcement" aria-live="polite"
-        style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"></div>
+    <div
+      id="announcement"
+      aria-live="polite"
+      style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden"
+    ></div>
     <dialog id="helpDialog">
-        <div class="eyebrow">welcome, world maker</div>
-        <h2>This is your little adventure.</h2>
-        <ol>
-            <li><strong>Explore.</strong> Click the game. Walk with the arrow keys or W A S D. Enter the second room to
-                meet Flowey. Face a nearby object and press C to inspect it. Before meeting Flowey, you get a short
-                description; afterward, he tells you not to waste time. C, Z or Enter advances dialogue. Press L to skip
-                ordinary conversations. Important Cutscenes are labeled “I. C.” and cannot be skipped with L. Finish his
-                speech and he joins you. Continue through the right-hand door into the Echo Chamber for your next
-                conversation. Follow the glowing cracks through its right-hand door to find the Dark Fountain. Continue
-                the conversation to see Susie’s Rude Buster and bring everyone into your party. Then face the fountain
-                and press C or Z for the next I. C.: jumping into D.G.W. After landing, explore its black passage
-                with your whole party.</li>
-            <li><strong>Build.</strong> Pick a tile and paint. Place Flowey in room 2, choose your starting spot, or
-                write new dialogue. Use Place NPC to add Froggit; select it to edit its name and speech. Face it and
-                press C or Z to talk. Doors connect the rooms you choose.</li>
-            <li><strong>Keep it.</strong> Use “Save build” to keep your rooms separately from adventure saves. “Download backup” keeps a build file you can bring back with “Restore backup.” “Download game” saves a new HTML file with all your edits. Double-click it to
-                play again, even offline.</li>
-        </ol>
-        <p class="helptext">This file has a map editor, not a built-in AI chatbot. For bigger changes, describe what you
-            want in our chat. Nothing in this game is sent anywhere.</p>
-        <p class="helptext">Walking and talking also work with the buttons below the game. Browser storage may remember
-            edits. Download a build backup to keep another copy.</p><button class="primary"
-            id="closeHelp">Let's begin →</button>
+      <div class="eyebrow">welcome, world maker</div>
+      <h2>This is your little adventure.</h2>
+      <ol>
+        <li>
+          <strong>Explore.</strong> Click the game. Walk with the arrow keys or W A S D. Enter the second room to meet
+          Flowey. Face a nearby object and press C to inspect it. Before meeting Flowey, you get a short description;
+          afterward, he tells you not to waste time. C, Z or Enter advances dialogue. Press L to skip ordinary
+          conversations. Important Cutscenes are labeled “I. C.” and cannot be skipped with L. Finish his speech and he
+          joins you. Continue through the right-hand door into the Echo Chamber for your next conversation. Follow the
+          glowing cracks through its right-hand door to find the Dark Fountain. Continue the conversation to see Susie’s
+          Rude Buster and bring everyone into your party. Then face the fountain and press C or Z for the next I. C.:
+          jumping into D.G.W. After landing, explore its black passage with your whole party.
+        </li>
+        <li>
+          <strong>Build.</strong> Pick a tile and paint. Place Flowey in room 2, choose your starting spot, or write new
+          dialogue. Use Place NPC to add Froggit; select it to edit its name and speech. Face it and press C or Z to
+          talk. Doors connect the rooms you choose.
+        </li>
+        <li>
+          <strong>Keep it.</strong> Use “Save build” to keep your rooms separately from adventure saves. “Download
+          backup” keeps a build file you can bring back with “Restore backup.” “Download game” saves a new HTML file
+          with all your edits. Double-click it to play again, even offline.
+        </li>
+      </ol>
+      <p class="helptext">
+        This file has a map editor, not a built-in AI chatbot. For bigger changes, describe what you want in our chat.
+        Nothing in this game is sent anywhere.
+      </p>
+      <p class="helptext">
+        Walking and talking also work with the buttons below the game. Browser storage may remember edits. Download a
+        build backup to keep another copy.
+      </p>
+      <button class="primary" id="closeHelp">Let's begin →</button>
     </dialog>
     <dialog id="bossChoiceDialog" aria-labelledby="bossChoiceTitle">
-<h2 id="bossChoiceTitle">Proceed to the boss fight?</h2>
-<p>Kris and Flowey will continue ahead. Susie and Ralsey will stay behind.</p>
-<div class="tool-row"><button id="proceedBossButton" class="primary">Proceed</button><button id="declineBossButton" autofocus>Not yet</button></div>
-</dialog>
+      <h2 id="bossChoiceTitle">Proceed to the boss fight?</h2>
+      <p>Kris and Flowey will continue ahead. Susie and Ralsey will stay behind.</p>
+      <div class="tool-row">
+        <button id="proceedBossButton" class="primary">Proceed</button
+        ><button id="declineBossButton" autofocus>Not yet</button>
+      </div>
+    </dialog>
     <dialog id="goldenDoorChoiceDialog" aria-labelledby="goldenDoorChoiceTitle">
-<h2 id="goldenDoorChoiceTitle">Enter the golden doors?</h2>
-<p>Do you want to go inside?</p>
-<div class="tool-row"><button id="enterGoldenDoorButton" class="primary">Enter</button><button id="stayAtGoldenDoorButton" autofocus>Stay here</button></div>
-</dialog>
-<dialog id="holeChoiceDialog" aria-labelledby="holeChoiceTitle">
-<div class="eyebrow">Flowey</div><h2 id="holeChoiceTitle">If we fall, we cant go back!</h2>
-<p>This jump is one-way. Do you want to jump?</p>
-<div class="tool-row"><button id="jumpHoleButton" class="primary">Jump</button><button id="backFromHoleButton" autofocus>Go back</button></div>
-</dialog>
-<dialog id="gameOverDialog" aria-labelledby="gameOverTitle">
-<h2 id="gameOverTitle">GAME OVER</h2>
-<p>Your party has fallen. Stay determined.</p>
-<button id="retryGameButton" class="primary">Try again</button>
-<p id="retryFeedback" class="helptext" role="status"></p>
-</dialog>
-<dialog id="inventoryDialog" aria-labelledby="inventoryTitle">
-<h2 id="inventoryTitle">Inventory</h2>
-<div id="partyHPList" aria-label="Party health"></div>
-<p class="helptext">Kris carries the party’s items.</p>
-<p id="inventoryContents"></p>
-<p class="helptext">1. Choose an item you have.</p>
-<div id="inventoryItem" class="save-slots" role="group" aria-label="Items Kris carries"></div>
-<p id="inventoryItemDescription" class="helptext">Select an item to see what it does.</p>
-<div id="healingItemControls" hidden>
-<label for="candyTarget">2. Choose a teammate to heal</label><select id="candyTarget"></select>
-<p id="inventoryHP" role="status">Kris HP: 100 / 100</p>
-<progress id="inventoryHPBar" value="100" max="100" aria-label="Player HP"></progress>
-<button id="useCandyButton" class="primary">Use selected item</button>
-</div>
-<p id="inventoryFeedback" role="status" aria-live="polite" class="helptext"></p>
-<button id="closeInventoryButton" class="quiet">Back to game · O / Esc</button>
-</dialog>
-<dialog id="objectEditDialog" aria-labelledby="objectEditTitle">
-<form id="objectEditForm">
-<h2 id="objectEditTitle">Edit tile</h2>
-<label for="editObjectTarget">Object on this tile</label><select id="editObjectTarget"></select>
-<div id="objectLayerFields" hidden>
-<label>Draw layer</label><div class="tool-row"><button type="button" id="editLayerNormal" aria-pressed="true">Normal</button><button type="button" id="editLayerBack" aria-pressed="false">Objects behind</button><button type="button" id="editLayerGround" aria-pressed="false">Behind ground</button></div>
-<p class="helptext">Layers change appearance. Walking, damage, and interactions stay the same.</p>
-</div>
-<div id="glitchPillarFields" hidden>
-<label for="editGlitchHeight">Pillar height (tiles)</label><input id="editGlitchHeight" type="number" min="1" max="12" step="1" value="8">
-<label for="editGlitchWidth">Pillar width (tiles)</label><input id="editGlitchWidth" type="number" min="1" max="4" step="1" value="1">
-</div>
-<div id="tileColorFields"><label for="editTileColor">Tile color</label><input id="editTileColor" type="color" value="#a349a4"></div>
-<div id="treeEditFields" hidden>
-<label for="editCanopyColor">Foliage color</label><input id="editCanopyColor" type="color" value="#160d39">
-<label for="editAccentColor">Leaf highlights and outline</label><input id="editAccentColor" type="color" value="#ef004b">
-<label for="editTrunkColor">Trunk color</label><input id="editTrunkColor" type="color" value="#140d38">
-<label for="editCandyCount">Candy supply (0–6)</label><input id="editCandyCount" type="number" min="0" max="6" step="1" required value="2">
-<p id="editCandyNote" class="helptext"></p>
-</div>
-<div class="tool-row"><button type="submit" class="primary">Apply changes</button><button type="button" id="resetObjectColors">Reset colors</button><button type="button" id="cancelObjectEdit">Cancel</button></div>
-</form>
-</dialog>
-<dialog id="saveDialog" aria-labelledby="saveDialogTitle">
-<h2 id="saveDialogTitle">Save your game</h2>
-<p id="saveDialogNote">Choose one of three slots.</p>
-<div id="saveSlots" class="save-slots"></div>
-<p id="saveFeedback" role="status" aria-live="polite"></p>
-<button id="closeSaveDialog" class="quiet">Back to game</button>
-</dialog>
-<script id="projectData"
-        type="application/json">{"version":2,"id":"two-worlds-castle-v1","updatedAt":0,"rooms":null}</script>
-    <script src="script.js"></script>
-</body>
-
+      <h2 id="goldenDoorChoiceTitle">Enter the golden doors?</h2>
+      <p>Do you want to go inside?</p>
+      <div class="tool-row">
+        <button id="enterGoldenDoorButton" class="primary">Enter</button
+        ><button id="stayAtGoldenDoorButton" autofocus>Stay here</button>
+      </div>
+    </dialog>
+    <dialog id="holeChoiceDialog" aria-labelledby="holeChoiceTitle">
+      <div class="eyebrow">Flowey</div>
+      <h2 id="holeChoiceTitle">If we fall, we cant go back!</h2>
+      <p>This jump is one-way. Do you want to jump?</p>
+      <div class="tool-row">
+        <button id="jumpHoleButton" class="primary">Jump</button
+        ><button id="backFromHoleButton" autofocus>Go back</button>
+      </div>
+    </dialog>
+    <dialog id="gameOverDialog" aria-labelledby="gameOverTitle">
+      <h2 id="gameOverTitle">GAME OVER</h2>
+      <p>Your party has fallen. Stay determined.</p>
+      <button id="retryGameButton" class="primary">Try again</button>
+      <p id="retryFeedback" class="helptext" role="status"></p>
+    </dialog>
+    <dialog id="inventoryDialog" aria-labelledby="inventoryTitle">
+      <h2 id="inventoryTitle">Inventory</h2>
+      <div id="partyHPList" aria-label="Party health"></div>
+      <p class="helptext">Kris carries the party’s items.</p>
+      <p id="inventoryContents"></p>
+      <p class="helptext">1. Choose an item you have.</p>
+      <div id="inventoryItem" class="save-slots" role="group" aria-label="Items Kris carries"></div>
+      <p id="inventoryItemDescription" class="helptext">Select an item to see what it does.</p>
+      <div id="healingItemControls" hidden>
+        <label for="candyTarget">2. Choose a teammate to heal</label
+        ><select id="candyTarget"></select>
+        <p id="inventoryHP" role="status">Kris HP: 100 / 100</p>
+        <progress id="inventoryHPBar" value="100" max="100" aria-label="Player HP"></progress>
+        <button id="useCandyButton" class="primary">Use selected item</button>
+      </div>
+      <p id="inventoryFeedback" role="status" aria-live="polite" class="helptext"></p>
+      <button id="closeInventoryButton" class="quiet">Back to game · O / Esc</button>
+    </dialog>
+    <dialog id="objectEditDialog" aria-labelledby="objectEditTitle">
+      <form id="objectEditForm">
+        <h2 id="objectEditTitle">Edit tile</h2>
+        <label for="editObjectTarget">Object on this tile</label
+        ><select id="editObjectTarget"></select>
+        <div id="objectLayerFields" hidden>
+          <label>Draw layer</label>
+          <div class="tool-row">
+            <button type="button" id="editLayerNormal" aria-pressed="true">Normal</button
+            ><button type="button" id="editLayerBack" aria-pressed="false">Objects behind</button
+            ><button type="button" id="editLayerGround" aria-pressed="false">Behind ground</button>
+          </div>
+          <p class="helptext">Layers change appearance. Walking, damage, and interactions stay the same.</p>
+        </div>
+        <div id="glitchPillarFields" hidden>
+          <label for="editGlitchHeight">Pillar height (tiles)</label
+          ><input id="editGlitchHeight" type="number" min="1" max="12" step="1" value="8" />
+          <label for="editGlitchWidth">Pillar width (tiles)</label
+          ><input id="editGlitchWidth" type="number" min="1" max="4" step="1" value="1" />
+        </div>
+        <div id="tileColorFields">
+          <label for="editTileColor">Tile color</label><input id="editTileColor" type="color" value="#a349a4" />
+        </div>
+        <div id="treeEditFields" hidden>
+          <label for="editCanopyColor">Foliage color</label><input id="editCanopyColor" type="color" value="#160d39" />
+          <label for="editAccentColor">Leaf highlights and outline</label
+          ><input id="editAccentColor" type="color" value="#ef004b" /> <label for="editTrunkColor">Trunk color</label
+          ><input id="editTrunkColor" type="color" value="#140d38" />
+          <label for="editCandyCount">Candy supply (0–6)</label
+          ><input id="editCandyCount" type="number" min="0" max="6" step="1" required value="2" />
+          <p id="editCandyNote" class="helptext"></p>
+        </div>
+        <div class="tool-row">
+          <button type="submit" class="primary">Apply changes</button
+          ><button type="button" id="resetObjectColors">Reset colors</button
+          ><button type="button" id="cancelObjectEdit">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="saveDialog" aria-labelledby="saveDialogTitle">
+      <h2 id="saveDialogTitle">Save your game</h2>
+      <p id="saveDialogNote">Choose one of three slots.</p>
+      <div id="saveSlots" class="save-slots"></div>
+      <p id="saveFeedback" role="status" aria-live="polite"></p>
+      <button id="closeSaveDialog" class="quiet">Back to game</button>
+    </dialog>
+    <script id="projectData" type="application/json">
+      { "version": 2, "id": "two-worlds-castle-v1", "updatedAt": 0, "rooms": null }
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
