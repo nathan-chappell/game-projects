@@ -1085,6 +1085,7 @@ export function startGame() {
     'jackLeverFound',
     'jackReward',
     'tennaFinale',
+    'tennaOpening',
     'tennaHelpers',
   ]);
   // A short path connects Flowey to Kris initially. After that he follows the

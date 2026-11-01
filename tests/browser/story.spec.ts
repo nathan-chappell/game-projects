@@ -59,7 +59,7 @@ test('Tenna starts the Helpers attack and returns to party controls after skippi
   await page.goto('/');
   await frames(page, 1);
   await page.locator('#talkButton').click();
-  for (let line = 0; line < 4; line++) await confirmRoomDialogue(page);
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
   await frames(page, 2);
   await expect(page.locator('#bossControls')).toBeVisible();
   for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
@@ -175,7 +175,7 @@ test('Tenna’s paired saxophone paths replace each other and finish after five 
   await page.goto('/');
   await frames(page, 1);
   await page.locator('#talkButton').click();
-  for (let line = 0; line < 4; line++) await confirmRoomDialogue(page);
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
   await frames(page, 2);
   for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
   await frames(page, 2);
@@ -193,4 +193,39 @@ test('Tenna’s paired saxophone paths replace each other and finish after five 
   await expect(page.locator('#battleSoulControls')).not.toBeVisible();
   await expect(page.locator('#battleAttack')).toBeEnabled();
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+});
+
+test('Tenna stops the glitching on the studio battlefield before the first turn', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 4; line++) await confirmRoomDialogue(page);
+  await frames(page, 2);
+  await expect(page.locator('#battleAttack')).toBeDisabled();
+  await expect(page.locator('#speakerName')).toHaveText('Tenna');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toHaveText('* Mike! Stop the glitching!!');
+  await page.keyboard.press('l');
+  await expect(page.locator('#dialogue')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await frames(page, 2);
+  await expect(page.locator('#battleAttack')).toBeEnabled();
+  await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('studio-battlefield.png') });
+  const bounds = await page.locator('#game').boundingBox();
+  if (!bounds) throw new Error('Missing game canvas');
+  const clip = {
+    x: bounds.x + (bounds.width * 240) / 640,
+    y: bounds.y + (bounds.height * 15) / 480,
+    width: (bounds.width * 160) / 640,
+    height: (bounds.height * 90) / 480,
+  };
+  const scoreboard = await page.screenshot({ clip });
+  await frames(page, 120);
+  const later = await page.screenshot({ clip });
+  expect(later).toEqual(scoreboard);
 });

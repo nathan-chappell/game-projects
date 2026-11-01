@@ -199,6 +199,7 @@ export interface EncounterBase {
   darkUnlocked?: boolean;
   darkAttackCount?: number;
   lastDarkPattern?: number;
+  score?: number;
   tennaCueSeen?: boolean;
   darkShinePending?: boolean;
 }

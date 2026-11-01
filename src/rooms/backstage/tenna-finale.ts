@@ -14,6 +14,7 @@ export const finaleConversation = [
 export function createTennaEncounter() {
   const b = createEncounter();
   b.kind = 'tenna';
+  b.score = 0;
   b.enemy.name = 'Tenna';
   b.enemy.hp = b.enemy.maxHP = 4000;
   startKrisTurn(b);

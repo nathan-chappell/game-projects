@@ -13,6 +13,7 @@ test('the Finale introduces fighting Tenna with all four party turns', () => {
   assert.ok(finaleConversation.some((l) => /fighting ME/.test(l.text)));
   const b = createTennaEncounter();
   assert.equal(b.enemy.name, 'Tenna');
+  assert.equal(b.score, 0);
   assert.equal(b.kind, 'tenna');
   assert.equal(b.turn, 'Kris');
   assert.deepEqual(battlePartyNames(b), ['Kris', 'Flowey', 'Susie', 'Ralsey']);

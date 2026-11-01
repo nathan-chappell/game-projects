@@ -343,8 +343,16 @@ export function createDialogue(dependencies: Dependencies) {
       if (kind === 'tennaFinale') {
         state.story.tennaFinaleExplained = true;
         state.bossEncounter = createTennaEncounter();
+        state.bossEncounter.phase = 'tennaOpening';
+        openDialogue(['[Tenna] * Mike! Stop the glitching!!'], 'tennaOpening');
         dependencies.syncBossUI();
         dependencies.storyUI();
+        dependencies.canvas.focus({ preventScroll: true });
+      }
+      if (kind === 'tennaOpening' && state.bossEncounter?.kind === 'tenna') {
+        state.bossEncounter.phase = 'enemy';
+        startKrisTurn(state.bossEncounter, state.partyHP);
+        dependencies.syncBossUI();
         dependencies.canvas.focus({ preventScroll: true });
       }
       if (kind === 'darkIntro') {

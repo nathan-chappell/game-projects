@@ -96,14 +96,14 @@ export function createGlitchStudioDrawing(
       }
     }
   }
-  function floorLines(room: Room) {
+  function floorLines(room: Room, fullStage = false) {
     ctx.save();
     ctx.beginPath();
     // Keep the perspective floor on the room's actual walkable tiles, including
     // custom Build edits, so the visible stage agrees with collision geometry.
     for (let y = 5; y < 11; y++)
       for (let x = 0; x < 16; x++)
-        if ([0, 2, 3, 5].includes(room.map[y][x])) ctx.rect(x * 40, y * 40, 40, 40);
+        if (fullStage || [0, 2, 3, 5].includes(room.map[y][x])) ctx.rect(x * 40, y * 40, 40, 40);
     ctx.clip();
     ctx.strokeStyle = '#c7a477';
     ctx.lineWidth = 2;
@@ -125,7 +125,7 @@ export function createGlitchStudioDrawing(
     rect(0, 432, 640, 8, '#ffdf96');
     ctx.restore();
   }
-  function room(time: number, room: Room) {
+  function room(time: number, room: Room, fixedScore?: number, fullStage = false) {
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, 640, 200);
     rect(0, 181, 640, 19, '#87ce87');
@@ -207,10 +207,11 @@ export function createGlitchStudioDrawing(
       '#303d99',
     );
     scoreText('SCORE', 320, 52, 5);
-    scoreText(String(scores(time, reducedParticleMotion.matches)[0]), 320, 106, 5);
+    scoreText(String(fixedScore ?? scores(time, reducedParticleMotion.matches)[0]), 320, 106, 5);
     rect(80, 181, 480, 7, '#b9df86');
     rect(0, 197, 640, 3, '#b7d78f');
-    floorLines(room);
+    if (fullStage) rect(0, 200, 640, 240, '#fff0c5');
+    floorLines(room, fullStage);
     rect(0, 440, 640, 40, '#06192d');
     rect(0, 440, 640, 13, '#f2a8b6');
     rect(0, 440, 640, 3, '#ffd3c7');
@@ -302,5 +303,12 @@ export function createGlitchStudioDrawing(
     for (let y = 0; y < 440; y += 7) rect(0, y, 640, 1, '#1e2b85');
     ctx.restore();
   }
-  return { room, overlay };
+  function battlefield(stageRoom: Room, score: number) {
+    ctx.save();
+    ctx.scale(1, 0.625);
+    room(0, stageRoom, score, true);
+    frontAudience();
+    ctx.restore();
+  }
+  return { room, overlay, battlefield };
 }

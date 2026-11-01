@@ -1,3 +1,4 @@
+import { createGlitchStudioDrawing } from '../../rooms/glitch-studio/glitch-studio-drawing.ts';
 import type { Elements } from '../../game/dom.ts';
 import { present } from '../../game/invariants.ts';
 import type { GameState } from '../../game/types.ts';
@@ -82,6 +83,7 @@ export function createBattleDrawing(
   const drawPelletsCast = createPelletsDrawing(ctx, reducedParticleMotion);
   const battleArenaForDark = { x: 205, y: 48, size: 230 };
   const drawTenna = createTennaSprite(ctx).draw;
+  const studio = createGlitchStudioDrawing(ctx, { rect, reducedParticleMotion });
   const current = () => state.project.rooms[state.roomIndex];
   function drawBattleKris(x: number, y: number, scale = 1, hitAge: number | null = null) {
     drawPartyMember('Kris', x, y, scale, state.bossEncounter?.partyStatus?.Kris, () =>
@@ -624,18 +626,7 @@ export function createBattleDrawing(
     ctx.imageSmoothingEnabled = false;
     if (present(encounter).kind === 'tenna') {
       rect(0, 0, 640, 480, '#100d24');
-      for (let x = 0; x < 640; x += 40) {
-        rect(x, 0, 20, 280, x % 80 === 0 ? '#24142c' : '#361739');
-      }
-      ctx.strokeStyle = '#d7b24b';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      for (let x = 0; x <= 640; x += 40) {
-        ctx.moveTo(320 + (x - 320) * 0.6, 230);
-        ctx.lineTo(x, 296);
-      }
-      ctx.stroke();
-      rect(0, 280, 640, 16, '#36263d');
+      studio.battlefield(room, present(encounter).score ?? 0);
       drawBattleKris(105, 97, 1.1, present(encounter).hitActor === 'Kris' ? present(encounter).hitAge : null);
       helpers.drawFountainFriend({ name: 'Susie', x: 110, y: 159 }, t);
       drawBattleFlowey(110, 213, t, 1.1);
@@ -657,7 +648,7 @@ export function createBattleDrawing(
         drawBattleSoul(encounter);
       } else if (present(encounter).enemy.visible) drawTenna(495, 269, 1.77);
       pixelText('TENNA', 450, 31, '#ffda6b', 21);
-      pixelText('THE FINALE!', 244, 24, '#ffffff', 17);
+
       pixelText(`TP ${Math.floor(present(encounter).tp)}%`, 280, 293, '#ffca50', 15);
       drawDarkPartyStatus();
       drawBattleMenu();
