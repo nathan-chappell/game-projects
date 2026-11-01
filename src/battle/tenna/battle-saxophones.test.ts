@@ -11,7 +11,7 @@ import {
   advanceSaxAttack,
   createSaxAttack,
   noteTouches,
-  saxHelperTurn,
+  saxWave,
   saxSettings,
   saxStaffY,
 } from './saxophones.ts';
@@ -23,32 +23,37 @@ function attack() {
   b.projectileDamageMultiplier = 1;
   return b;
 }
-test('two Helpers each play a separate right-side phrase after their staff preview', () => {
+test('both Helpers send six spaced notes along two paths in each of exactly five waves', () => {
   for (const fps of [30, 60, 144]) {
     const a = createSaxAttack(battleArena);
-    advanceSaxAttack(a, 1);
-    assert.equal(a.notes.length, 0);
-    advanceSaxAttack(a, 0.11);
-    assert.equal(a.notes.length, 6);
-    assert.ok(a.notes.every((n) => n.direction === -1 && n.helper === 0));
-    const x = a.notes[0].x;
-    advanceSaxAttack(a, 0.1);
-    assert.ok(Math.abs(a.notes[0].x - (x - 21)) < 1e-8);
-    advanceSaxAttack(a, 1.2);
-    assert.ok(a.notes.every((n) => n.helper === 0));
-    while (a.age < 7) advanceSaxAttack(a, 1 / fps);
-    assert.equal(a.notes.length, 0);
-    assert.equal(a.waves, 4);
-    while (a.age < 7.5) advanceSaxAttack(a, 1 / fps);
-    assert.equal(saxHelperTurn(a), 1);
-    assert.equal(a.notes.length, 0);
-    while (a.age < 8.4) advanceSaxAttack(a, 1 / fps);
-    assert.ok(a.notes.length > 0);
-    assert.ok(a.notes.every((n) => n.helper === 1 && n.direction === -1));
+    for (let wave = 0; wave < saxSettings.waves; wave++) {
+      const preview = wave * saxSettings.interval + 0.3;
+      advanceSaxAttack(a, preview - a.age);
+      assert.equal(saxWave(a), wave);
+      assert.equal(a.notes.length, 0);
+      const launch = wave * saxSettings.interval + saxSettings.warmup + 0.01;
+      advanceSaxAttack(a, launch - a.age);
+      assert.equal(a.waves, wave + 1);
+      assert.equal(a.notes.length, 12);
+      for (const helper of [0, 1]) {
+        const notes = a.notes.filter((n) => n.helper === helper);
+        assert.equal(notes.length, 6);
+        assert.ok(notes[1].x > notes[0].x);
+      }
+      const previous = [...a.notes];
+      const x = a.notes[0].x;
+      advanceSaxAttack(a, 1 / fps);
+      assert.ok(Math.abs(a.notes[0].x - (x - 210 / fps)) < 1e-8);
+      if (wave < 4) {
+        advanceSaxAttack(a, (wave + 1) * saxSettings.interval + 0.01 - a.age);
+        assert.equal(a.notes.length, 0);
+        assert.ok(previous.every((n) => !a.notes.includes(n)));
+      }
+    }
     let done = false;
-    for (let i = 0; i < fps * 15 && !done; i++) done = advanceSaxAttack(a, 1 / fps);
+    for (let i = 0; i < fps * 4 && !done; i++) done = advanceSaxAttack(a, 1 / fps);
     assert.equal(done, true);
-    assert.equal(a.waves, 8);
+    assert.equal(a.waves, 5);
     assert.equal(a.notes.length, 0);
   }
 });
@@ -105,7 +110,7 @@ test('grazing and collision use the visible note head, stem and flag', () => {
   assert.equal(isGrazingHazard(b, battleSettings, battleArena), false);
 });
 
-test('every note head follows its own visible staff curve throughout both phrases', () => {
+test('every note head follows its own visible staff curve throughout all five paired waves', () => {
   const a = createSaxAttack(battleArena);
   let helpers = new Set();
   for (let frame = 0; frame < 15 * 60; frame++) {
@@ -113,26 +118,20 @@ test('every note head follows its own visible staff curve throughout both phrase
     for (const n of a.notes) {
       helpers.add(n.helper);
       assert.equal(n.y, saxStaffY(a, n.lane, n.x, n.helper));
-      assert.equal(n.helper, saxHelperTurn(a));
+      assert.ok(n.helper === 0 || n.helper === 1);
     }
   }
   assert.deepEqual([...helpers], [0, 1]);
 });
 
-test('each volley sends six notes while preserving three adjacent empty staff lines', () => {
-  const a = createSaxAttack(battleArena);
-  for (let wave = 0; wave < 8; wave++) {
-    const launch =
-      Math.floor(wave / 4) * saxSettings.phraseLength +
-      saxSettings.warmup +
-      (wave % 4) * saxSettings.interval;
-    advanceSaxAttack(a, launch - a.age + 1e-8);
-    const notes = a.notes.filter((n) => Math.abs(n.launch - launch) < 1e-7);
-    assert.equal(notes.length, 6);
-    const empty = Array.from({ length: saxSettings.lanes }, (_, i) => i).filter(
-      (i) => !notes.some((n) => n.lane === i),
-    );
-    assert.equal(empty.length, 3);
-    assert.equal(empty[2] - empty[0], 2);
+test('wave paths change shape and the two Helpers have distinct crossing curves', () => {
+  const a = createSaxAttack(battleArena),
+    shapes: number[][] = [];
+  for (let wave = 0; wave < 5; wave++) {
+    advanceSaxAttack(a, wave * saxSettings.interval + 0.4 - a.age);
+    const sample = [225, 320, 415].map((x) => saxStaffY(a, 2, x, 0));
+    shapes.push(sample);
+    assert.ok(sample.some((y, i) => Math.abs(y - saxStaffY(a, 2, [225, 320, 415][i], 1)) > 20));
+    if (wave) assert.notDeepEqual(sample, shapes[wave - 1]);
   }
 });

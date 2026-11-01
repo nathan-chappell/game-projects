@@ -11,7 +11,7 @@ import { drawMiniSwords } from '../dark/mini-swords.ts';
 import { drawSwords } from '../dark/swords.ts';
 import { drawWarningSwords } from '../dark/warning-swords.ts';
 import type { createOrbitAttack } from '../noelle/orbit.ts';
-import { drawSaxAttack, drawSaxHelper, saxHelperTurn } from '../tenna/saxophones.ts';
+import { drawSaxAttack, drawSaxHelper } from '../tenna/saxophones.ts';
 import { battleArena } from './settings.ts';
 import type { Encounter, Snowball } from './types.ts';
 // The battle appearance lives here. Attack patterns and action rules can be added separately.
@@ -649,7 +649,6 @@ export function createBattleDrawing(
         ctx.strokeRect(205, 48, 230, 230);
         for (let helper = 0; helper < 2; helper++) {
           ctx.save();
-          ctx.globalAlpha = saxHelperTurn(present(a)) === helper ? 1 : 0.4;
           drawSaxHelper(ctx, 490, helper === 0 ? 155 : 260, -1, present(a).age);
           ctx.restore();
         }

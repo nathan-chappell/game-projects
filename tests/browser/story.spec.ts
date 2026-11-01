@@ -166,3 +166,31 @@ test('Jackenstein at 1 HP reveals the lever, then reuses the Shine conversation 
   await expect(page.locator('#dialogue')).not.toBeVisible();
   await expect(page.locator('#inventorySummary')).toContainText('Jack.Candy × 1');
 });
+
+test('Tenna’s paired saxophone paths replace each other and finish after five waves', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 4; line++) await confirmRoomDialogue(page);
+  await frames(page, 2);
+  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('2');
+  await frames(page, 90);
+  await expect(page.locator('#battleSoulControls')).toBeVisible();
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('paired-paths-wave-one.png') });
+  await frames(page, 90);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('paired-paths-wave-two-preview.png') });
+  await frames(page, 66);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('paired-paths-wave-two-notes.png') });
+  await frames(page, 10 * 60);
+  await expect(page.locator('#battleSoulControls')).not.toBeVisible();
+  await expect(page.locator('#battleAttack')).toBeEnabled();
+  await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+});

@@ -3,44 +3,67 @@ import type { Arena, Note, SaxAttack } from '../shared/types.ts';
 export const saxSettings = {
   damage: 30,
   hitCooldown: 0.75,
-  warmup: 1.1,
-  interval: 1.2,
-  waves: 8,
+  warmup: 0.75,
+  interval: 2.8,
+  waves: 5,
   speed: 210,
-  phraseLength: 7.2,
-  lanes: 9,
-  laneSpacing: 22,
+  notesPerPath: 6,
+  noteSpacing: 0.12,
+  staffLines: 5,
+  laneSpacing: 6,
 };
 export function createSaxAttack(arena: Arena): SaxAttack {
   return { arena: { ...arena }, age: 0, waves: 0, notes: [] };
 }
-export const saxHelperTurn = (a: SaxAttack) => Math.min(1, Math.floor(a.age / saxSettings.phraseLength));
-// A phrase keeps its staff fixed: notes and the preview use this same curve.
-export function saxStaffY(a: SaxAttack, lane: number, x: number, helper = saxHelperTurn(a)) {
+export const saxWave = (a: SaxAttack) =>
+  Math.min(saxSettings.waves - 1, Math.floor((a.age + 1e-9) / saxSettings.interval));
+// Each Helper owns one curved staff. Drawing and note movement share its geometry.
+export function saxStaffY(a: SaxAttack, lane: number, x: number, helper = 0) {
+  const wave = saxWave(a),
+    u = (x - a.arena.x) / a.arena.size;
+  const slope = [120, -130, 90, -115, 150][wave];
+  const curve = (u - 0.5) * slope + Math.sin(u * Math.PI * 1.3 + wave * 0.95) * 24;
   return (
-    a.arena.y + 29 + lane * saxSettings.laneSpacing + Math.sin((x - a.arena.x) * 0.018 + helper * Math.PI) * 7
+    a.arena.y +
+    a.arena.size / 2 +
+    [0, -16, 18, -10, 0][wave] +
+    (helper === 0 ? curve : -curve) +
+    (lane - 2) * saxSettings.laneSpacing
   );
 }
 export function advanceSaxAttack(a: SaxAttack, dt: number) {
   a.age += dt;
-  while (a.waves < saxSettings.waves) {
-    const wave = a.waves,
-      helper = Math.floor(wave / 4),
-      localWave = wave % 4;
-    const launch = helper * saxSettings.phraseLength + saxSettings.warmup + localWave * saxSettings.interval;
-    if (a.age + 1e-9 < launch) break;
-    a.waves++;
-    const gap = [4, 3, 2, 3][localWave];
-    for (let lane = 0; lane < saxSettings.lanes; lane++)
-      if (lane < gap || lane > gap + 2) a.notes.push({ direction: -1, helper, lane, launch, x: 0, y: 0 });
+  if (a.age + 1e-9 >= saxSettings.waves * saxSettings.interval) {
+    a.notes = [];
+    return true;
+  }
+  const wave = saxWave(a),
+    waveStart = wave * saxSettings.interval;
+  if (a.age < waveStart + saxSettings.warmup - 1e-9) {
+    // A new pair of preview paths replaces the previous pair and its notes.
+    a.notes = [];
+  } else if (a.waves < wave + 1) {
+    a.waves = wave + 1;
+    a.notes = [];
+    for (let helper = 0; helper < 2; helper++) {
+      for (let note = 0; note < saxSettings.notesPerPath; note++) {
+        a.notes.push({
+          direction: -1,
+          helper,
+          lane: 2,
+          launch: waveStart + saxSettings.warmup + note * saxSettings.noteSpacing,
+          x: 0,
+          y: 0,
+        });
+      }
+    }
   }
   for (const n of a.notes) {
-    const t = Math.max(0, a.age - n.launch);
-    n.x = a.arena.x + a.arena.size + 24 - saxSettings.speed * t;
+    n.x = a.arena.x + a.arena.size + 24 - saxSettings.speed * (a.age - n.launch);
     n.y = saxStaffY(a, n.lane, n.x, n.helper);
   }
   a.notes = a.notes.filter((n) => n.x > a.arena.x - 24);
-  return a.waves === saxSettings.waves && !a.notes.length;
+  return false;
 }
 export function noteTouches(n: Note, soul: Point, width = 24, height = 21, margin = 0) {
   return [
@@ -61,19 +84,20 @@ export function drawSaxAttack(ctx: CanvasRenderingContext2D, a: SaxAttack) {
   ctx.rect(x + 3, y + 3, size - 6, size - 6);
   ctx.clip();
   // The staff is scenery; only the solid notes can hit the soul.
-  const helper = saxHelperTurn(a),
-    localAge = a.age - helper * saxSettings.phraseLength;
-  const reveal = Math.min(1, localAge / 0.75),
+  const localAge = a.age - saxWave(a) * saxSettings.interval;
+  const reveal = Math.min(1, localAge / (saxSettings.warmup * 0.8)),
     left = x + size * (1 - reveal);
-  ctx.strokeStyle = localAge < saxSettings.warmup ? '#b8bac3' : '#696b79';
   ctx.lineWidth = 1;
-  for (let lane = 0; lane < saxSettings.lanes; lane++) {
-    ctx.beginPath();
-    for (let px = x + size; px >= left; px -= 2) {
-      const py = saxStaffY(a, lane, px, helper);
-      px === x + size ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  for (let helper = 0; helper < 2; helper++) {
+    ctx.strokeStyle = localAge < saxSettings.warmup ? '#d2d3dd' : helper === 0 ? '#858794' : '#aaaab8';
+    for (let lane = 0; lane < saxSettings.staffLines; lane++) {
+      ctx.beginPath();
+      for (let px = x + size; px >= left; px -= 2) {
+        const py = saxStaffY(a, lane, px, helper);
+        px === x + size ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
   }
   for (const n of a.notes) {
     ctx.save();
