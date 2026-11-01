@@ -5,3 +5,5 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+playwright-report/
+test-results/

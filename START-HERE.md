@@ -6,15 +6,15 @@ There are three main kinds of files:
 
 - **HTML** lists what's on the page: a button, a heading, a menu.
 - **CSS** describes how the page looks: colors, sizes, and spacing.
-- **JavaScript** describes what happens: moving, talking, healing, and saving.
+- **TypeScript** describes what happens: moving, talking, healing, and saving. It is JavaScript with extra checks that help catch mistakes before you play.
 
 Vite is a helper that combines these files into the game you open. Nate can help you run `npm run dev` to start it.
 
 ## First experiment: walking speed
 
-Open `src/config.js` and find:
+Open `src/game/config.ts` and find:
 
-```js
+```ts
 const movementSpeed = 135;
 ```
 
@@ -24,9 +24,9 @@ The `const` word means this named setting won't be reassigned while the game run
 
 ## A value that changes while you play
 
-In `src/game.js`, you'll see things like:
+In `src/game/movement.ts`, you'll see things like:
 
-```js
+```ts
 state.player.x;
 ```
 
@@ -38,26 +38,26 @@ The game changes these values as you walk. You don't have to change them by hand
 
 This is a small example, not code you need to paste:
 
-```js
-function sayHello() {
+```ts
+function sayHello(): void {
   console.log('Hello, Lenny!');
 }
 
 sayHello();
 ```
 
-The first part names the recipe. `sayHello()` runs it. `console.log` puts a message in the browser's developer console. In the game, recipes have names such as `drawPlayer` or `takeTreeCandy`.
+The first part names the recipe. `: void` means it does something without returning a value. `sayHello()` runs it. `console.log` puts a message in the browser's developer console. In the game, recipes have names such as `drawPlayer` or `takeTreeCandy`.
 
 ## Files can share recipes
 
-The small `src/main.js` file says:
+The small `src/main.ts` file says:
 
-```js
-import { startGame } from './game.js';
+```ts
+import { startGame } from './game/game.ts';
 startGame();
 ```
 
-`import` means “use this from another file.” In `game.js`, `export` makes the recipe available to other files. This lets us keep related code together instead of putting everything in one enormous file.
+`import` means “use this from another file.” In `src/game/game.ts`, `export` makes the recipe available to other files. This lets us keep related code together instead of putting everything in one enormous file.
 
 ## Another experiment: a button color
 
@@ -76,12 +76,14 @@ Try `#7fe4cf` instead. Open Build and look at the buttons. The letters and numbe
 3. Try it and compare your guess with what happened.
 4. If it doesn't work, undo that edit. An error message is a clue, not a sign that you can't do this.
 
-Lines beginning with `//` are comments for people reading JavaScript. The game skips them. We've left comments near useful settings and important rules.
+Lines beginning with `//` are comments for people reading TypeScript. The game skips them. We've left comments near useful settings and important rules.
 
-Keep using Build for room edits. Existing Build saves take priority over the starter rooms in `world.js`, so changing a starter room won't erase a room you've already edited. Keep a downloaded Build backup too.
+Keep using Build for room edits. Existing Build saves take priority over the starter rooms in the room construction files under `src/rooms/`, so changing a starter room won't erase a room you've already edited. Keep a downloaded Build backup too.
+
+A type annotation such as `speed: number` says that a value should be a number. You can keep experimenting with the settings without understanding every type. `npm run typecheck` points out mistakes, and `npm test` checks the game rules.
 
 When you're ready to share a code change, ask Nate to help run `npm run build`. The new playable copy appears in `exports/`. You don't need to edit the generated files.
 
 ## A battle setting you can read
 
-In `src/battle-rules.js`, `krisAttackDamage: 75` means one attack takes 75 HP from the enemy. `enemyHP: 1000` is the enemy’s starting health. The code subtracts the first number from the second: `1000 - 75 = 925`. Settings describe the rules; `battle.js` draws their results.
+In `src/battle/shared/settings.ts`, `krisAttackDamage: 75` means one attack takes 75 HP from the enemy. `enemyHP: 3000` is the enemy’s starting health. The code subtracts the first number from the second: `3000 - 75 = 2925`. Settings describe the rules; `src/battle/shared/battle.ts` draws their results.

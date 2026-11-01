@@ -1,6 +1,6 @@
 # Little Lantern
 
-Lenny's adventure and room builder, written in plain JavaScript. Vite runs the development server and bundles the game for Sites and offline downloads. No framework or TypeScript is needed.
+Lenny's adventure and room builder, written in strict TypeScript with Canvas and Vite. Vite runs the development server and bundles the game for Sites and offline downloads. No framework is needed.
 
 ## Run it
 
@@ -18,8 +18,11 @@ Hold **F** while moving with the arrow keys or WASD to sprint at 1.75× walking 
 ## Build and check
 
 ```sh
-npm run build
+npm run typecheck
 npm test
+npx playwright install chromium
+npm run test:browser
+npm run build
 ```
 
 The build creates:
@@ -36,31 +39,31 @@ Coding agents should read [AGENTS.md](AGENTS.md) before making changes.
 
 ## Where things live
 
-| File                           | What it does                                                  |
-| ------------------------------ | ------------------------------------------------------------- |
-| `index.html`                   | Page structure, buttons, menus, and the canvas                |
-| `styles.css`                   | Colors, spacing, and phone layout                             |
-| `src/main.js`                  | Starts the game and loads the styles                          |
-| `src/config.js`                | Tile names, movement speed, HP, and healing-item settings     |
-| `src/world.js`                 | Room layouts, validation, and upgrades for older saved worlds |
-| `src/game.js`                  | Game state, movement, dialogue, saving, and story scenes      |
-| `src/editor.js`                | Build tools, object editing, layers, and Undo                 |
-| `src/sprites.js`               | Character, tree, and door drawings                            |
-| `src/particles.js`             | Drifting particles and glitch pillars                         |
-| `src/battle-rules.js`          | Attack damage, TP, turns, healing, and Proceed rules          |
-| `src/battle-controls.js`       | Battle buttons, canvas taps, and keyboard controls            |
-| `src/battle-unused-effects.js` | Archived soul and snowflake drawings for future attacks       |
-| `src/battle-crossing.js`       | Moving snowball streams and fixed corner-ball geometry       |
-| `src/battle-snowgrave.js`     | Final attack timing, narrow escape gaps and ice collision rules |
-| `src/battle-snowgrave-drawing.js` | Blizzard, casting runes and faceted Snowgrave ice columns |
-| `src/battle-goal.js`          | Blue-soul gravity, variable jumps, platforms and rolling snowballs |
-| `src/battle-orbit.js`          | Moving box, wall bounces, and orbiting ice geometry           |
-| `src/battle.js`                | The Noelle encounter's appearance and HP cards                |
-| `src/export-game.js`           | The in-game **Download game** button                          |
-| `assets/`                      | Original image files used by the game                         |
-| `scripts/build.js`             | Uses Vite to make the self-contained HTML and ZIP             |
+Organize by feature first: keep a room's world upgrades, story, drawing and tests together. Battle encounters have their own directories, with common party rules and controls beside them. Share a helper only when several features use the same responsibility.
 
-There is deliberately one shared `state` object inside `startGame()`. The editor and drawing helpers receive it as an argument, so they see the same changing values. Room data stays separate from the code that draws it. There are no circular module imports.
+| Location | What it does |
+| --- | --- |
+| `index.html`, `styles.css`, `src/main.ts` | Page structure, styles and entry point |
+| `src/game/` | Startup, typed runtime state, input, movement, room transitions and frame loop |
+| `src/game/config.ts` | Tile names, movement speeds, HP, inventory definitions and storage keys |
+| `src/rooms/<feature>/` | Each room's construction/upgrades, story controllers, drawing and unit tests |
+| `src/battle/shared/` | Encounter rules, action availability, damage/TP, controls and shared presentation |
+| `src/battle/noelle/`, `dark/`, `tenna/` | Encounter-specific attacks, geometry, dialogue and drawing |
+| `src/world/` | Serialized room/project types, validation and the ordered upgrade pipeline |
+| `src/persistence/` | Build precedence, legacy adventure validation, save slots and restoration |
+| `src/editor/`, `src/inventory/`, `src/dialogue/` | Feature controllers, operations and local types/tests |
+| `src/rendering/` | Frame composition, terrain, shared sprites and particles |
+| `src/export/`, `scripts/build.ts` | In-game download and self-contained HTML/ZIP packaging |
+| `tests/fixtures/`, `tests/browser/` | Shared historical worlds, safe attack routes and browser regressions |
+| `assets/`, `archive/` | Original art and preserved historical snapshots |
+
+`createGameState()` constructs one mutable state object. Controllers and drawing functions share it; startup connects their typed callbacks through lazy references so initialization order stays safe. Models and rules can run without a browser. The type check also rejects runtime module-import cycles.
+
+TypeScript checks source, colocated unit tests and tooling without emitting JavaScript; Vite handles bundling. `npm test` discovers every `src/**/*.test.ts` and runs Node's test runner through `tsx`. Browser checks start a fresh Vite server on a free port and use isolated browser storage. They cover input, editing/undo, saves/backups, offline downloads, Queen's puzzle and the Noelle, dark and Tenna encounters. Install Chromium once with the command above; on Linux, Playwright may require `npx playwright install --with-deps chromium`.
+
+`npm run build` runs the type and import checks before generating the distribution. `npm run format` formats maintained TypeScript; it leaves historical snapshots and generated exports alone.
+
+Use comments for compatibility rules, timing, coordinate systems and other non-obvious intent. Put a feature's types beside its implementation, and treat imported JSON as `unknown` until its validator accepts it. Keep save versions, keys and legacy defaults compatible during code-only changes.
 
 ## Saving and exporting
 

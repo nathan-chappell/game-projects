@@ -1,0 +1,40 @@
+import type { GlitchPoint, JumpPad, Npc, PlacedObject, Point, Room, Tree } from '../world/types.ts';
+import type { Elements } from './dom.ts';
+import type { Actor } from './types.ts';
+export type ObjectField =
+  'glitchPoints' | 'particlePoints' | 'trees' | 'npcs' | 'savePoints' | 'spikes' | 'jumpPads';
+export type EditorObject = PlacedObject & Partial<Tree & Npc & GlitchPoint & JumpPad>;
+export type ObjectGroup = [ObjectField, EditorObject[], string];
+export interface GameServices {
+  $: Elements;
+  canvas: HTMLCanvasElement;
+  roomNpcs: () => Npc[];
+  roomSpikes: (room?: Room) => PlacedObject[];
+  roomTrees: (room?: Room) => Tree[];
+  roomSavePoints: (room?: Room, index?: number) => PlacedObject[];
+  fountainFriends: (room?: Room) => Actor[];
+  toast: (text: string) => void;
+  remember: () => void;
+  save: () => boolean;
+  setMode: (mode: 'play' | 'build') => void;
+  readProgressSlots: () => unknown[];
+  updateRoomUI: () => void;
+  removeSavePoint: (x: number, y: number) => void;
+  cellOpen: (room: Room, x: number, y: number, avoidFlowey?: boolean) => boolean;
+  advanceDialogue: () => void;
+  roomBackground: (room?: Room) => string;
+  roomObjectGroups: () => ObjectGroup[];
+  glitchComfortPose: (name: string) => Point;
+  divePose: (name: string) => (Point & { scale: number }) | null;
+  roomWaitingFriends: () => Actor[];
+  partyFriends: () => Actor[];
+  floweyPosition: () => Point | null;
+  facingFountain: () => boolean;
+  nearbyCandyTree: () => Tree | undefined;
+  nearbyNpc: () => Npc | null;
+  nearFountainFriend: () => Actor | undefined;
+  nearFlowey: () => boolean | null;
+  nearSavePoint: () => boolean;
+  importantKinds: Set<string>;
+  friendsWaiting: () => boolean;
+}

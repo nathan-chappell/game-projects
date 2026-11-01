@@ -3,18 +3,26 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Lenny's plain JavaScript adventure and room builder",
+  "description": "Lenny's TypeScript adventure and room builder",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/build.js",
+    "build": "npm run typecheck && tsx scripts/build.ts",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "tsx scripts/test.ts",
+    "typecheck": "tsc --noEmit && tsx scripts/check-imports.ts",
+    "test:browser": "tsx scripts/browser-tests.ts",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\" \"*.config.ts\" tsconfig.json"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^22.20.5",
     "fflate": "^0.8.2",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
     "vite": "^8.3.5"
   }
 }
