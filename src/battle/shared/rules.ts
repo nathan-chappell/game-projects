@@ -506,7 +506,21 @@ export function advanceSnowAttack(
 }
 export function damageEnemy(encounter: Encounter, amount: number) {
   if (encounter.fastKill) amount = battleSettings.fastKillDamage;
-  if (['dark', 'tenna'].includes(encounter.kind ?? '')) {
+  if (encounter.kind === 'dark') {
+    const damage = Math.min(amount, Math.max(0, encounter.enemy.hp - 1));
+    encounter.enemy.hp -= damage;
+    encounter.hitAge = 0;
+    encounter.hitActor = encounter.turn;
+    encounter.hitDamage = damage;
+    if (encounter.enemy.hp === 1) {
+      encounter.phase = 'jackLever';
+      encounter.screen = 'menu';
+      encounter.soul = encounter.snowAttack = null;
+      encounter.pelletsCast = null;
+    }
+    return damage;
+  }
+  if (encounter.kind === 'tenna') {
     const damage = Math.min(amount, Math.max(0, encounter.enemy.hp));
     encounter.enemy.hp -= damage;
     encounter.hitAge = 0;
@@ -640,6 +654,7 @@ export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: Pa
     if (!present(cast).impacted && present(cast).age >= pelletsImpactTime - 1e-9) {
       present(cast).impacted = true;
       const damage = damageEnemy(encounter, battleSettings.pelletsDamage);
+      if (encounter.phase === 'jackLever') return true;
       encounter.message = `Flowey used Friendlyness Pellets! ??? took ${damage} damage. Flowey recovered ${present(cast).restored} HP.`;
       changed = true;
     }

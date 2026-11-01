@@ -117,3 +117,52 @@ test('Noelle Snowgrave, rescue, and the three protected responses complete throu
   await expect(page.locator('#bossControls')).not.toBeVisible();
   await expect(page.locator('#speakerName')).toHaveText('Ralsey');
 });
+
+test('Jackenstein at 1 HP reveals the lever, then reuses the Shine conversation and gift', async ({
+  page,
+}) => {
+  await controlFrames(page);
+  await seedProgress(page, 'collisionChamber', {
+    darkBattleSeen: false,
+    jackRevealed: false,
+    jackCandyReceived: false,
+  });
+  await page.goto('/');
+  await frames(page, 60);
+  await confirmRoomDialogue(page);
+  await frames(page, 2);
+  for (let shine = 0; shine < 3; shine++) {
+    await page.locator('#game').focus();
+    await page.keyboard.press('1');
+    await page.locator('#battleAct').click();
+    await page.locator('#battleProceedButton').click();
+    await frames(page, 2);
+    await confirmRoomDialogue(page);
+    for (let member = 0; member < 3; member++) await page.locator('#battleDefend').click();
+    await page.locator('#game').focus();
+    await page.keyboard.press('Shift');
+  }
+  await page.keyboard.press('4');
+  for (let member = 0; member < 4; member++) {
+    await page.locator('#battleAttack').click();
+    await page.locator('#battleTargetButton').click();
+  }
+  await frames(page, 2);
+  await expect(page.locator('#speakerName')).toHaveText('Susie');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText("There's a lever!");
+  await page.keyboard.press('l');
+  await expect(page.locator('#speakerName')).toHaveText('Susie');
+  await page.keyboard.press('Enter');
+  await frames(page, 2);
+  await expect(page.locator('#bossControls')).not.toBeVisible();
+  await expect(page.locator('#speakerName')).toHaveText('Jackenstein');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('NOT THE LAAAIght... Oh! You guys!');
+  for (let press = 0; press < 16 && (await page.locator('#dialogue').isVisible()); press++) {
+    await page.keyboard.press('Enter');
+  }
+  await frames(page, 2);
+  await expect(page.locator('#dialogue')).not.toBeVisible();
+  await expect(page.locator('#inventorySummary')).toContainText('Jack.Candy × 1');
+});

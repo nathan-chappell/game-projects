@@ -165,6 +165,12 @@ export function createGameLoop(dependencies: Dependencies) {
       dependencies.canvas.focus({ preventScroll: true });
       return;
     }
+    if (state.bossEncounter?.phase === 'jackLever' && !state.dialogue) {
+      dependencies.openDialogue(["[Susie] * There's a lever!"], 'jackLeverFound');
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'jackReveal') {
       state.story.jackRevealed = true;
       state.story.darkBattleSeen = true;

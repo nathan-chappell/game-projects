@@ -1082,6 +1082,7 @@ export function startGame() {
     'darkIntro',
     'darkShine',
     'jackReveal',
+    'jackLeverFound',
     'jackReward',
     'tennaFinale',
     'tennaHelpers',

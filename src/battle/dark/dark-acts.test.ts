@@ -147,13 +147,14 @@ test('Heal Player costs 50, chooses only injured teammates, caps HP and does not
   assert.equal(full.tp, 50);
   assert.equal(full.turn, 'Ralsey');
 });
-test('defeating the dark boss reaches zero HP without triggering Noelle’s final attack', () => {
+test('bringing the dark boss down to 1 HP starts the lever reveal without Noelle’s final attack', () => {
   const b = unlocked();
   actor(b, 'Ralsey');
   b.enemy.hp = 50;
   attackEnemy(b);
-  assert.equal(b.enemy.hp, 0);
-  assert.equal(b.phase, 'victory');
+  assert.equal(b.enemy.hp, 1);
+  assert.equal(b.phase, 'jackLever');
+  assert.equal(b.enemy.visible, true);
   assert.equal(b.finalAttackPending, false);
   assert.equal(b.finalAttackUsed, false);
 });
@@ -183,4 +184,36 @@ test('the fifth Shine reveals Jackenstein while preserving health and earlier un
   }
   assert.equal(hp.Kris, 42);
   assert.equal(hp.Flowey, 23);
+});
+
+test('normal attacks reaching exactly 1 HP and overkill both trigger the lever route', () => {
+  for (const hp of [76, 75, 2]) {
+    const b = unlocked();
+    b.enemy.hp = hp;
+    assert.equal(attackEnemy(b), true);
+    assert.equal(b.enemy.hp, 1);
+    assert.equal(b.phase, 'jackLever');
+    assert.equal(attackEnemy(b), false);
+    assert.equal(b.finalAttackPending, false);
+  }
+});
+test('Rude Buster and Friendlyness Pellets also stop at 1 HP and retain the reveal phase', () => {
+  for (const name of ['Susie', 'Flowey']) {
+    const b = unlocked(),
+      hp = freshPartyHP();
+    actor(b, name);
+    b.tp = 100;
+    b.enemy.hp = 100;
+    assert.equal(
+      useDarkAct(b, hp, () => 0),
+      true,
+    );
+    if (name === 'Flowey') advanceBattleTime(b, 2, hp);
+    assert.equal(b.enemy.hp, 1);
+    assert.equal(b.phase, 'jackLever');
+    advanceBattleTime(b, 2, hp);
+    assert.equal(b.phase, 'jackLever');
+    assert.equal(b.pelletsCast, null);
+    assert.equal(b.finalAttackUsed, false);
+  }
 });

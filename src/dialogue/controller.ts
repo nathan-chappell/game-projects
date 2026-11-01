@@ -328,6 +328,9 @@ export function createDialogue(dependencies: Dependencies) {
         state.collisionBlackout = { age: 0, spoken: false };
         dependencies.storyUI();
       }
+      if (kind === 'jackLeverFound' && state.bossEncounter?.phase === 'jackLever') {
+        state.bossEncounter.phase = 'jackReveal';
+      }
       if (kind === 'darkShine') {
         completeDarkShine(present(state.bossEncounter));
         dependencies.syncBossUI();
