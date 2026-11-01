@@ -1,3 +1,4 @@
+import { createTvBolts } from '../tenna/tv-bolts.ts';
 import { createMiniSwords } from '../dark/mini-swords.ts';
 import { createSwordAttack } from '../dark/swords.ts';
 import { createWarningSwords } from '../dark/warning-swords.ts';
@@ -45,6 +46,8 @@ export function createAttackState(
       return { ...base, direction, goal: createGoalAttack() };
     case 'snowgrave':
       return { ...base, direction, snowgrave: createSnowgraveAttack() };
+    case 'tvBolts':
+      return { ...base, direction, tvBolts: createTvBolts(arena) };
     case 'saxophones':
       return { ...base, direction, saxophones: createSaxAttack(arena) };
     case 'dark': {

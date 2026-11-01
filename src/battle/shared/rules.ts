@@ -137,7 +137,11 @@ export function soulArena(encounter: Encounter): {
 }
 export function isSoulInSnow(encounter: Encounter | null) {
   if (!canControlSoul(encounter) || !encounter.snowAttack) return false;
-  if (['dark', 'saxophones', 'crossing', 'goal', 'snowgrave'].includes(encounter.snowAttack.direction))
+  if (
+    ['dark', 'saxophones', 'tvBolts', 'crossing', 'goal', 'snowgrave'].includes(
+      encounter.snowAttack.direction,
+    )
+  )
     return false;
   if (encounter.snowAttack.direction === 'path') {
     const top = encounter.soul.y - battleSettings.soulHeight / 2,
@@ -293,6 +297,18 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'tenna') {
+    const direction =
+      encounter.repeatAttack && ['saxophones', 'tvBolts'].includes(encounter.lastEnemyAttack ?? '')
+        ? encounter.lastEnemyAttack
+        : encounter.enemyAttackCount % 2 === 0
+          ? 'saxophones'
+          : 'tvBolts';
+    if (!encounter.repeatAttack || !encounter.lastEnemyAttack) encounter.enemyAttackCount++;
+    if (direction === 'tvBolts') {
+      beginEnemyAttack(encounter, 'tvBolts', 'Dodge the TV bolts! A glitch means five bolts!');
+      encounter.turn = 'Tenna';
+      return true;
+    }
     encounter.phase = 'tennaCue';
     encounter.turn = 'Tenna';
     encounter.screen = 'menu';
@@ -357,6 +373,7 @@ export function beginEnemyAttack(encounter: Encounter, direction: AttackDirectio
     darkPattern,
   );
   encounter.nextAttackGrazeTP = null;
+  if (direction === 'tvBolts') encounter.soul.y = battleArena.y + battleArena.size - 35;
   if (direction === 'saxophones') encounter.soul.y = battleArena.y + battleArena.size - 35;
   if (direction === 'dark') {
     if (!encounter.repeatAttack || encounter.lastDarkPattern === undefined)
@@ -425,6 +442,7 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
+  if (encounter?.snowAttack?.direction === 'tvBolts') return 'TV bolts · Glitch = 5';
   if (encounter?.snowAttack?.direction === 'saxophones') return 'Dodge the saxophone notes!';
   if (encounter?.kind === 'dark' && encounter.snowAttack?.darkPattern === 2)
     return 'Warnings become swords after 0.5s';

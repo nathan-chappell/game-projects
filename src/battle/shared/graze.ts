@@ -1,3 +1,4 @@
+import { boltTouches } from '../tenna/tv-bolts.ts';
 import { miniSwordHazards } from '../dark/mini-swords.ts';
 import { swordTouchesSoul } from '../dark/swords.ts';
 import { warningSwordTouches } from '../dark/warning-swords.ts';
@@ -22,7 +23,13 @@ export function isGrazingHazard(encounter: Encounter, settings: typeof battleSet
       distance = dx * dx + dy * dy;
     hazards.push({ hit: distance <= radius * radius, near: !ball.hit && distance <= (radius + margin) ** 2 });
   };
-  if (snow.direction === 'saxophones') {
+  if (snow.direction === 'tvBolts') {
+    for (const b of snow.tvBolts.bolts)
+      hazards.push({
+        hit: boltTouches(b, soul, width, height),
+        near: boltTouches(b, soul, width, height, margin),
+      });
+  } else if (snow.direction === 'saxophones') {
     hazards.push({
       hit: saxRimTouches(snow.saxophones, soul, width, height),
       near: saxRimTouches(snow.saxophones, soul, width, height, margin),

@@ -1,3 +1,4 @@
+import type { TvBolts } from '../tenna/tv-bolts.ts';
 import type { PartyName } from '../../inventory/types.ts';
 import type { Point } from '../../world/types.ts';
 import type { createCrossingAttack } from '../noelle/crossing.ts';
@@ -99,7 +100,7 @@ export interface Snowball extends Point {
   velocity?: number;
 }
 export type AttackDirection =
-  'down' | 'right' | 'path' | 'orbit' | 'crossing' | 'goal' | 'snowgrave' | 'dark' | 'saxophones';
+  'down' | 'right' | 'path' | 'orbit' | 'crossing' | 'goal' | 'snowgrave' | 'dark' | 'saxophones' | 'tvBolts';
 export interface AttackBase {
   direction: AttackDirection;
   grazeTP: number;
@@ -127,6 +128,7 @@ export interface AttackBase {
   warningSwords?: WarningAttack;
   darkPattern?: number;
   saxophones?: SaxAttack;
+  tvBolts?: TvBolts;
 }
 export type Attack = AttackBase &
   (
@@ -137,6 +139,7 @@ export type Attack = AttackBase &
     | { direction: 'snowgrave'; snowgrave: NonNullable<AttackBase['snowgrave']> }
     | { direction: 'dark'; swords: SwordAttack; miniSwords: MiniAttack; darkPattern: number }
     | { direction: 'saxophones'; saxophones: SaxAttack }
+    | { direction: 'tvBolts'; tvBolts: TvBolts }
   );
 export type BattleAction = 'attack' | 'act' | 'item' | 'defend' | 'spare';
 export interface Rescue {

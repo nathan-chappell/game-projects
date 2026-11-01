@@ -229,3 +229,29 @@ test('Tenna stops the glitching on the studio battlefield before the first turn'
   const later = await page.screenshot({ clip });
   expect(later).toEqual(scoreboard);
 });
+
+test('Tenna’s second attack moves a TV above the box and fires glitch bursts', async ({ page }, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('Shift');
+  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
+  await frames(page, 2);
+  await expect(page.locator('#battleSnowText')).toContainText('TV bolts');
+  await page.locator('#game').focus();
+  await page.keyboard.press('2');
+  await frames(page, 158);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('tv-glitch-warning.png') });
+  await frames(page, 26);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('tv-five-bolt-burst.png') });
+  await frames(page, 12 * 60);
+  await expect(page.locator('#battleAttack')).toBeEnabled();
+  await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+});

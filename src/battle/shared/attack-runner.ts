@@ -1,3 +1,4 @@
+import { advanceTvBolts, boltTouches, tvBoltSettings } from '../tenna/tv-bolts.ts';
 import { present } from '../../game/invariants.ts';
 import type { PartyHP } from '../../inventory/types.ts';
 import type { Point } from '../../world/types.ts';
@@ -69,6 +70,27 @@ export function createAttackRunner(dependencies: Dependencies) {
   function stepSnowAttack(encounter: Encounter, partyHP: PartyHP, dt: number, random: () => number) {
     const snow = present(encounter.snowAttack),
       soul = present(encounter.soul);
+    if (snow.direction === 'tvBolts') {
+      snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
+      const finished = advanceTvBolts(snow.tvBolts, dt, random);
+      let changed = false;
+      if (snow.hitCooldown <= 0 && snow.tvBolts.bolts.some((b) => boltTouches(b, soul))) {
+        changed = dependencies.damageLivingTeammate(
+          encounter,
+          partyHP,
+          projectileDamage(encounter, tvBoltSettings.damage),
+          'a TV bolt',
+          random,
+        );
+        snow.hitCooldown = tvBoltSettings.hitCooldown;
+      }
+      if (finished) {
+        dependencies.startKrisTurn(encounter, partyHP);
+        dependencies.skipFallenTurns(encounter, partyHP);
+        return true;
+      }
+      return changed;
+    }
     if (snow.direction === 'saxophones') {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
       const finished = advanceSaxAttack(snow.saxophones, dt);

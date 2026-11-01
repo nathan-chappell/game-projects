@@ -1,3 +1,4 @@
+import { drawTvBolts } from '../tenna/tv-bolts.ts';
 import { createGlitchStudioDrawing } from '../../rooms/glitch-studio/glitch-studio-drawing.ts';
 import type { Elements } from '../../game/dom.ts';
 import { present } from '../../game/invariants.ts';
@@ -192,7 +193,9 @@ export function createBattleDrawing(
       const inSnow = isSoulInSnow(encounter),
         title =
           encounter.kind === 'tenna'
-            ? 'DODGE THE NOTES'
+            ? encounter.snowAttack?.direction === 'tvBolts'
+              ? 'DODGE THE BOLTS'
+              : 'DODGE THE NOTES'
             : encounter.kind === 'dark'
               ? encounter.snowAttack?.darkPattern === 2
                 ? 'DODGE THE WARNINGS'
@@ -632,18 +635,21 @@ export function createBattleDrawing(
       drawBattleFlowey(110, 213, t, 1.1);
       helpers.drawFountainFriend({ name: 'Ralsey', x: 110, y: 270 }, t);
       if (canControlSoul(encounter)) {
-        const a = encounter.snowAttack.saxophones;
         drawTenna(565, 147, 0.8);
         rect(205, 48, 230, 230, '#101118');
         ctx.strokeStyle = '#63eb8b';
         ctx.lineWidth = 4;
         ctx.strokeRect(205, 48, 230, 230);
-        for (let helper = 0; helper < 2; helper++) {
-          ctx.save();
-          drawSaxHelper(ctx, 490, helper === 0 ? 155 : 260, -1, present(a).age);
-          ctx.restore();
-        }
-        drawSaxAttack(ctx, present(a));
+        if (encounter.snowAttack.direction === 'saxophones') {
+          const a = encounter.snowAttack.saxophones;
+          for (let helper = 0; helper < 2; helper++) {
+            ctx.save();
+            drawSaxHelper(ctx, 490, helper === 0 ? 155 : 260, -1, present(a).age);
+            ctx.restore();
+          }
+          drawSaxAttack(ctx, present(a));
+        } else if (encounter.snowAttack.direction === 'tvBolts')
+          drawTvBolts(ctx, encounter.snowAttack.tvBolts);
         drawGrazeRing(encounter);
         drawBattleSoul(encounter);
       } else if (present(encounter).enemy.visible) drawTenna(495, 269, 1.77);
