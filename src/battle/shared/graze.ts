@@ -5,7 +5,7 @@ import { crossingHazards, crossingSettings } from '../noelle/crossing.ts';
 import { goalSettings, goalSnowballs } from '../noelle/goal.ts';
 import { cubeTouchesSoul, orbitHazards, orbitSettings } from '../noelle/orbit.ts';
 import { snowgraveFrame, snowgraveTouchesSoul } from '../noelle/snowgrave.ts';
-import { noteTouches } from '../tenna/saxophones.ts';
+import { noteTouches, saxRimTouches } from '../tenna/saxophones.ts';
 import type { battleSettings } from './settings.ts';
 import type { Arena, Encounter, Snowball } from './types.ts';
 
@@ -23,6 +23,10 @@ export function isGrazingHazard(encounter: Encounter, settings: typeof battleSet
     hazards.push({ hit: distance <= radius * radius, near: !ball.hit && distance <= (radius + margin) ** 2 });
   };
   if (snow.direction === 'saxophones') {
+    hazards.push({
+      hit: saxRimTouches(snow.saxophones, soul, width, height),
+      near: saxRimTouches(snow.saxophones, soul, width, height, margin),
+    });
     for (const n of snow.saxophones.notes)
       hazards.push({
         hit: noteTouches(n, soul, width, height),

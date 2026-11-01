@@ -12,6 +12,7 @@ import {
   createSaxAttack,
   noteTouches,
   saxWave,
+  saxRimTouches,
   saxSettings,
   saxStaffY,
 } from './saxophones.ts';
@@ -43,7 +44,7 @@ test('both Helpers send six spaced notes along two paths in each of exactly five
       const previous = [...a.notes];
       const x = a.notes[0].x;
       advanceSaxAttack(a, 1 / fps);
-      assert.ok(Math.abs(a.notes[0].x - (x - 210 / fps)) < 1e-8);
+      assert.ok(Math.abs(a.notes[0].x - (x - saxSettings.speed / fps)) < 1e-8);
       if (wave < 4) {
         advanceSaxAttack(a, (wave + 1) * saxSettings.interval + 0.01 - a.age);
         assert.equal(a.notes.length, 0);
@@ -106,7 +107,7 @@ test('grazing and collision use the visible note head, stem and flag', () => {
   b.soul = { x: n.x - 25, y: n.y };
   assert.equal(noteTouches(n, b.soul), false);
   assert.equal(isGrazingHazard(b, battleSettings, battleArena), true);
-  b.soul = { x: 220, y: 260 };
+  b.soul = { x: 320, y: 250 };
   assert.equal(isGrazingHazard(b, battleSettings, battleArena), false);
 });
 
@@ -134,4 +135,27 @@ test('wave paths change shape and the two Helpers have distinct crossing curves'
     assert.ok(sample.some((y, i) => Math.abs(y - saxStaffY(a, 2, [225, 320, 415][i], 1)) > 20));
     if (wave) assert.notDeepEqual(sample, shapes[wave - 1]);
   }
+});
+
+test('mini rim notes cover each arena edge, share hit cooldown, and leave the interior clear', () => {
+  const b = attack(),
+    hp = freshPartyHP(),
+    a = attackState(b).saxophones!;
+  for (const p of [
+    { x: 221, y: 165 },
+    { x: 419, y: 165 },
+    { x: 320, y: 63 },
+    { x: 320, y: 263 },
+  ]) {
+    a.age = 0;
+    assert.equal(saxRimTouches(a, p), false);
+    a.age = 1;
+    assert.equal(saxRimTouches(a, p), true);
+  }
+  assert.equal(saxRimTouches(a, { x: 320, y: 220 }), false);
+  b.soul = { x: 221, y: 165 };
+  advanceSnowAttack(b, hp, 1 / 60, () => 0);
+  assert.equal(hp.Kris, 70);
+  advanceSnowAttack(b, hp, 0.1, () => 0);
+  assert.equal(hp.Kris, 70);
 });

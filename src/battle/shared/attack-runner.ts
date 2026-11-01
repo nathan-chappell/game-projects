@@ -13,7 +13,7 @@ import {
   snowgraveSettings,
   snowgraveTouchesSoul,
 } from '../noelle/snowgrave.ts';
-import { advanceSaxAttack, noteTouches, saxSettings } from '../tenna/saxophones.ts';
+import { advanceSaxAttack, noteTouches, saxRimTouches, saxSettings } from '../tenna/saxophones.ts';
 import { battlePartyNames } from './availability.ts';
 import { bossAttackDamage, projectileDamage } from './resources.ts';
 import { battleArena, battleSettings } from './settings.ts';
@@ -73,7 +73,10 @@ export function createAttackRunner(dependencies: Dependencies) {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
       const finished = advanceSaxAttack(snow.saxophones, dt);
       let changed = false;
-      if (snow.hitCooldown <= 0 && snow.saxophones.notes.some((n) => noteTouches(n, soul))) {
+      if (
+        snow.hitCooldown <= 0 &&
+        (snow.saxophones.notes.some((n) => noteTouches(n, soul)) || saxRimTouches(snow.saxophones, soul))
+      ) {
         changed = dependencies.damageLivingTeammate(
           encounter,
           partyHP,

@@ -1,16 +1,17 @@
 import type { Point } from '../../world/types.ts';
-import type { Arena, Note, SaxAttack } from '../shared/types.ts';
+import type { Arena, SaxAttack } from '../shared/types.ts';
 export const saxSettings = {
   damage: 30,
   hitCooldown: 0.75,
-  warmup: 0.75,
-  interval: 2.8,
+  warmup: 0.65,
+  interval: 2.2,
   waves: 5,
-  speed: 210,
+  speed: 280,
   notesPerPath: 6,
-  noteSpacing: 0.12,
+  noteSpacing: 0.09,
   staffLines: 5,
-  laneSpacing: 6,
+  laneSpacing: 10,
+  rimScale: 0.45,
 };
 export function createSaxAttack(arena: Arena): SaxAttack {
   return { arena: { ...arena }, age: 0, waves: 0, notes: [] };
@@ -22,7 +23,7 @@ export function saxStaffY(a: SaxAttack, lane: number, x: number, helper = 0) {
   const wave = saxWave(a),
     u = (x - a.arena.x) / a.arena.size;
   const slope = [120, -130, 90, -115, 150][wave];
-  const curve = (u - 0.5) * slope + Math.sin(u * Math.PI * 1.3 + wave * 0.95) * 24;
+  const curve = (u - 0.5) * slope * 1.15 + Math.sin(u * Math.PI * 1.3 + wave * 0.95) * 32;
   return (
     a.arena.y +
     a.arena.size / 2 +
@@ -50,7 +51,7 @@ export function advanceSaxAttack(a: SaxAttack, dt: number) {
         a.notes.push({
           direction: -1,
           helper,
-          lane: 2,
+          lane: [0, 2, 4, 0, 2, 4][note],
           launch: waveStart + saxSettings.warmup + note * saxSettings.noteSpacing,
           x: 0,
           y: 0,
@@ -65,11 +66,11 @@ export function advanceSaxAttack(a: SaxAttack, dt: number) {
   a.notes = a.notes.filter((n) => n.x > a.arena.x - 24);
   return false;
 }
-export function noteTouches(n: Note, soul: Point, width = 24, height = 21, margin = 0) {
+export function noteTouches(n: Point, soul: Point, width = 24, height = 21, margin = 0, scale = 1) {
   return [
-    { x: n.x, y: n.y, hw: 7, hh: 5 },
-    { x: n.x + 6, y: n.y - 11, hw: 2, hh: 12 },
-    { x: n.x + 11, y: n.y - 21, hw: 7, hh: 2 },
+    { x: n.x, y: n.y, hw: 7 * scale, hh: 5 * scale },
+    { x: n.x + 6 * scale, y: n.y - 11 * scale, hw: 2 * scale, hh: 12 * scale },
+    { x: n.x + 11 * scale, y: n.y - 21 * scale, hw: 7 * scale, hh: 2 * scale },
   ].some(
     (p) =>
       Math.abs(p.x - soul.x) < p.hw + width / 2 + margin &&
@@ -99,19 +100,43 @@ export function drawSaxAttack(ctx: CanvasRenderingContext2D, a: SaxAttack) {
       ctx.stroke();
     }
   }
-  for (const n of a.notes) {
-    ctx.save();
-    ctx.translate(Math.round(n.x), Math.round(n.y));
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 4;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-6, -4, 11, 8);
-    ctx.fillRect(-8, -2, 15, 4);
-    ctx.fillRect(5, -23, 3, 24);
-    ctx.fillRect(7, -23, 11, 3);
-    ctx.fillRect(14, -20, 4, 5);
-    ctx.restore();
+  for (const n of a.notes) drawNote(ctx, n);
+  ctx.globalAlpha = a.age < saxSettings.warmup ? 0.35 : 1;
+  for (const n of saxRimNotes(a)) drawNote(ctx, n, saxSettings.rimScale);
+  ctx.restore();
+}
+export function saxRimNotes(a: SaxAttack): Point[] {
+  const { x, y, size } = a.arena,
+    notes: Point[] = [];
+  for (let i = 0; i <= 10; i++) {
+    const offset = 8 + (i * (size - 16)) / 10;
+    notes.push(
+      { x: x + offset, y: y + 17 },
+      { x: x + offset, y: y + size - 8 },
+      { x: x + 8, y: y + offset },
+      { x: x + size - 8, y: y + offset },
+    );
   }
+  return notes;
+}
+export function saxRimTouches(a: SaxAttack, soul: Point, width = 24, height = 21, margin = 0) {
+  return (
+    a.age >= saxSettings.warmup &&
+    saxRimNotes(a).some((n) => noteTouches(n, soul, width, height, margin, saxSettings.rimScale))
+  );
+}
+function drawNote(ctx: CanvasRenderingContext2D, n: Point, scale = 1) {
+  ctx.save();
+  ctx.translate(Math.round(n.x), Math.round(n.y));
+  ctx.scale(scale, scale);
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowBlur = scale < 1 ? 0 : 4;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(-6, -4, 11, 8);
+  ctx.fillRect(-8, -2, 15, 4);
+  ctx.fillRect(5, -23, 3, 24);
+  ctx.fillRect(7, -23, 11, 3);
+  ctx.fillRect(14, -20, 4, 5);
   ctx.restore();
 }
 // A small white-outlined silhouette, matching the supplied Helper reference.
