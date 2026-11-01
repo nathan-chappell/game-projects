@@ -255,3 +255,38 @@ test('Tenna’s second attack moves a TV above the box and fires glitch bursts',
   await expect(page.locator('#battleAttack')).toBeEnabled();
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
 });
+
+test('Susie and Ralsey show their own downed poses and revive through the inventory', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' }, { gCandy: 2 });
+  await page.addInitScript(async () => {
+    const key = 'little-lantern-save-slots-v1';
+    const slots = JSON.parse(localStorage.getItem(key) ?? '[]');
+    slots[0].partyHP.Susie = 0;
+    slots[0].partyHP.Ralsey = 0;
+    localStorage.setItem(key, JSON.stringify(slots));
+  });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  await frames(page, 12);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('susie-ralsey-collapsing.png') });
+  await frames(page, 48);
+  await page.locator('.stage').screenshot({ path: testInfo.outputPath('susie-ralsey-downed.png') });
+  await expect(page.locator('#battleAttack')).toBeEnabled();
+  await page.locator('#battleItem').click();
+  await page.getByRole('button', { name: 'G. Candy × 2', exact: true }).click();
+  await page.locator('#candyTarget').selectOption('Susie');
+  await page.locator('#useCandyButton').click();
+  await frames(page, 45);
+  await page.locator('#battleItem').click();
+  await page.getByRole('button', { name: 'G. Candy × 1', exact: true }).click();
+  await page.locator('#candyTarget').selectOption('Ralsey');
+  await page.locator('#useCandyButton').click();
+  await frames(page, 45);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('susie-ralsey-revived.png') });
+});

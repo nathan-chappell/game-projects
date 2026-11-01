@@ -631,9 +631,13 @@ export function createBattleDrawing(
       rect(0, 0, 640, 480, '#100d24');
       studio.battlefield(room, present(encounter).score ?? 0);
       drawBattleKris(105, 97, 1.1, present(encounter).hitActor === 'Kris' ? present(encounter).hitAge : null);
-      helpers.drawFountainFriend({ name: 'Susie', x: 110, y: 159 }, t);
+      drawPartyMember('Susie', 110, 159, 1, present(encounter).partyStatus.Susie, () =>
+        helpers.drawFountainFriend({ name: 'Susie', x: 110, y: 159, hideName: true }, t),
+      );
       drawBattleFlowey(110, 213, t, 1.1);
-      helpers.drawFountainFriend({ name: 'Ralsey', x: 110, y: 270 }, t);
+      drawPartyMember('Ralsey', 110, 270, 1, present(encounter).partyStatus.Ralsey, () =>
+        helpers.drawFountainFriend({ name: 'Ralsey', x: 110, y: 270, hideName: true }, t),
+      );
       if (canControlSoul(encounter)) {
         drawTenna(565, 147, 0.8);
         rect(205, 48, 230, 230, '#101118');

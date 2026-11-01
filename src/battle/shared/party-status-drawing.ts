@@ -23,7 +23,14 @@ export function createPartyStatusDrawing(
       down = status.mode === 'down',
       motion = !reducedMotion.matches,
       unit = scale * (name === 'Kris' ? 1.75 : 1.5),
-      drawDown = name === 'Kris' ? sprites.krisDown : sprites.floweyDown,
+      drawDown =
+        name === 'Kris'
+          ? sprites.krisDown
+          : name === 'Susie'
+            ? sprites.susieDown
+            : name === 'Ralsey'
+              ? sprites.ralseyDown
+              : sprites.floweyDown,
       recoil =
         down && age < 0.18 && motion ? Math.round(Math.sin(age * 65) * 4 * (1 - age / 0.18)) * unit : 0;
     ctx.save();
@@ -59,7 +66,14 @@ export function createPartyStatusDrawing(
     } else if (down && age > 0.38 && age < partyStatusSettings.collapseSeconds) {
       const p = (age - 0.38) / (partyStatusSettings.collapseSeconds - 0.38);
       ctx.globalAlpha = 1 - p;
-      ctx.fillStyle = name === 'Kris' ? '#b7b3ca' : '#ffe19b';
+      ctx.fillStyle =
+        name === 'Kris'
+          ? '#b7b3ca'
+          : name === 'Susie'
+            ? '#c18adb'
+            : name === 'Ralsey'
+              ? '#a1eac7'
+              : '#ffe19b';
       for (let i = 0; i < 6; i++) {
         const side = i % 2 ? 1 : -1,
           distance = 5 + (i + 3) * p * 2;

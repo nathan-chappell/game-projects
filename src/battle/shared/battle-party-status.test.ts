@@ -94,3 +94,24 @@ test('Snowgrave healing revives both downed teammates and fresh encounters have 
   assert.equal(second.partyStatus.Kris.mode, 'up');
   assert.equal(second.partyStatus.Flowey.mode, 'up');
 });
+
+for (const target of ['Susie', 'Ralsey'] as const) {
+  test(`${target} collapses once in the four-person battle and rises after healing`, async () => {
+    const { createTennaEncounter } = await import('../../rooms/backstage/tenna-finale.ts');
+    const b = createTennaEncounter(),
+      hp = freshPartyHP(),
+      bag = freshInventory();
+    hp[target] = 0;
+    syncPartyStatus(b, hp);
+    assert.equal(b.partyStatus[target].mode, 'down');
+    advanceBattleTime(b, 0.5, hp);
+    const age = b.partyStatus[target].age;
+    syncPartyStatus(b, hp);
+    assert.equal(b.partyStatus[target].age, age);
+    bag.items.gCandy = 1;
+    assert.equal(useBattleItem(b, hp, bag, 'gCandy', target, () => 0)!.restored, 35);
+    assert.equal(b.partyStatus[target].mode, 'reviving');
+    advanceBattleTime(b, partyStatusSettings.reviveSeconds, hp);
+    assert.equal(b.partyStatus[target].mode, 'up');
+  });
+}

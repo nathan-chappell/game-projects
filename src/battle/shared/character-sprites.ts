@@ -1,3 +1,4 @@
+import { createDownedFriendSprites } from './downed-friends.ts';
 import snowgraveNoelleURL from '../../../assets/noelle-snowgrave-left.png?inline';
 import { context2D } from '../../game/dom.ts';
 import type { Polygon, Rect } from '../../rendering/types.ts';
@@ -1244,5 +1245,15 @@ export function createBattleCharacterSprites(ctx: CanvasRenderingContext2D, redu
     else if (name === 'Flowey') sprite('flowey:portrait', 48, 155, 5, (r) => paintFlowey(r, 0));
     else sprite(`ralsey:portrait:${angry}`, 48, 144, 3, (r) => ralseyHead(r, angry));
   }
-  return { kris, flowey, krisDown, floweyDown, ralsey, scaredNoelle, snowgraveNoelle, portrait };
+  return {
+    kris,
+    flowey,
+    krisDown,
+    floweyDown,
+    ralsey,
+    scaredNoelle,
+    snowgraveNoelle,
+    portrait,
+    ...createDownedFriendSprites(sprite),
+  };
 }
