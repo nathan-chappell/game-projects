@@ -1,3 +1,4 @@
+import { beginTennaMinigame } from '../battle/tenna/minigame.ts';
 import physicalChallengeURL from '../../assets/physical-challenge.png?inline';
 import { createDarkEncounter } from '../battle/dark/dark-battle.ts';
 import { isRescueImportant } from '../battle/noelle/aftermath.ts';
@@ -347,6 +348,11 @@ export function createDialogue(dependencies: Dependencies) {
         openDialogue(['[Tenna] * Mike! Stop the glitching!!'], 'tennaOpening');
         dependencies.syncBossUI();
         dependencies.storyUI();
+        dependencies.canvas.focus({ preventScroll: true });
+      }
+      if (kind === 'tennaMinigame' && state.bossEncounter) {
+        beginTennaMinigame(state.bossEncounter);
+        dependencies.syncBossUI();
         dependencies.canvas.focus({ preventScroll: true });
       }
       if (kind === 'tennaOpening' && state.bossEncounter?.kind === 'tenna') {

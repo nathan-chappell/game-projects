@@ -1,3 +1,4 @@
+import { drawShootingMinigame } from '../tenna/minigame-drawing.ts';
 import { drawTvBolts } from '../tenna/tv-bolts.ts';
 import { createGlitchStudioDrawing } from '../../rooms/glitch-studio/glitch-studio-drawing.ts';
 import type { Elements } from '../../game/dom.ts';
@@ -281,7 +282,9 @@ export function createBattleDrawing(
     } else if (encounter.kind === 'tenna') {
       pixelText(
         encounter.screen === 'act'
-          ? 'CHECK TENNA'
+          ? encounter.turn === 'Kris'
+            ? 'MINIGAME'
+            : 'CHECK TENNA'
           : `TENNA HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,
         391,
         407,
@@ -627,6 +630,25 @@ export function createBattleDrawing(
       t = reducedParticleMotion.matches ? 0 : time;
     const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
+    if (encounter?.phase === 'minigame' && encounter.minigame) {
+      drawShootingMinigame(ctx, encounter.minigame, encounter.score ?? 0, () => {
+        drawBattleKris(124, 367, 0.48);
+        drawBattleFlowey(84, 367, t, 0.48);
+        for (const friend of [
+          { name: 'Susie', x: 104 },
+          { name: 'Ralsey', x: 151 },
+        ]) {
+          ctx.save();
+          ctx.translate(friend.x, 367);
+          ctx.scale(0.5, 0.5);
+          helpers.drawFountainFriend({ name: friend.name, x: 0, y: 0, hideName: true }, t);
+          ctx.restore();
+        }
+      });
+      $('gameHint').textContent =
+        'Shoot enemies, avoid Flowey · Click / tap, or arrows to aim and Z / Space to shoot.';
+      return;
+    }
     if (present(encounter).kind === 'tenna') {
       rect(0, 0, 640, 480, '#100d24');
       studio.battlefield(room, present(encounter).score ?? 0);

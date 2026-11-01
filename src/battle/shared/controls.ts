@@ -1,3 +1,5 @@
+import { shootGallery, moveGalleryAim, minigamePoints } from '../tenna/minigame.ts';
+import { requestTennaMinigame, finishTennaMinigame } from './rules.ts';
 import type { Elements, GameElements } from '../../game/dom.ts';
 import { present } from '../../game/invariants.ts';
 import type { GameState } from '../../game/types.ts';
@@ -90,7 +92,9 @@ export function setupBattleControls(
       encounter.screen = 'act';
       encounter.message =
         encounter.kind === 'tenna'
-          ? 'Check Tenna.'
+          ? encounter.turn === 'Kris'
+            ? 'Minigame: shoot enemies and do not shoot Flowey. No TP cost.'
+            : 'Check Tenna.'
           : encounter.kind === 'dark'
             ? `${darkActInfo(encounter).description} ${darkActLocked(encounter) ? 'Locked until Shine is used three times.' : ''}`
             : canFloweyAct(encounter)
@@ -120,7 +124,8 @@ export function setupBattleControls(
     if (encounter.screen === 'attack') attackEnemy(encounter);
     else if (encounter.screen === 'act') {
       if (encounter.kind === 'tenna') {
-        encounter.message = 'Tenna is ready for his big Finale.';
+        if (encounter.turn === 'Kris') requestTennaMinigame(encounter);
+        else encounter.message = 'Tenna is ready for his big Finale.';
       } else if (encounter.kind === 'dark') {
         if (!useDarkAct(encounter, state.partyHP))
           encounter.message = darkActLocked(encounter)
@@ -152,6 +157,23 @@ export function setupBattleControls(
   };
   $('battleMenuBack').onclick = back;
   $('battleStoryNext').onclick = confirm;
+  $('battleMinigameShoot').onclick = () => {
+    const m = state.bossEncounter?.minigame;
+    if (m && state.bossEncounter?.phase === 'minigame') {
+      shootGallery(m);
+      refresh();
+      canvas.focus({ preventScroll: true });
+    }
+  };
+  canvas.addEventListener('pointermove', (event) => {
+    const m = state.bossEncounter?.minigame;
+    if (!m || state.bossEncounter?.phase !== 'minigame') return;
+    const b = canvas.getBoundingClientRect();
+    m.cursor = {
+      x: ((event.clientX - b.left) * 640) / b.width,
+      y: ((event.clientY - b.top) * 480) / b.height,
+    };
+  });
 
   function blocked() {
     return (
@@ -172,6 +194,11 @@ export function setupBattleControls(
       const bounds = canvas.getBoundingClientRect();
       const x = ((event.clientX - bounds.left) * 640) / bounds.width,
         y = ((event.clientY - bounds.top) * 480) / bounds.height;
+      if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
+        shootGallery(state.bossEncounter.minigame, x, y);
+        refresh();
+        return;
+      }
       if (present(state.bossEncounter).phase === 'rescue' || isProceedScene(state.bossEncounter)) {
         confirm();
         return;
@@ -199,6 +226,36 @@ export function setupBattleControls(
         (event.target instanceof HTMLElement && event.target.isContentEditable)
       )
         return;
+      if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
+        const b = state.bossEncounter,
+          m = present(b.minigame);
+        if (
+          [
+            'ArrowUp',
+            'ArrowDown',
+            'ArrowLeft',
+            'ArrowRight',
+            'z',
+            'Z',
+            'c',
+            'C',
+            'Enter',
+            ' ',
+            'Shift',
+            '2',
+          ].includes(event.key)
+        ) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (event.repeat) return;
+          if (event.key.startsWith('Arrow')) moveGalleryAim(m, event.key);
+          else if (event.key === 'Shift') finishTennaMinigame(b, state.partyHP);
+          else if (event.key === '2') b.invincible = !b.invincible;
+          else shootGallery(m);
+          refresh();
+        }
+        return;
+      }
       if (present(state.bossEncounter).phase === 'rescue' || isProceedScene(state.bossEncounter)) {
         if (['x', 'X', 'Escape', 'Backspace'].includes(event.key)) {
           event.preventDefault();
@@ -318,7 +375,8 @@ export function setupBattleControls(
     $('talkButton').disabled = $('inspectButton').disabled = active && !intro;
     $('inventoryButton').disabled =
       active &&
-      (isPelletCast(encounter) ||
+      (['minigame', 'minigameIntro'].includes(encounter.phase) ||
+        isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));
     for (const [action, id] of Object.entries(buttons)) {
@@ -327,11 +385,17 @@ export function setupBattleControls(
       button.disabled = !acting || !canUseBattleAction(encounter, action);
       $(id).setAttribute('aria-pressed', String(acting && encounter.selectedAction === action));
     }
+    const minigame = encounter?.phase === 'minigame';
+    $('battleMinigameControls').hidden = !minigame;
+    $('battleMinigameStatus').textContent = encounter?.minigame
+      ? `Misses: ${encounter.minigame.misses} · Round points: ${minigamePoints(encounter.minigame.misses)}`
+      : '';
     $('battleSpare').textContent = encounter?.kind === 'tenna' ? 'TV TIME!' : 'Spare';
     $('battleSpare').disabled = !acting || !canUseBattleAction(encounter, 'spare');
     $('battleActionButtons').hidden =
       active &&
-      (canControlSoul(encounter) ||
+      (minigame ||
+        canControlSoul(encounter) ||
         isPelletCast(encounter) ||
         encounter.phase === 'rescue' ||
         isProceedScene(encounter));
@@ -351,9 +415,11 @@ export function setupBattleControls(
     $('battleMovementHint').textContent +=
       ` Stay near hazards for +${encounter?.snowAttack?.grazeTP ?? (encounter?.kind === 'dark' ? 1 : battleSettings.grazeTP)}% TP every 0.5 seconds.`;
     $('battleTestStatus').textContent =
-      encounter?.kind === 'dark'
-        ? `Playtesting · 1: Fill TP · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: Skip attack`
-        : `Playtesting · 1 / 5: Fill TP · 6: Repeat ${encounter?.repeatAttack ? 'ON' : 'OFF'} · 2: Invincible ${encounter?.invincible ? 'ON' : 'OFF'} · 3: Special${encounter?.specialAttackQueued ? ' QUEUED' : ''} → Buffed attacks · 4: Fast kill ${encounter?.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
+      encounter?.phase === 'minigame'
+        ? `Playtesting · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
+        : encounter?.kind === 'dark'
+          ? `Playtesting · 1: Fill TP · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: Skip attack`
+          : `Playtesting · 1 / 5: Fill TP · 6: Repeat ${encounter?.repeatAttack ? 'ON' : 'OFF'} · 2: Invincible ${encounter?.invincible ? 'ON' : 'OFF'} · 3: Special${encounter?.specialAttackQueued ? ' QUEUED' : ''} → Buffed attacks · 4: Fast kill ${encounter?.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
     $('battleTestStatus').hidden =
       encounter?.phase === 'rescue' || isProceedScene(encounter) || isPelletCast(encounter);
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
@@ -369,7 +435,9 @@ export function setupBattleControls(
     $('battleActionButtons').setAttribute('aria-label', `${encounter?.turn || 'Party'}’s actions`);
     $('battleProceedButton').textContent =
       encounter?.kind === 'tenna'
-        ? 'Check Tenna'
+        ? encounter.turn === 'Kris'
+          ? 'Minigame'
+          : 'Check Tenna'
         : encounter?.kind === 'dark'
           ? `${darkActInfo(encounter).name} · ${actCost}% TP`
           : floweyTurn
@@ -389,27 +457,31 @@ export function setupBattleControls(
       : '???';
     $('battleTurnText').textContent = !active
       ? ''
-      : encounter.phase === 'victory'
-        ? encounter.kind === 'tenna'
-          ? 'Tenna defeated.'
-          : encounter.kind === 'dark'
-            ? '??? defeated.'
-            : encounter.noelleEscaped
-              ? 'Noelle escaped.'
-              : '??? disappeared.'
-        : encounter.phase === 'rescue'
-          ? 'Ralsey intervenes'
-          : isPelletCast(encounter)
-            ? 'Flowey uses Friendlyness Pellets'
-            : isProceedScene(encounter)
-              ? 'Proceed...'
-              : `${encounter.turn}’s turn`;
+      : encounter.phase === 'minigame'
+        ? 'Shooting minigame'
+        : encounter.phase === 'victory'
+          ? encounter.kind === 'tenna'
+            ? 'Tenna defeated.'
+            : encounter.kind === 'dark'
+              ? '??? defeated.'
+              : encounter.noelleEscaped
+                ? 'Noelle escaped.'
+                : '??? disappeared.'
+          : encounter.phase === 'rescue'
+            ? 'Ralsey intervenes'
+            : isPelletCast(encounter)
+              ? 'Flowey uses Friendlyness Pellets'
+              : isProceedScene(encounter)
+                ? 'Proceed...'
+                : `${encounter.turn}’s turn`;
     $('battleFeedback').textContent = encounter?.message || '';
     $('battleTPBar').value = encounter?.tp || 0;
     $('battleTPText').textContent = `TP: ${Math.floor(encounter?.tp || 0)}%`;
     $('battleProceedCount').textContent =
       encounter?.kind === 'tenna'
-        ? 'Tenna is ready for the Finale.'
+        ? encounter.turn === 'Kris'
+          ? 'Shoot enemies, avoid Flowey. 100 points minus 10 per X. No TP cost.'
+          : 'Tenna is ready for the Finale.'
         : encounter?.kind === 'dark'
           ? encounter.turn === 'Kris'
             ? `Shine: ${encounter.shineCount || 0} / 5${encounter.darkUnlocked ? ' · Attacks and ACTs unlocked' : ''}`
@@ -419,7 +491,8 @@ export function setupBattleControls(
             : `Proceed: ${encounter?.proceedCount || 0} / ${battleSettings.proceedsToDisappear}`;
     $('leaveBossButton').disabled =
       active &&
-      (isPelletCast(encounter) ||
+      (['minigame', 'minigameIntro'].includes(encounter.phase) ||
+        isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         encounter.phase === 'rescue' ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));

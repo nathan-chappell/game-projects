@@ -156,6 +156,15 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       return;
     }
+    if (state.bossEncounter?.phase === 'minigameIntro' && !state.dialogue) {
+      dependencies.openDialogue(
+        ['[Tenna] * Oh yeah! 1500 Points and i give up! Or else you work for ME!'],
+        'tennaMinigame',
+      );
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'tennaCue' && !state.dialogue) {
       dependencies.openDialogue(
         ['[Tenna] * Hey Minions- i mean Helpers, attack! It will come to your paycheck...'],

@@ -117,6 +117,7 @@ export function createInventory(dependencies: Dependencies) {
             : 'Use item';
   }
   function toggleInventory() {
+    if (['minigame', 'minigameIntro'].includes(state.bossEncounter?.phase ?? '')) return;
     if (state.bossEncounter?.finalAttackComplete && state.bossEncounter.phase !== 'victory') return;
     if (isProceedScene(state.bossEncounter) || isPelletCast(state.bossEncounter)) return;
     if (state.death || state.holeFall || state.padJump || dependencies.choiceDialogOpen()) return;

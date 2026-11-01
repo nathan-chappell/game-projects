@@ -1,3 +1,4 @@
+import { advanceShootingMinigame, settleShootingMinigame } from '../tenna/minigame.ts';
 import { itemDefinitions, maxHP } from '../../game/config.ts';
 import { present } from '../../game/invariants.ts';
 import { useHealingItem } from '../../inventory/healing.ts';
@@ -649,9 +650,38 @@ export function advanceProceedDialogue(encounter: Encounter) {
   }
   return startNextEnemyAttack(encounter, 'Noelle attacks after Kris proceeds.');
 }
+export function requestTennaMinigame(encounter: Encounter) {
+  if (encounter.kind !== 'tenna' || !canKrisAct(encounter) || !canUseBattleAction(encounter, 'act'))
+    return false;
+  encounter.phase = 'minigameIntro';
+  encounter.screen = 'menu';
+  return true;
+}
+export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: () => number = Math.random) {
+  if (encounter.kind !== 'tenna' || encounter.phase !== 'minigame') return false;
+  const result = settleShootingMinigame(encounter, hp, random);
+  if (!result) return false;
+  syncPartyStatus(encounter, hp);
+  encounter.phase = 'kris';
+  encounter.turn = 'Kris';
+  const damage = Object.entries(result.damage)
+    .map(([name, amount]) => `${name} lost ${amount} HP`)
+    .join(', ');
+  finishPartyTurn(
+    encounter,
+    `Minigame complete! +${result.points} points.${damage ? ' ' + damage + '.' : ''}`,
+  );
+  skipFallenTurns(encounter, hp);
+  return true;
+}
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  if (encounter.phase === 'minigame' && encounter.minigame && partyHP) {
+    const before = encounter.minigame.misses;
+    if (advanceShootingMinigame(encounter.minigame, dt)) return finishTennaMinigame(encounter, partyHP);
+    return encounter.minigame.misses !== before;
+  }
   if (encounter.darkHeal) {
     encounter.darkHeal.age += dt;
     if (encounter.darkHeal.age > 1) encounter.darkHeal = null;

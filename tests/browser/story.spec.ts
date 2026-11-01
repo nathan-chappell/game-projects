@@ -290,3 +290,83 @@ test('Susie and Ralsey show their own downed poses and revive through the invent
   await frames(page, 45);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('susie-ralsey-revived.png') });
 });
+
+test('Kris Minigame ACT plays the gallery, pays points and applies X penalties only after the round', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  await page.locator('#battleAct').click();
+  await expect(page.locator('#battleProceedButton')).toHaveText('Minigame');
+  await page.locator('#battleProceedButton').click();
+  await frames(page, 2);
+  await expect(page.locator('#speakerName')).toHaveText('Tenna');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText(
+    '1500 Points and i give up! Or else you work for ME!',
+  );
+  await page.keyboard.press('l');
+  await expect(page.locator('#dialogue')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#battleMinigameControls')).toBeVisible();
+  await expect(page.locator('#inventoryButton')).toBeDisabled();
+  await page.keyboard.press('o');
+  await expect(page.locator('#inventoryDialog')).not.toBeVisible();
+  let stepped = 0;
+  for (let target = 0; target < 12; target++) {
+    const frame = Math.round((0.95 + target * 1.1) * 60);
+    await frames(page, frame - stepped);
+    stepped = frame;
+    if (target === 0) {
+      await page.locator('#game').focus();
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('Space');
+    } else if (target === 1)
+      continue; // Let this enemy shoot: one X.
+    else if (target === 2 || target % 4 !== 2) {
+      // Shoot Flowey once; leave the later Floweys alone.
+      if (target === 2)
+        await page
+          .locator('#game')
+          .screenshot({ path: testInfo.outputPath('shooting-gallery-flowey-target.png') });
+      const p = target % 2 === 0 ? { x: 530, y: 112 } : { x: 318, y: 207 };
+      const bounds = await page.locator('#game').boundingBox();
+      if (!bounds) throw new Error('Missing canvas');
+      await page.mouse.click(bounds.x + (p.x * bounds.width) / 640, bounds.y + (p.y * bounds.height) / 480);
+    }
+    if (target === 3) {
+      await expect(page.locator('#battleMinigameStatus')).toContainText('Misses: 2');
+      await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 80');
+      await frames(page, 1);
+      stepped++;
+      await page.locator('#game').screenshot({ path: testInfo.outputPath('shooting-gallery-two-xs.png') });
+    }
+  }
+  await frames(page, 100);
+  await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
+  await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
+  await expect(page.locator('#battleFeedback')).toContainText('+80 points');
+  await expect(page.locator('#battleFeedback')).toContainText('Flowey lost 20 HP');
+  await expect(page.locator('#battleFeedback')).toContainText('Susie lost 20 HP');
+  await page.locator('#inventoryButton').click();
+  await expect(page.getByText('Susie · HP: 80 / 100', { exact: true })).toBeVisible();
+  await page.locator('#closeInventoryButton').click();
+  for (let member = 0; member < 3; member++) await page.locator('#battleDefend').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('Shift');
+  await page.locator('#battleAct').click();
+  await page.locator('#battleProceedButton').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Misses: 0');
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 100');
+  await frames(page, 1);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('shooting-gallery-fresh-round.png') });
+});
