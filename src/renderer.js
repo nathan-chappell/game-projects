@@ -2,7 +2,18 @@
 import { createSprites } from './sprites.js';
 import { createParticles } from './particles.js';
 import { createBattleDrawing } from './battle.js';
-import { T, W, H, tiles } from './config.js';
+import { T, W, H, tiles, itemDefinitions } from './config.js';
+import { nextTreeItem } from './tree-items.js';
+import { createGlitchStudioDrawing } from './glitch-studio-drawing.js';
+import { createBackstageDrawing } from './backstage-drawing.js';
+import { createStorageDrawing } from './storage-drawing.js';
+import { createHallwayDrawing } from './storage-travel-drawing.js';
+import { createHallway } from './storage-travel.js';
+import { createTrafficDrawing } from './traffic-drawing.js';
+import { createRooftopDrawing } from './neon-rooftop-drawing.js';
+import {createCollisionChamberDrawing} from './collision-chamber-drawing.js';
+import { createQueenRoomDrawing } from './queen-room-drawing.js';
+import { tennaEntrancePose, tennaArrivalSettings } from './tenna-story.js';
 import { objectLayer, jumpIslandPlatforms } from './world.js';
 
 export function createRenderer(ctx, state, helpers) {
@@ -35,6 +46,7 @@ export function createRenderer(ctx, state, helpers) {
     pixelText,
     drawGoldenDoor,
     drawNoelleBoss,
+    drawTenna,
     drawDarkTree,
     drawFountainFriend,
     drawNpc,
@@ -50,6 +62,14 @@ export function createRenderer(ctx, state, helpers) {
     drawGlitchPillar,
     drawGlitchParticles,
   } = createParticles(ctx, state, { rect, pixelText });
+  const glitchStudioDrawing = createGlitchStudioDrawing(ctx, { rect, pixelText, reducedParticleMotion });
+  const backstageDrawing=createBackstageDrawing(ctx,{rect});
+  const storageDrawing=createStorageDrawing(ctx,{rect,reducedParticleMotion});
+  const drawHallway=createHallwayDrawing(ctx,{rect,pixelText,drawPlayer,drawFlowey,drawFountainFriend,reducedParticleMotion});
+  const trafficDrawing=createTrafficDrawing(ctx,{rect,pixelText,reducedParticleMotion});
+  const drawRooftop=createRooftopDrawing(ctx,{rect,pixelText,reducedParticleMotion});
+  const drawCollisionChamber=createCollisionChamberDrawing(ctx);
+  const drawQueenRoom=createQueenRoomDrawing(ctx,{rect,pixelText,reducedParticleMotion});
 
   const { drawBossEncounter } = createBattleDrawing(ctx, state, {
     rect,
@@ -63,6 +83,7 @@ export function createRenderer(ctx, state, helpers) {
     drawGlitchParticles,
     drawNoelleBoss,
     $,
+    drawFountainFriend,
   });
   function drawSavePoint(time, layer = 'normal') {
     for (const tile of roomSavePoints().filter((point) => objectLayer(point) === layer)) {
@@ -385,6 +406,37 @@ export function createRenderer(ctx, state, helpers) {
     }
     if (['glitchWorld', 'glitchBoss'].includes(current().scene) && [0, 1, 6].includes(id)) {
       rect(x, y, T, T, id === 1 ? roomBackground() : '#c3c3c3');
+      return;
+    }
+    if (current().scene === 'glitchStudio' && [0,1,6].includes(id)) {
+      if (id === 1) { rect(x,y,T,T,roomBackground()); return; }
+      rect(x,y,T,T,'#fff0c8');
+      if(id===6) {
+        rect(x+3,y+1,34,38,'#080b17');rect(x+4,y+2,3,36,'#7be3dc');
+        rect(x+33,y+2,3,36,'#d376c2');pixelText(x===0?'<':'>',x+12,y+26,'#b9f7ef',20);
+      }
+      return;
+    }
+    if(current().scene==='glitchBackstage'&&[0,1,6].includes(id)) {
+      rect(x,y,T,T,id===1?roomBackground():(x/T)%2?'#513019':'#56341c');
+      if(id===6) {
+        rect(x+3,y+1,34,38,'#130f0c');rect(x+4,y+2,3,36,'#d19752');
+        rect(x+33,y+2,3,36,'#af743b');pixelText(y<200?'^':x===0?'<':'>',x+12,y+26,'#f5d498',20);
+      }
+      return;
+    }
+    if(current().scene==='tennaStorage'&&[0,1,6,7].includes(id)) {
+      rect(x,y,T,T,id===1?roomBackground():'#141c26');
+      if(id===7) {
+        rect(x+1,y+1,38,38,'#070c12');rect(x+3,y+4,34,31,'#2c3640');
+        rect(x+3,y+4,34,3,'#64717c');rect(x+6,y+11,28,2,'#111a24');
+        rect(x+6,y+25,28,2,'#111a24');rect(x+8,y+15,9,6,'#4b5965');
+        rect(x+10,y+17,5,2,'#111a24');rect(x+31,y+7,2,27,'#4c5961');
+      }
+      if(id===6) {
+        rect(x+3,y+1,34,38,'#060a10');rect(x+4,y+2,3,36,'#658c98');
+        rect(x+33,y+2,3,36,'#435d71');pixelText(x===0?'<':'>',x+12,y+26,'#cce2e6',20);
+      }
       return;
     }
     if (['coreEntrance', 'coreLower', 'coreDepths'].includes(current().scene) && [0, 1, 6].includes(id)) {
@@ -1186,6 +1238,7 @@ export function createRenderer(ctx, state, helpers) {
   }
 
   function render(time) {
+    if(state.mode==='play'&&state.collisionBlackout){rect(0,0,640,480,'#000000');$('gameHint').textContent='';return;}
     if (state.death) {
       drawDeath();
       return;
@@ -1201,6 +1254,13 @@ export function createRenderer(ctx, state, helpers) {
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, 640, 480);
     const r = current();
+    if(state.mode==='play'&&r.scene==='storageHallway') {
+      state.storageHallway??=createHallway();
+      drawHallway(state,time);
+      if(state.fade>0)rect(0,0,640,480,`rgba(17,20,29,${Math.min(1,state.fade/0.32)})`);
+      $('gameHint').textContent='Walk right through the corridor to reach the crossing, or left to return to storage.';
+      return;
+    }
     // Shake the scene briefly; keep the surrounding UI and fade overlay steady.
     rect(0, 0, 640, 480, roomBackground(r));
     ctx.save();
@@ -1216,6 +1276,51 @@ export function createRenderer(ctx, state, helpers) {
     for (let y = 0; y < H; y++)
       for (let x = 0; x < W; x++) if (![1, 10].includes(r.map[y][x])) drawTile(r.map[y][x], x * T, y * T, r.theme);
     if (state.mode === 'build' && r.scene === 'glitchBoss') drawNoelleBoss(528, 122, 140);
+    if (r.scene === 'glitchStudio') glitchStudioDrawing.room(time,r);
+    if(r.scene==='glitchBackstage') {
+      backstageDrawing.room(r);
+      for(const [cell,target] of Object.entries(r.doorLinks||{})) {
+        if(state.project.rooms[target]?.scene!=='glitchStudio')continue;
+        const [x,y]=cell.split(',').map(Number);
+        rect(x*T+5,y*T+3,30,37,'#030403');rect(x*T+5,y*T+3,2,37,'#6c4a2a');
+        pixelText('^',x*T+13,y*T+25,'#d8ae6b',17);
+      }
+      pixelText('< STRANGE ROOM',4,329,'#d5cbb6',10);
+      if(state.story.tennaStorageInvited)pixelText('STORAGE >',506,329,'#d5af76',11);
+    }
+    if(r.scene==='tennaStorage') {
+      storageDrawing.room(time,r);
+      pixelText('HALLWAY >',510,329,'#a4c4cb',11);
+    }
+    if(r.scene==='trafficCrossing') {
+      trafficDrawing.room(time,state.traffic??undefined);
+      for(const [cell,target] of Object.entries(r.doorLinks||{})) {
+        if(state.project.rooms[target]?.scene!=='neonRooftop')continue;
+        const [x,y]=cell.split(',').map(Number);
+        if(r.map[y][x]!==6)continue;
+        rect(x*T+4,y*T+2,36,36,'#091b2c');rect(x*T+4,y*T+2,2,36,'#8be8cf');
+        pixelText('>',x*T+14,y*T+27,'#d4fae9',20);
+      }
+    }
+    if(r.scene==='neonRooftop') {
+      drawRooftop(time);
+      for(const [cell,target] of Object.entries(r.doorLinks||{})) {
+        if(state.project.rooms[target]?.scene!=='queenPasscode')continue;
+        const [x,y]=cell.split(',').map(Number);
+        if(r.map[y][x]===6){rect(x*T+4,y*T+1,36,38,'#0a3028');pixelText('>',x*T+14,y*T+27,'#baf4d8',20);}
+      }
+    }
+    if(r.scene==='queenPasscode')drawQueenRoom(time,state);
+    if(r.scene==='collisionChamber')drawCollisionChamber(r,state);
+    if(r.scene==='glitchStudio'&&state.story.tennaInvited)pixelText('BACKSTAGE >',484,329,'#684c47',11);
+    if (r.scene === 'glitchBoss' && (state.story.noelleEscaped || state.story.noelleGone || state.mode === 'build'))
+      for (const [cell,target] of Object.entries(r.doorLinks || {})) {
+        if (state.project.rooms[target]?.scene !== 'glitchStudio') continue;
+        const [x,y]=cell.split(',').map(Number);
+        if(r.map[y][x]!==6) continue;
+        rect(x*T+3,y*T+1,34,38,'#080b17');rect(x*T+4,y*T+2,3,36,'#7be3dc');
+        rect(x*T+33,y*T+2,3,36,'#d376c2');pixelText('>',x*T+12,y*T+26,'#b9f7ef',20);
+      }
     if (r.scene === 'glitchWorld')
       for (const [cell, target] of Object.entries(r.doorLinks || {})) {
         const [x, y] = cell.split(',').map(Number);
@@ -1254,25 +1359,40 @@ export function createRenderer(ctx, state, helpers) {
     } else if (state.mode === 'play') {
       const actors = [
         { y: state.player.y, draw: () => drawPlayer(state.player.x, state.player.y, time) },
-        ...partyFriends().map((n) => ({ y: n.y, draw: () => drawFountainFriend(n, time) })),
+        ...partyFriends().map((n) => ({ y: n.y, draw: () => drawFountainFriend({...n,lookRight:state.dialogue?.kind==='collisionIntro'&&state.dialogue.index>=2&&n.name==='Ralsey'}, time) })),
         ...roomNpcs()
           .filter((object) => objectLayer(object) === 'normal')
           .map((n) => ({ y: n.y * T + 24, draw: () => drawNpc(n) })),
       ];
+      if(r.scene==='glitchStudio'&&state.tennaEntrance) {
+        const scene=state.tennaEntrance,pose=tennaEntrancePose(scene,reducedParticleMotion.matches);
+        actors.push({y:pose.y,draw:()=>{
+          ctx.save();ctx.translate(pose.x,pose.y);ctx.scale(pose.scaleX,pose.scaleY);drawTenna(0,0);ctx.restore();
+          if(!reducedParticleMotion.matches&&scene.stage==='jump'&&scene.age>tennaArrivalSettings.jump) {
+            const p=(scene.age-tennaArrivalSettings.jump)/tennaArrivalSettings.land;
+            ctx.save();ctx.globalAlpha=1-p;
+            for(let i=0;i<6;i++)rect(pose.x+(i-2.5)*(8+p*12),pose.y+2-(i%2)*3,5,2,'#fff6c9');
+            ctx.restore();
+          }
+        }});
+      }
       for (const tile of roomTrees().filter((object) => objectLayer(object) === 'normal')) {
         const tree = { ...tile, x: tile.x * T + 20, y: tile.y * T + 20 };
         actors.push({ y: tree.y, draw: () => drawDarkTree(tree) });
       }
-      if (flower) actors.push({ y: flower.y, draw: () => drawFlowey(flower.x, flower.y, time) });
+      if (flower) actors.push({ y: flower.y, draw: () => drawFlowey(flower.x, flower.y, time,state.dialogue?.kind==='collisionIntro'&&state.dialogue.index>=2) });
       actors.sort((a, b) => a.y - b.y).forEach((a) => a.draw());
       if (roomWaitingFriends().length) drawComfortingArm(state.glitchWaiting.Susie, state.glitchWaiting.Ralsey);
       if (state.story.teamJoined && facingFountain() && !state.dialogue && !state.buster)
         pixelText('C / Z · I. C.', 282, 212, '#ead8ff', 11);
-      if (nearbyCandyTree() && !state.dialogue && !state.buster)
-        pixelText('C / Z · G. CANDY', state.player.x - 48, state.player.y - 68, '#ffd9ee', 10);
+      if (nearbyCandyTree() && !state.dialogue && !state.buster) {
+        const item = nextTreeItem(nearbyCandyTree(), state.roomIndex, state.treeHarvests);
+        pixelText('C / Z · ' + (item ? itemDefinitions[item].name.toUpperCase() : 'EMPTY TREE'),
+          state.player.x - 48, state.player.y - 68, '#ffd9ee', 10);
+      }
       const npc = nearbyNpc();
       if (npc && !state.dialogue && !state.buster && state.story.emerging < 0 && state.story.discussion < 0)
-        pixelText('C / Z', npc.x * T + 3, npc.y * T - 34, '#fff0c7', 10);
+        pixelText('C / Z', npc.x * T + 3, npc.y * T - (npc.sprite==='tenna'?149:npc.sprite==='queen'?103:npc.sprite==='jackenstein'?128:34), '#fff0c7', 10);
       const friend = nearFountainFriend();
       if (friend && !state.dialogue && !state.buster && state.story.discussion < 0)
         pixelText('Z', friend.x - 4, friend.y - 75, '#fff0c7', 14);
@@ -1330,11 +1450,17 @@ export function createRenderer(ctx, state, helpers) {
       drawGlitchParticles(time, true);
     }
     drawObjectMarkers();
+    if (r.scene === 'glitchStudio') glitchStudioDrawing.overlay(time);
+    if(r.scene==='trafficCrossing')trafficDrawing.overlay(state.traffic,state.player);
     drawBuster();
     if (state.mode === 'play' && state.dive?.phase === 'flowey' && state.dive.age > 1.15)
       rect(0, 0, 640, 480, 'rgba(8,9,18,' + Math.min(1, (state.dive.age - 1.15) / 0.9) + ')');
     ctx.restore();
     if (state.fade > 0) rect(0, 0, 640, 480, `rgba(17,20,29,${Math.min(1, state.fade / 0.32)})`);
+    if(state.mode==='play'&&r.scene==='trafficCrossing') {
+      $('gameHint').textContent='C / Z at a STOP sign slows traffic for 5 seconds. A car hit returns you to your stop-sign checkpoint.';
+      return;
+    }
     $('gameHint').textContent =
       state.mode === 'build'
         ? state.tool === 'delete'

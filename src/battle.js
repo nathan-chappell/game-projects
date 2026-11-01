@@ -1,12 +1,41 @@
+import {drawSaxAttack,drawSaxHelper,saxHelperTurn} from './battle-saxophones.js';
+import {createTennaSprite} from './tenna-sprite.js';
+import {darkActInfo,darkActLocked} from './dark-acts.js';
+import {drawWarningSwords} from './battle-warning-swords.js';
+import {drawMiniSwords} from './battle-mini-swords.js';
+import {drawSwords} from './battle-swords.js';
 // The battle appearance lives here. Attack patterns and action rules can be added separately.
+import {drawDarkEyes} from './dark-battle.js';
 import { maxHP, H, W, T } from './config.js';
-import { battleSettings, canKrisAct } from './battle-rules.js';
-import memoryURL from '../assets/proceed-memory.png?inline';
+import {
+  battleSettings,
+  canPartyAct,
+  canUseBattleAction,
+  canFloweyAct,
+  canControlSoul,
+  snowAttackStatus,
+  snowPathBounds,
+  isSoulInSnow,
+  soulArena,
+  bossAttackDamage,
+} from './battle-rules.js';
+import { orbitArena, orbitSettings, orbitHazards } from './battle-orbit.js';
+import { crossingSettings, crossingHazards } from './battle-crossing.js';
+import { goalSettings, goalArena, goalPlatforms, goalGroundY, goalSpeed, goalSnowballs, greenGoal } from './battle-goal.js';
+import { createSnowgraveDrawing } from './battle-snowgrave-drawing.js';
+import { createAftermathDrawing } from './battle-aftermath-drawing.js';
+import { createBattleCharacterSprites } from './battle-character-sprites.js';
+import { createRedSlashDrawing } from './battle-slash.js';
+import { isSlashScreen, isBattleBlackout, isRalseyChoice } from './battle-aftermath.js';
+import { isProceedScene } from './battle-proceed.js';
+import { createProceedGlitchDrawing } from './battle-proceed-drawing.js';
+import { isPelletCast } from './battle-pellets.js';
+import { createPelletsDrawing } from './battle-pellets-drawing.js';
+import { createPartyStatusDrawing } from './battle-party-status-drawing.js';
 
 export function createBattleDrawing(ctx, state, helpers) {
   const {
     rect,
-    drawFlowey,
     pixelText,
     reducedParticleMotion,
     roomBackground,
@@ -17,79 +46,62 @@ export function createBattleDrawing(ctx, state, helpers) {
     drawNoelleBoss,
     $,
   } = helpers;
-  const memory = new Image();
-  memory.src = memoryURL;
+  const snowgraveDrawing = createSnowgraveDrawing(ctx, { rect, pixelText, reducedParticleMotion });
+  const battleSprites = createBattleCharacterSprites(ctx, () => reducedParticleMotion.matches);
+  const drawPartyMember = createPartyStatusDrawing(ctx, battleSprites, reducedParticleMotion);
+  const drawRedSlash = createRedSlashDrawing(ctx);
+  const aftermathDrawing = createAftermathDrawing(ctx, { rect, pixelText, drawNoelleBoss, battleSprites, reducedParticleMotion });
+  const drawProceedGlitch = createProceedGlitchDrawing(ctx, reducedParticleMotion);
+  const drawPelletsCast = createPelletsDrawing(ctx, reducedParticleMotion);
+  const battleArenaForDark={x:205,y:48,size:230};
+  const drawTenna=createTennaSprite(ctx).draw;
   const current = () => state.project.rooms[state.roomIndex];
-  function drawBattleKris(x, y, scale = 1) {
+  function drawBattleKris(x, y, scale = 1, hitAge = null) {
+    drawPartyMember('Kris', x, y, scale, state.bossEncounter?.partyStatus?.Kris,
+      () => battleSprites.kris(x, y, scale, hitAge, state.bossEncounter?.rescue?.stage === 'strike'));
+  }
+
+  function drawSwordSlash(hitAge) {
+    if (hitAge === null || hitAge >= battleSettings.swordSwingSeconds) return;
+    const progress = hitAge / battleSettings.swordSwingSeconds,
+      reach = reducedParticleMotion.matches ? 1 : Math.min(1, 0.2 + progress * 4);
     ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-    rect(-12, -20, 9, 18, '#182545');
-    rect(4, -20, 9, 16, '#182545');
-    rect(-13, -8, 10, 8, '#e5f3ff');
-    rect(4, -9, 11, 8, '#e5f3ff');
-    rect(-10, -5, 6, 4, '#60759c');
-    rect(-12, -43, 25, 25, '#17223f');
-    rect(-15, -45, 10, 15, '#243755');
-    rect(8, -43, 11, 13, '#243755');
-    rect(-7, -27, 17, 5, '#93c5d9');
-    rect(-10, -24, 9, 4, '#cce8ef');
-    rect(10, -36, 9, 14, '#72d7ee');
-    rect(15, -30, 10, 8, '#91e7ef');
-    rect(-10, -62, 24, 19, '#62d5ef');
-    rect(7, -59, 11, 13, '#75e1f4');
-    rect(11, -57, 3, 4, '#17233f');
-    rect(-17, -70, 30, 16, '#121b43');
-    rect(-21, -64, 13, 18, '#151f49');
-    rect(-18, -54, 14, 9, '#151f49');
-    rect(-9, -76, 14, 9, '#151f49');
-    rect(6, -68, 12, 10, '#151f49');
-    rect(-23, -59, 8, 15, '#151f49');
-    ctx.fillStyle = '#e33cb0';
-    ctx.beginPath();
-    ctx.moveTo(-9, -49);
-    ctx.lineTo(12, -46);
-    ctx.lineTo(7, -39);
-    ctx.lineTo(-16, -42);
-    ctx.lineTo(-29, -34);
-    ctx.lineTo(-35, -38);
-    ctx.closePath();
-    ctx.fill();
-    rect(-20, -42, 19, 4, '#f571ce');
-    rect(8, -44, 10, 6, '#c72c99');
-    ctx.beginPath();
-    ctx.moveTo(22, -28);
-    ctx.lineTo(44, -61);
-    ctx.lineTo(51, -60);
-    ctx.lineTo(52, -53);
-    ctx.lineTo(27, -23);
-    ctx.closePath();
-    ctx.fillStyle = '#f4b6cb';
-    ctx.fill();
-    ctx.strokeStyle = '#452445';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    rect(19, -27, 10, 4, '#ce6c9c');
-    rect(18, -23, 4, 6, '#78395f');
+    ctx.translate(528, 192);
+    ctx.rotate(-Math.PI / 4);
+    ctx.globalAlpha = 1 - progress;
+    // A tapered diagonal cut marks the hit, then quickly fades as the boss recoils.
+    for (const [width, color] of [[11, '#f571ce'], [4, '#fff7fc']]) {
+      ctx.beginPath();
+      ctx.moveTo(0, -75);
+      ctx.lineTo(width, -18);
+      ctx.lineTo(0, -75 + 150 * reach);
+      ctx.lineTo(-width, -18);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFloweyPellets(hitAge) {
+    if (hitAge === null || hitAge >= battleSettings.swordSwingSeconds) return;
+    const progress = hitAge / battleSettings.swordSwingSeconds;
+    ctx.save();
+    ctx.globalAlpha = 1 - progress;
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * Math.PI * 2) / 5,
+        spread = reducedParticleMotion.matches ? 30 : 15 + progress * 60;
+      ctx.beginPath();
+      ctx.ellipse(528 + Math.cos(angle) * spread, 192 + Math.sin(angle) * spread, 3, 7, angle, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    }
     ctx.restore();
   }
 
   function drawBattleFlowey(x, y, time, scale = 1) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-    drawFlowey(0, 0, time);
-    // Worried eyes and a small frown match the face-off in the reference.
-    rect(-8, -33, 16, 17, '#f5f1e6');
-    for (const ex of [-7, 2]) {
-      rect(ex, -32, 7, 10, '#29252d');
-      rect(ex + 1, -31, 5, 8, '#ffffff');
-      rect(ex + 3, -29, 2, 5, '#29252d');
-    }
-    rect(-3, -20, 6, 2, '#29252d');
-    rect(-5, -18, 2, 2, '#29252d');
-    rect(3, -18, 2, 2, '#29252d');
-    ctx.restore();
+    drawPartyMember('Flowey', x, y, scale, state.bossEncounter?.partyStatus?.Flowey,
+      () => battleSprites.flowey(x, y, time, scale));
   }
 
   function drawBattlePanel(x, y, width, height) {
@@ -112,47 +124,107 @@ export function createBattleDrawing(ctx, state, helpers) {
     drawBattlePanel(x, y, width, 45);
     if (name === 'Kris') drawBattleKris(x + 25, y + 37, 0.35);
     else drawBattleFlowey(x + 25, y + 36, time, 0.58);
-    pixelText(name.toUpperCase(), x + 51, y + 28, '#ffffff', 18);
+    const down = state.partyHP[name] <= 0;
+    pixelText(name.toUpperCase(), x + 51, y + 28, down ? '#9b93ab' : '#ffffff', 18);
+    if (down) pixelText('DOWN', x + 127, y + 28, '#f783aa', 11);
     pixelText(state.partyHP[name] + ' / ' + maxHP, x + width - 104, y + 16, '#ffffff', 12);
     pixelText('HP', x + width - 128, y + 33, '#ffffff', 11);
     rect(x + width - 104, y + 24, 90, 9, '#333333');
     rect(x + width - 104, y + 24, 90 * Math.max(0, Math.min(1, state.partyHP[name] / maxHP)), 9, color);
   }
 
+  function drawDarkPartyStatus(){
+    const party=['Kris','Flowey','Susie','Ralsey'],colors=['#00e5ec','#eef51c','#cc78db','#80e7aa'];
+    party.forEach((name,index)=>{
+      const x=18+index*153,hp=state.partyHP[name],active=state.bossEncounter.turn===name;
+      drawBattlePanel(x,300,145,45);
+      if(active)rect(x+3,302,139,2,colors[index]);
+      pixelText(name.toUpperCase(),x+9,318,hp<=0?'#ee819e':active?'#fff32a':'#ffffff',14);
+      pixelText(hp<=0?'DOWN':`${hp} / 100`,x+83,317,hp<=0?'#ee819e':'#ffffff',10);
+      pixelText('HP',x+9,336,'#cccccc',10);rect(x+31,328,104,8,'#333333');rect(x+31,328,104*Math.max(0,hp)/100,8,colors[index]);
+    });
+  }
+
   function drawBattleMenu() {
     const encounter = state.bossEncounter,
-      acting = canKrisAct(encounter);
+      acting = canPartyAct(encounter),
+      floweyTurn = canFloweyAct(encounter);
     drawBattlePanel(18, 353, 350, 115);
     drawBattlePanel(378, 353, 244, 115);
-    for (const [id, label, x, y] of [
-      ['attack', 'ATTACK', 65, 386],
-      ['act', 'ACT', 65, 418],
-      ['item', 'ITEM', 65, 450],
-      ['defend', 'DEFEND', 227, 418],
-    ]) {
-      const color = acting ? (encounter.selectedAction === id ? '#fff32a' : '#ffffff') : '#888888';
-      pixelText(label, x, y, color, 19);
-      if (acting && encounter.selectedAction === id) pixelText('>', x - 23, y, color, 19);
+    if (canControlSoul(encounter)) {
+      const inSnow = isSoulInSnow(encounter),
+        title = encounter.kind==='tenna'?'DODGE THE NOTES':encounter.kind==='dark'?(encounter.snowAttack?.darkPattern===2?'DODGE THE WARNINGS':encounter.snowAttack?.darkPattern===1?'WATCH THE EDGES':'DODGE THE SWORDS'):encounter.snowAttack?.endingAge != null ? 'ATTACK ENDED' : inSnow ? 'IN SNOW: SLOWED'
+          : encounter.snowAttack?.direction === 'snowgrave' ? 'FINAL ATTACK: SNOWGRAVE'
+          : encounter.snowAttack?.direction === 'goal' ? 'BLUE SOUL: JUMP & CLIMB'
+            : encounter.snowAttack?.direction === 'path' ? 'FOLLOW THE PATH'
+            : encounter.snowAttack?.direction === 'orbit' ? 'DODGE THE ICE'
+              : encounter.snowAttack?.direction === 'crossing' ? 'DODGE THE SNOWBALLS' : 'DODGE THE SNOW';
+      pixelText(title, 38, 385, inSnow ? '#ffbd69' : '#ffffff', 19);
+      pixelText(encounter.snowAttack?.direction === 'goal' ? 'Left/right · Hold Up / W / Space' : 'Arrow keys / WASD',
+        38, 418, '#fff32a', encounter.snowAttack?.direction === 'goal' ? 13 : 17);
+      const status = encounter.snowAttack?.direction === 'goal'
+        ? `Speed ${goalSpeed(encounter.snowAttack.goal)} / ${goalSettings.maxSpeed} · + every 10s`
+        : snowAttackStatus(encounter);
+      pixelText(status, 38, 449, '#cccccc', 14);
+    } else {
+      for (const [id, label, x, y] of [
+        ['attack', 'ATTACK', 65, 386],
+        ['act', 'ACT', 65, 418],
+        ['item', 'ITEM', 65, 450],
+        ['defend', 'DEFEND', 227, 418],
+      ]) {
+        const enabled = acting && canUseBattleAction(encounter, id),
+          color = enabled ? (encounter.selectedAction === id ? '#fff32a' : '#ffffff') : '#666677';
+        pixelText(label, x, y, color, 19);
+        if (acting && encounter.selectedAction === id) pixelText('>', x - 23, y, color, 19);
+      }
+      pixelText(encounter.kind==='tenna'?'TV TIME!':'SPARE',227,386,['dark','tenna'].includes(encounter.kind)?(acting&&encounter.selectedAction==='spare'?'#fff32a':acting?'#ffffff':'#666677'):'#94d9ef',19);
+      if(acting&&encounter.selectedAction==='spare')pixelText('>',204,386,'#fff32a',19);
+      // Ice bars make the locked action visible even in the canvas menu.
+      if(!['dark','tenna'].includes(encounter.kind)){rect(218,373,119,3,'#bcefff');rect(224,382,106,2,'#67a5c9');}
+      if (acting && encounter.screen !== 'menu') {
+        rect(198, 433, 160, 27, '#243044');
+        pixelText('< BACK  X / Esc', 207, 451, '#fff32a', 14);
+      }
     }
-    pixelText('SPARE', 227, 386, '#94d9ef', 19);
-    // Ice bars make the locked action visible even in the canvas menu.
-    rect(218, 373, 119, 3, '#bcefff');
-    rect(224, 382, 106, 2, '#67a5c9');
     const title =
       encounter.phase === 'victory'
-        ? '??? disappeared.'
+        ? encounter.kind==='dark'?'??? defeated.':encounter.noelleEscaped ? 'Noelle escaped.' : '??? disappeared.'
         : `${encounter.turn || 'Proceed'}${encounter.turn ? '’s turn' : '...'}`;
     pixelText(title, 391, 377, '#ffffff', 16);
-    if (encounter.screen === 'attack' || encounter.phase === 'flowey') {
+    if (isRalseyChoice(encounter)) {
+      pixelText('RALSEY', 391, 406, '#99dfb5', 18);
+      pixelText('Only ATTACK remains.', 391, 435, '#cccccc', 13);
+    } else if(encounter.kind==='tenna'){
+      pixelText(encounter.screen==='act'?'CHECK TENNA':`TENNA HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,391,407,'#ffffff',14);
+      pixelText('THE FINALE',391,435,'#ffca50',14);
+    } else if(encounter.kind==='dark'){
+      if(encounter.screen==='act'){
+        const act=darkActInfo(encounter),locked=darkActLocked(encounter);pixelText(act.name.toUpperCase(),391,403,locked?'#777788':'#ffffff',14);
+        pixelText(`${act.cost}% TP${locked?' · LOCKED':''}`,391,426,locked?'#777788':'#fff32a',14);
+        pixelText(`Shine ${encounter.shineCount||0}/5`,391,450,'#cccccc',13);
+      }else{
+        pixelText(encounter.phase==='victory'?'??? defeated.':`??? HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,391,410,'#ffffff',14);
+        pixelText(encounter.darkUnlocked?'Attacks / ACTs unlocked':'Shine 3 times to unlock',391,435,encounter.darkUnlocked?'#a6ffb6':'#fff32a',13);
+      }
+    } else if (encounter.screen === 'attack' || encounter.phase === 'enemy') {
       pixelText('???', 391, 402, '#ffffff', 18);
       pixelText(`HP ${encounter.enemy.hp} / ${encounter.enemy.maxHP}`, 391, 423, '#ffffff', 14);
       rect(392, 434, 208, 8, '#41232b');
       rect(392, 434, (208 * encounter.enemy.hp) / encounter.enemy.maxHP, 8, '#e7688b');
       if (acting) pixelText('Confirm attack', 391, 459, '#fff32a', 14);
     } else if (encounter.screen === 'act') {
-      pixelText('PROCEED · 100% TP', 391, 404, encounter.tp >= 100 ? '#fff32a' : '#999999', 16);
-      pixelText(`Proceed: ${encounter.proceedCount} / 3`, 391, 431, '#ffffff', 14);
-      pixelText(encounter.tp >= 100 ? 'Confirm to proceed' : 'Not enough TP', 391, 455, '#cccccc', 13);
+      if (floweyTurn) {
+        const color = encounter.tp >= battleSettings.pelletsCost ? '#fff32a' : '#999999';
+        pixelText('FRIENDLYNESS', 391, 399, color, 15);
+        pixelText('PELLETS · 90% TP', 391, 417, color, 15);
+        pixelText('150 DMG · +35 HP', 391, 437, '#ffffff', 14);
+        pixelText(encounter.tp >= battleSettings.pelletsCost ? 'Confirm to use' : 'Not enough TP', 391, 457, '#cccccc', 13);
+      } else {
+        pixelText('PROCEED · 100% TP', 391, 404, encounter.tp >= battleSettings.proceedCost ? '#fff32a' : '#999999', 16);
+        pixelText(`Proceed: ${encounter.proceedCount} / 3`, 391, 431, '#ffffff', 14);
+        pixelText(encounter.tp >= battleSettings.proceedCost ? 'Confirm to proceed' : 'Not enough TP', 391, 455, '#cccccc', 13);
+      }
     } else if (encounter.phase !== 'victory') {
       pixelText('Choose an action.', 391, 410, '#ffffff', 15);
       pixelText('Z / Enter to select', 391, 439, '#cccccc', 13);
@@ -165,13 +237,306 @@ export function createBattleDrawing(ctx, state, helpers) {
     rect(21, 105, 12, 124, '#4d3544');
     rect(21, 229 - (124 * tp) / 100, 12, (124 * tp) / 100, '#ffb634');
     pixelText('TP', 13, 86, '#ffffff', 15);
+    if (state.bossEncounter.tpGainAge !== null)
+      pixelText(`+${state.bossEncounter.tpGainAmount}%`, 8, 101, '#fff478', 11);
     pixelText(`${Math.floor(tp)}%`, 11, 265, '#ffca50', 14);
+  }
+
+  function drawSnowEdge(x, y, length, vertical, bodyDirection = 1) {
+    ctx.fillStyle = '#f8fcff';
+    for (let mound = 0; mound < length; mound += 22) {
+      ctx.beginPath();
+      if (vertical) ctx.ellipse(x + bodyDirection * 3, y + mound + 11, 6, 15, 0, 0, Math.PI * 2);
+      else ctx.ellipse(x + mound + 11, y + bodyDirection * 3, 15, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawSnowball(ball, radius = battleSettings.snowballRadius) {
+    ctx.beginPath();
+    ctx.arc(Math.round(ball.x), Math.round(ball.y), radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#f8fcff';
+    ctx.fill();
+    ctx.strokeStyle = '#b7cbdc';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    rect(Math.round(ball.x - 4), Math.round(ball.y - 5), 5, 3, '#ffffff');
+  }
+
+  function drawOrbitField(orbit) {
+    const { cube, balls } = orbitHazards(orbit);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(orbitArena.x + orbitArena.border, orbitArena.y + orbitArena.border,
+      orbitArena.width - orbitArena.border * 2, orbitArena.height - orbitArena.border * 2);
+    ctx.clip();
+    for (const ball of balls) drawSnowball(ball, orbitSettings.ballRadius);
+    ctx.translate(cube.x, cube.y);
+    ctx.rotate(cube.angle);
+    const half = cube.size / 2;
+    ctx.beginPath();
+    ctx.moveTo(-half + 7, -half);
+    ctx.lineTo(half - 7, -half);
+    ctx.lineTo(half, -half + 7);
+    ctx.lineTo(half, half - 7);
+    ctx.lineTo(half - 7, half);
+    ctx.lineTo(-half + 7, half);
+    ctx.lineTo(-half, half - 7);
+    ctx.lineTo(-half, -half + 7);
+    ctx.closePath();
+    ctx.fillStyle = '#8fd8ec';
+    ctx.fill();
+    ctx.strokeStyle = '#d7f6ff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-half + 8, -half + 7);
+    ctx.lineTo(half - 9, -half + 7);
+    ctx.lineTo(-half + 8, half - 10);
+    ctx.closePath();
+    ctx.fillStyle = '#c0edf8';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-7, -5);
+    ctx.lineTo(4, 3);
+    ctx.lineTo(-2, 15);
+    ctx.moveTo(4, 3);
+    ctx.lineTo(16, 7);
+    ctx.strokeStyle = '#e6fbff';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawGrazeRing(encounter) {
+    if (!encounter.snowAttack?.grazeActive) return;
+    const radius = 32,
+      bevel = Math.round(radius * 0.36),
+      cx = Math.round(encounter.soul.x) + 0.5,
+      cy = Math.round(encounter.soul.y) + 0.5,
+      r = Math.round(radius);
+    // Keep the pixel-art halo visible for the entire close dodge, even at full TP.
+    ctx.save();
+    ctx.strokeStyle = '#fff5ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - r + bevel, cy - r);
+    ctx.lineTo(cx + r - bevel, cy - r);
+    ctx.lineTo(cx + r, cy - r + bevel);
+    ctx.lineTo(cx + r, cy + r - bevel);
+    ctx.lineTo(cx + r - bevel, cy + r);
+    ctx.lineTo(cx - r + bevel, cy + r);
+    ctx.lineTo(cx - r, cy + r - bevel);
+    ctx.lineTo(cx - r, cy - r + bevel);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawSoulArena() {
+    const encounter = state.bossEncounter;
+    if (!canControlSoul(encounter)) return;
+    const snow = encounter.snowAttack;
+    if (['crossing', 'goal'].includes(snow?.direction)) rect(0, 24, 640, 266, '#050b12');
+    if (snow?.direction === 'orbit') {
+      rect(orbitArena.x, orbitArena.y, orbitArena.width, orbitArena.height, '#b4e925');
+      rect(orbitArena.x + orbitArena.border, orbitArena.y + orbitArena.border,
+        orbitArena.width - orbitArena.border * 2, orbitArena.height - orbitArena.border * 2, '#050b12');
+    }
+    const { x, y, size, width = size, height = size, border } = soulArena(encounter);
+    rect(x, y, width, height, snow?.direction === 'snowgrave' ? '#b9f5ff' : '#00ad00');
+    rect(x + border, y + border, width - border * 2, height - border * 2, '#000000');
+    const innerSize = width - border * 2,
+      horizontal = snow?.direction === 'right',
+      snowSurface = (horizontal ? x + width : y + height) - border - (snow?.height || 0);
+    if (snow) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + border, y + border, innerSize, height - border * 2);
+      ctx.clip();
+      if (['down', 'right', 'orbit'].includes(snow.direction)) {
+        const rim = battleSettings.snowBorderDepth;
+        // This rim stays fixed; only the bottom pile or right-hand bank accumulates.
+        rect(x + border, y + border, innerSize, rim, '#e6edf3');
+        rect(x + border, y + size - border - rim, innerSize, rim, '#e6edf3');
+        rect(x + border, y + border, rim, innerSize, '#e6edf3');
+        rect(x + size - border - rim, y + border, rim, innerSize, '#e6edf3');
+        drawSnowEdge(x + border, y + border + rim, innerSize, false, -1);
+        drawSnowEdge(x + border, y + size - border - rim, innerSize, false);
+        drawSnowEdge(x + border + rim, y + border, innerSize, true, -1);
+        drawSnowEdge(x + size - border - rim, y + border, innerSize, true);
+      }
+      if (snow.direction === 'path') {
+        // Draw the same winding edges used for collision, down to the leading edge.
+        const innerRight = x + size - border;
+        for (let row = y + border; row < y + size - border; row++) {
+          const bounds = snowPathBounds(encounter, row);
+          if (!bounds) continue;
+          rect(x + border, row, bounds.left - x - border, 1, '#e6edf3');
+          rect(bounds.right, row, innerRight - bounds.right, 1, '#e6edf3');
+          rect(bounds.left - 3, row, 3, 1, '#f8fcff');
+          rect(bounds.right, row, 3, 1, '#f8fcff');
+        }
+        for (let flake = 0; flake < 28; flake++) {
+          const px = x + border + (flake * 53 + 17) % innerSize,
+            py = y + border + (flake * 37 + (reducedParticleMotion.matches ? 0 : snow.pathAge * 90)) % innerSize,
+            bounds = snowPathBounds(encounter, py);
+          if (bounds && (px < bounds.left - 4 || px > bounds.right + 4))
+            rect(px, py, 2, 4, '#ffffff');
+        }
+      } else if (snow.height > 0) {
+        if (horizontal) rect(snowSurface, y + border, snow.height, innerSize, '#e6edf3');
+        else rect(x + border, snowSurface, innerSize, snow.height, '#e6edf3');
+        if (horizontal) drawSnowEdge(snowSurface, y + border, innerSize, true);
+        else drawSnowEdge(x + border, snowSurface, innerSize, false);
+      }
+      if (!reducedParticleMotion.matches) {
+        for (const impact of snow.impacts) {
+          const progress = impact.age / 0.35;
+          ctx.globalAlpha = 1 - progress;
+          for (const side of [-1, 0, 1]) {
+            ctx.beginPath();
+            ctx.arc(
+              horizontal ? snowSurface - progress * 15 : impact.x + side * progress * 24,
+              horizontal ? impact.y + side * progress * 24 : snowSurface - progress * 15,
+              3 * (1 - progress) + 1, 0, Math.PI * 2,
+            );
+            ctx.fill();
+          }
+        }
+      }
+      ctx.restore();
+      for (const ball of snow.balls) drawSnowball(ball);
+      if (snow.direction === 'orbit') drawOrbitField(snow.orbit);
+      if (snow.direction === 'snowgrave') snowgraveDrawing.field(snow.snowgrave);
+      if (snow.direction === 'crossing') {
+        const { large, small, spinning } = crossingHazards(snow.crossing, soulArena(encounter));
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 24, 640, 266);
+        ctx.clip();
+        for (const ball of large) drawSnowball(ball, crossingSettings.largeRadius);
+        for (const ball of small) drawSnowball(ball, crossingSettings.smallRadius);
+        for (const ball of spinning) drawSnowball(ball, crossingSettings.spinnerRadius);
+        ctx.restore();
+      }
+      if (snow.direction === 'goal') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(goalArena.x + goalArena.border, goalArena.y + goalArena.border,
+          goalArena.width - goalArena.border * 2, goalArena.height - goalArena.border * 2);
+        ctx.clip();
+        rect(goalArena.x + goalArena.border, goalGroundY - 3, goalArena.width - goalArena.border * 2, 3, '#d7f6ff');
+        for (const platform of goalPlatforms) {
+          rect(platform.x, platform.y, platform.width, platform.height, '#698a9e');
+          rect(platform.x, platform.y, platform.width, 3, '#e7faff');
+        }
+        if (snow.endingAge === null) {
+          for (const ball of goalSnowballs(snow.goal)) {
+            if (!ball.active) continue;
+            drawSnowball(ball, ball.radius);
+            ctx.save();
+            ctx.translate(ball.x, ball.y);
+            ctx.rotate(reducedParticleMotion.matches ? 0 : ball.angle);
+            ctx.strokeStyle = '#d7efff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let spoke = 0; spoke < 6; spoke++) {
+              const angle = spoke * Math.PI / 3;
+              ctx.moveTo(0, 0);
+              ctx.lineTo(Math.cos(angle) * ball.radius * 0.6, Math.sin(angle) * ball.radius * 0.6);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+        rect(greenGoal.x - 3, greenGoal.y - 3, greenGoal.width + 6, greenGoal.height + 6, '#20b747');
+        rect(greenGoal.x, greenGoal.y, greenGoal.width, greenGoal.height, '#b4e925');
+        rect(greenGoal.x + 11, greenGoal.y + 5, 6, greenGoal.height - 10, '#20b747');
+        rect(greenGoal.x + 5, greenGoal.y + 14, greenGoal.width - 10, 6, '#20b747');
+        pixelText('GOAL', greenGoal.x - 2, greenGoal.y - 10, '#b4e925', 11);
+        ctx.restore();
+      }
+    }
+    drawGrazeRing(encounter);
+    drawBattleSoul(encounter);
+  }
+
+  function drawBattleSoul(encounter){
+    const snow=encounter.snowAttack;
+    const rows = ['01100110', '11111111', '11111111', '11111111', '01111110', '00111100', '00011000'],
+      left = Math.round(encounter.soul.x - battleSettings.soulWidth / 2),
+      top = Math.round(encounter.soul.y - battleSettings.soulHeight / 2);
+    ctx.save();
+    const damageFlash = encounter.invincible ? 0 : Math.max(snow?.hitCooldown || 0, snow?.contactFlash || 0);
+    if (damageFlash > 0) ctx.globalAlpha = Math.floor(damageFlash * 12) % 2 ? 0.3 : 1;
+    for (let row = 0; row < rows.length; row++)
+      for (let col = 0; col < rows[row].length; col++)
+        if (rows[row][col] === '1') rect(left + col * 3, top + row * 3, 3, 3,
+          snow?.direction === 'goal' ? '#2675ff' : '#ff0000');
+    ctx.restore();
   }
 
   function drawBossEncounter(time) {
     const room = current(),
       t = reducedParticleMotion.matches ? 0 : time;
+    const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
+    if(encounter.kind==='tenna'){
+      rect(0,0,640,480,'#100d24');
+      for(let x=0;x<640;x+=40){rect(x,0,20,280,x%80===0?'#24142c':'#361739');}
+      ctx.strokeStyle='#d7b24b';ctx.lineWidth=2;ctx.beginPath();
+      for(let x=0;x<=640;x+=40){ctx.moveTo(320+(x-320)*.6,230);ctx.lineTo(x,296);}
+      ctx.stroke();rect(0,280,640,16,'#36263d');
+      drawBattleKris(105,97,1.1,encounter.hitActor==='Kris'?encounter.hitAge:null);
+      helpers.drawFountainFriend({name:'Susie',x:110,y:159},t);
+      drawBattleFlowey(110,213,t,1.1);helpers.drawFountainFriend({name:'Ralsey',x:110,y:270},t);
+      if(canControlSoul(encounter)){
+        const a=encounter.snowAttack.saxophones;
+        drawTenna(565,147,.8);rect(205,48,230,230,'#101118');ctx.strokeStyle='#63eb8b';ctx.lineWidth=4;ctx.strokeRect(205,48,230,230);
+        for(let helper=0;helper<2;helper++){ctx.save();ctx.globalAlpha=saxHelperTurn(a)===helper?1:.4;drawSaxHelper(ctx,490,helper===0?155:260,-1,a.age);ctx.restore();}
+        drawSaxAttack(ctx,a);drawGrazeRing(encounter);drawBattleSoul(encounter);
+      }else if(encounter.enemy.visible)drawTenna(495,269,1.77);
+      pixelText('TENNA',450,31,'#ffda6b',21);pixelText('THE FINALE!',244,24,'#ffffff',17);
+      pixelText(`TP ${Math.floor(encounter.tp)}%`,280,293,'#ffca50',15);
+      drawDarkPartyStatus();drawBattleMenu();$('gameHint').textContent='The Finale · Tenna takes the stage.';return;
+    }
+    if(encounter.kind==='dark'){
+      rect(0,0,640,480,'#000000');drawDarkEyes(ctx,encounter.enemy.visible);
+      if(canControlSoul(encounter)){
+        const {x,y,size}=battleArenaForDark;
+        rect(x,y,size,size,'#444444');ctx.strokeStyle='#6de990';ctx.lineWidth=4;ctx.strokeRect(x,y,size,size);
+        const soul=encounter.soul;
+        ctx.save();ctx.beginPath();ctx.rect(x+2,y+2,size-4,size-4);ctx.clip();
+        const shade=ctx.createRadialGradient(soul.x,soul.y,4,soul.x,soul.y,42);
+        shade.addColorStop(0,'rgba(0,0,0,0)');shade.addColorStop(.4,'rgba(0,0,0,.28)');shade.addColorStop(1,'rgba(0,0,0,.90)');
+        ctx.fillStyle=shade;ctx.fillRect(x,y,size,size);
+        const glow=ctx.createRadialGradient(soul.x,soul.y,1,soul.x,soul.y,14);
+        glow.addColorStop(0,'rgba(255,25,55,.32)');glow.addColorStop(.45,'rgba(255,20,45,.14)');glow.addColorStop(1,'rgba(255,20,45,0)');
+        ctx.fillStyle=glow;ctx.fillRect(soul.x-15,soul.y-15,30,30);ctx.restore();
+        drawMiniSwords(ctx,encounter.snowAttack?.miniSwords);
+        if(encounter.snowAttack?.darkPattern===0)drawSwords(ctx,encounter.snowAttack?.swords);
+        if(encounter.snowAttack?.darkPattern===2)drawWarningSwords(ctx,encounter.snowAttack.warningSwords);
+        drawGrazeRing(encounter);drawBattleSoul(encounter);
+      }
+      drawPelletsCast(encounter);
+      if(encounter.phase==='shine'){
+        const alpha=reducedParticleMotion.matches ? .12 :Math.max(0,1-encounter.animationAge/.45)*.75;
+        if(alpha>0)rect(0,0,640,285,`rgba(255,250,210,${alpha})`);
+      }
+      if(encounter.hitActor==='Susie'&&encounter.hitAge!==null){
+        ctx.save();ctx.globalAlpha=Math.max(0,1-encounter.hitAge/.5);ctx.strokeStyle='#e657ed';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(475,55);ctx.lineTo(530,100);ctx.lineTo(497,78);ctx.lineTo(548,68);ctx.stroke();ctx.restore();
+      }
+      if(encounter.darkHeal)pixelText(`+${encounter.darkHeal.restored} HP · ${encounter.darkHeal.target}`,215,275,'#9dffb2',14);
+      if(encounter.enemy.visible)pixelText(`??? ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,455,118,'#d3d3d8',11);
+      pixelText(`TP ${Math.floor(encounter.tp)}%`,280,293,'#ffca50',15);drawDarkPartyStatus();drawBattleMenu();
+      $('gameHint').textContent=(encounter.phase==='victory'?'??? defeated':encounter.darkUnlocked?'Attacks and ACTs unlocked':`Shine ${encounter.shineCount||0}/5 · Attacks and other ACTs locked`)+' · Grazing: 1% TP · TP Elixir: +5% TP';return;
+    }
+    if (isBattleBlackout(encounter)) {
+      rect(0, 0, 640, 480, '#000000');
+      if (isSlashScreen(encounter)) drawRedSlash(encounter.rescue.age, reducedParticleMotion.matches);
+      $('gameHint').textContent = '';
+      return;
+    }
     rect(0, 0, 640, 480, roomBackground(room));
     // Compress the workshop's terrain into a horizontal stage, preserving its tile colors.
     const terrain = (backdrop) => {
@@ -191,33 +556,64 @@ export function createBattleDrawing(ctx, state, helpers) {
     drawGlitchParticles(t, false);
     drawPlacedParticles(t, true);
     drawGlitchParticles(t, true);
-    drawBattleKris(88, 266, 1.25);
-    drawBattleFlowey(178, 265, t, 1.22);
-    const encounter = state.bossEncounter;
-    if (encounter.enemy.visible) {
-      ctx.save();
-      if (encounter.phase === 'vanishing')
-        ctx.globalAlpha = reducedParticleMotion.matches
-          ? 0
-          : Math.max(0, 1 - encounter.animationAge / battleSettings.disappearSeconds);
-      drawNoelleBoss(528, 122, 140);
-      ctx.restore();
+    if (encounter.snowAttack?.direction === 'snowgrave') snowgraveDrawing.backdrop(encounter.snowAttack.snowgrave);
+    const fieldAttack = ['orbit', 'crossing', 'goal'].includes(encounter.snowAttack?.direction);
+    if (!fieldAttack) {
+      drawBattleKris(88, 266, 1.25, encounter.hitActor === 'Kris' ? encounter.hitAge : null);
+      drawBattleFlowey(178, 265, t, 1.22);
     }
-    if (encounter.hitAge !== null) pixelText('-75', 515, 110 - encounter.hitAge * 35, '#ffdc59', 24);
+    if (encounter.enemy.visible && !fieldAttack && !encounter.rescue) {
+      ctx.save();
+      if (encounter.hitAge !== null && !reducedParticleMotion.matches) {
+        const recoil = 1 - encounter.hitAge / battleSettings.enemyHitSeconds;
+        ctx.translate(Math.round(Math.cos(encounter.hitAge * 90) * 8 * recoil), 0);
+      }
+      if (encounter.snowAttack?.direction === 'snowgrave') battleSprites.snowgraveNoelle(528, 262, 2.25);
+      else drawNoelleBoss(528, 122, 140);
+      ctx.restore();
+      if (encounter.hitActor === 'Kris') drawSwordSlash(encounter.hitAge);
+      else if (encounter.hitActor === 'Flowey') drawFloweyPellets(encounter.hitAge);
+    }
+    if (encounter.rescue) {
+      aftermathDrawing.actors(encounter, t);
+    }
+    drawPelletsCast(encounter);
+    if (encounter.hitAge !== null)
+      pixelText(`-${encounter.hitDamage}`, 515, 110 - encounter.hitAge * 35, '#ffdc59', 24);
+    drawSoulArena();
     drawTP();
     drawBattleStatus('Kris', 18, '#00e5ec', t);
     drawBattleStatus('Flowey', 324, '#eef51c', t);
-    drawBattleMenu();
-    if (state.fade > 0) rect(0, 0, 640, 480, 'rgba(17,20,29,' + Math.min(1, state.fade / 0.32) + ')');
-    if (encounter.phase === 'proceedFlash' && memory.complete && memory.naturalWidth) {
-      rect(0, 0, 640, 480, '#000000');
-      ctx.drawImage(memory, 0, 0, 640, 480);
+    if (isPelletCast(encounter)) {
+      rect(18, 353, 604, 115, '#101118');
+      pixelText('FRIENDLYNESS PELLETS', 38, 391, '#fff32a', 22);
+      pixelText('Flowey sends a ring of pellets toward Noelle.', 38, 429, '#ffffff', 16);
+    } else if (encounter.phase === 'rescue' || isProceedScene(encounter)) rect(18, 353, 604, 115, '#101118');
+    else drawBattleMenu();
+    const testingFlags = encounter.rescue ? [] : [encounter.snowAttack?.direction === 'snowgrave' ? 'FINAL ATTACK' : encounter.finalAttackComplete ? 'ONLY ATTACK REMAINS' : encounter.strongerAttacks && 'PHASE 2', encounter.nextAttackGrazeTP && 'NEXT ATTACK: 4% TP', encounter.snowAttack?.grazeTP > battleSettings.grazeTP && 'GRAZE: 4% TP', encounter.specialAttackQueued && 'SPECIAL QUEUED', encounter.repeatAttack && 'REPEAT ATTACK', encounter.invincible && 'INVINCIBLE', encounter.fastKill && 'FAST KILL'].filter(Boolean);
+    if (testingFlags.length) {
+      const label = testingFlags.join(' · ');
+      rect(64, 0, 12 + label.length * 7, 18, '#050505');
+      pixelText(label, 70, 13, '#fff32a', 11);
     }
+    if (state.fade > 0) rect(0, 0, 640, 480, 'rgba(17,20,29,' + Math.min(1, state.fade / 0.32) + ')');
+    if (encounter.phase === 'proceedGlitch') drawProceedGlitch(encounter.animationAge);
     $('gameHint').textContent = state.dialogue
       ? 'C / Z / Enter to continue · L to skip'
-      : encounter.phase === 'flowey'
-        ? `${encounter.message} Flowey’s turn is next.`
-        : encounter.message;
+      : canControlSoul(encounter)
+        ? isSoulInSnow(encounter)
+          ? encounter.snowAttack?.direction === 'path'
+            ? `Deep snow: quarter speed · ${bossAttackDamage(encounter, battleSettings.snowPathDamage)} damage on entry + each second`
+            : `In snow: half speed · ${bossAttackDamage(encounter, battleSettings.snowContactDamage)} damage on entry + each second`
+          : `${encounter.snowAttack?.direction === 'snowgrave' ? 'Snowgrave: move into the lit slit before the ice erupts · Survive the final attack'
+            : encounter.snowAttack?.direction === 'path' ? 'Follow the winding gap'
+            : encounter.snowAttack?.direction === 'orbit' ? `Ice cube: ${bossAttackDamage(encounter, encounter.snowAttack.orbit.cubeDamage)} damage · Snowballs: ${bossAttackDamage(encounter, orbitSettings.ballDamage)}`
+              : encounter.snowAttack?.direction === 'goal' ? `Blue soul: left/right to move · Tap Up / W / Space for a short hop, hold to jump higher · Climb the right step, then go left to the green goal · Snowballs: ${goalSettings.damage} damage`
+              : encounter.snowAttack?.direction === 'crossing' ? `Dodge crossing and spinning snowballs · ${bossAttackDamage(encounter, crossingSettings.damage)} damage · The small corner balls stay still`
+              : 'Dodge the snowballs'} · Arrow keys / WASD · ${snowAttackStatus(encounter)}`
+        : canPartyAct(encounter) && encounter.screen !== 'menu'
+          ? `${encounter.message} · Click BACK or press X / Esc to return.`
+          : encounter.message;
   }
   return { drawBossEncounter };
 }

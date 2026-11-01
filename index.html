@@ -50,7 +50,7 @@
                 width="640"
                 height="480"
                 tabindex="0"
-                aria-label="Two Worlds game. Use arrow keys or W A S D to walk. Press Z or Enter to talk. Press C to inspect nearby objects. C works anywhere on the game page."
+                aria-label="Two Worlds game. Use arrow keys or W A S D to walk. Hold F to run. Press Z or Enter to talk. Press C to inspect nearby objects. C works anywhere on the game page."
               ></canvas>
               <div class="dialogue" id="dialogue" hidden>
                 <div class="portrait" id="speakerPortrait" aria-hidden="true">✿</div>
@@ -74,6 +74,7 @@
             </div>
             <div class="controls-right">
               <button id="restartButton" class="quiet">Restart story</button
+              ><button id="sprintButton" title="Hold to run" aria-label="Hold to run, F">Run <span class="key">F</span></button
               ><button id="inspectButton">Inspect <span class="key">C</span></button
               ><button id="talkButton">Talk <span class="key">Z</span></button>
             </div>
@@ -83,24 +84,36 @@
           </p>
           <div id="bossControls" hidden class="hint-card">
             <strong id="battleTurnText" role="status">Kris’s turn</strong>
+            <p id="battleTestStatus" class="helptext" role="status" aria-live="polite"></p>
             <div class="battle-tp">
               <label id="battleTPText" for="battleTPBar">TP: 0%</label
               ><progress id="battleTPBar" value="0" max="100" aria-label="Tension points"></progress>
             </div>
             <div id="battleActionButtons" class="battle-actions" role="group" aria-label="Kris’s actions">
               <button id="battleAttack">Attack</button><button id="battleAct">ACT</button>
-              <button id="battleDefend">Defend</button><button id="battleItem">Item</button>
+              <button id="battleDefend">Defend · +10% TP</button><button id="battleItem">Item</button>
               <button id="battleSpare" class="frozen-spare" disabled title="SPARE is frozen and cannot be used">
                 SPARE · Frozen
               </button>
             </div>
-            <div id="battleTargetPanel" hidden><button id="battleTargetButton">??? · HP 1000 / 1000</button></div>
+            <div id="battleTargetPanel" hidden><button id="battleTargetButton">??? · HP 3000 / 3000</button></div>
             <div id="battleActPanel" hidden>
               <button id="battleProceedButton" disabled>Proceed · 100% TP</button>
               <p id="battleProceedCount">Proceed: 0 / 3</p>
             </div>
-            <button id="battleMenuBack" hidden>Back to actions</button>
+            <button id="battleMenuBack" hidden>Back to actions · X / Esc</button>
+            <div id="battleSoulControls" hidden>
+              <p id="battleSnowText">Snow: 0% / 50%</p>
+              <p id="battleMovementHint">Move your soul with the arrow keys, WASD, or these buttons.</p>
+              <div class="dpad" role="group" aria-label="Soul movement controls">
+                <button data-dir="up" aria-label="Move soul up">↑</button>
+                <button data-dir="left" aria-label="Move soul left">←</button>
+                <button data-dir="down" aria-label="Move soul down">↓</button>
+                <button data-dir="right" aria-label="Move soul right">→</button>
+              </div>
+            </div>
             <p id="battleFeedback" role="status" aria-live="polite"></p>
+            <button id="battleStoryNext" hidden>Continue · Z / Enter</button>
             <button id="leaveBossButton">Back to walkway</button>
           </div>
         </div>
@@ -136,7 +149,7 @@
               <button id="startBuilding">Edit your castle →</button>
             </div>
             <p class="small-note">
-              C / Z / Enter advances dialogue. L skips ordinary dialogue; scenes marked I. C. cannot be skipped. After
+              Hold F while moving to run. C / Z / Enter advances dialogue. L skips ordinary dialogue; scenes marked I. C. cannot be skipped. After
               the fountain scene, Flowey, Ralsey and Susie follow your footsteps.
             </p>
           </section>
@@ -289,7 +302,7 @@
       <h2>This is your little adventure.</h2>
       <ol>
         <li>
-          <strong>Explore.</strong> Click the game. Walk with the arrow keys or W A S D. Enter the second room to meet
+          <strong>Explore.</strong> Click the game. Walk with the arrow keys or W A S D; hold F to run. Enter the second room to meet
           Flowey. Face a nearby object and press C to inspect it. Before meeting Flowey, you get a short description;
           afterward, he tells you not to waste time. C, Z or Enter advances dialogue. Press L to skip ordinary
           conversations. Important Cutscenes are labeled “I. C.” and cannot be skipped with L. Finish his speech and he
@@ -359,10 +372,12 @@
       <div id="inventoryItem" class="save-slots" role="group" aria-label="Items Kris carries"></div>
       <p id="inventoryItemDescription" class="helptext">Select an item to see what it does.</p>
       <div id="healingItemControls" hidden>
-        <label for="candyTarget">2. Choose a teammate to heal</label
-        ><select id="candyTarget"></select>
-        <p id="inventoryHP" role="status">Kris HP: 100 / 100</p>
-        <progress id="inventoryHPBar" value="100" max="100" aria-label="Player HP"></progress>
+        <div id="itemHealingTarget">
+          <label for="candyTarget">2. Choose a teammate to heal</label
+          ><select id="candyTarget"></select>
+          <p id="inventoryHP" role="status">Kris HP: 100 / 100</p>
+          <progress id="inventoryHPBar" value="100" max="100" aria-label="Player HP"></progress>
+        </div>
         <button id="useCandyButton" class="primary">Use selected item</button>
       </div>
       <p id="inventoryFeedback" role="status" aria-live="polite" class="helptext"></p>
@@ -396,8 +411,11 @@
           <label for="editAccentColor">Leaf highlights and outline</label
           ><input id="editAccentColor" type="color" value="#ef004b" /> <label for="editTrunkColor">Trunk color</label
           ><input id="editTrunkColor" type="color" value="#140d38" />
-          <label for="editCandyCount">Candy supply (0–6)</label
+          <label for="editCandyCount">G. Candy supply (0–6)</label
           ><input id="editCandyCount" type="number" min="0" max="6" step="1" required value="2" />
+          <label for="editElixirCount">TP Elixir supply (0–6)</label
+          ><input id="editElixirCount" type="number" min="0" max="6" step="1" required value="0" />
+          <p class="helptext">Set either supply to 0 for a tree with only the other item. Trees give Candy first, then TP Elixir.</p>
           <p id="editCandyNote" class="helptext"></p>
         </div>
         <div class="tool-row">

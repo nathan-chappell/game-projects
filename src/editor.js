@@ -258,7 +258,7 @@ export function setupEditor(state, helpers) {
     $('objectLayerFields').hidden = !target;
     $('glitchPillarFields').hidden = !pillar;
     $('resetObjectColors').hidden = !!target && !tree;
-    $('editCandyCount').disabled = !tree;
+    $('editCandyCount').disabled = $('editElixirCount').disabled = !tree;
     $('editGlitchHeight').disabled = $('editGlitchWidth').disabled = !pillar;
     setEditorLayer(target ? objectLayer(target.object) : 'normal');
     if (tree) {
@@ -267,8 +267,11 @@ export function setupEditor(state, helpers) {
       $('editAccentColor').value = object.accentColor || '#ef004b';
       $('editTrunkColor').value = object.trunkColor || '#140d38';
       $('editCandyCount').value = object.candy ?? 2;
-      const taken = state.treeHarvests[state.roomIndex + ':' + x + ',' + y] || 0;
-      $('editCandyNote').textContent = 'Total supply for this tree. Already picked in this adventure: ' + taken + '.';
+      $('editElixirCount').value = object.tpElixirs ?? 0;
+      const key = state.roomIndex + ':' + x + ',' + y,
+        taken = state.treeHarvests[key] || 0,
+        elixirs = state.treeHarvests[key + ':tpElixir'] || 0;
+      $('editCandyNote').textContent = `Already picked in this adventure: ${taken} G. Candy, ${elixirs} TP Elixir.`;
     } else if (pillar) {
       $('editGlitchHeight').value = target.object.height ?? 8;
       $('editGlitchWidth').value = target.object.width ?? 1;
@@ -349,13 +352,15 @@ export function setupEditor(state, helpers) {
     const tree = target?.field === 'trees',
       pillar = target?.object.shape === 'pillar';
     const candy = Number($('editCandyCount').value),
+      tpElixirs = Number($('editElixirCount').value),
       height = Number($('editGlitchHeight').value),
       width = Number($('editGlitchWidth').value);
     if (tree && (!Number.isInteger(candy) || candy < 0 || candy > 6)) return;
+    if (tree && (!Number.isInteger(tpElixirs) || tpElixirs < 0 || tpElixirs > 6)) return;
     if (pillar && !validGlitchStyle({ height, width })) return;
     remember();
     if (target) {
-      writeObject(target, { renderLayer: layer, ...(tree ? { candy } : {}), ...(pillar ? { height, width } : {}) });
+      writeObject(target, { renderLayer: layer, ...(tree ? { candy, tpElixirs } : {}), ...(pillar ? { height, width } : {}) });
       if (tree) {
         const object = current().trees[target.index];
         if (resetColors) for (const key of ['canopyColor', 'accentColor', 'trunkColor']) delete object[key];

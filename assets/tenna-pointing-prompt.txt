@@ -1,0 +1,7 @@
+Use case: background-extraction
+Asset type: transparent pixel-art game character sprite for the existing Little Lantern game.
+Edit target: Image 1 is the user's exact Tenna reference and must be preserved faithfully.
+Primary request: remove ONLY the baked white/light-grey checkerboard background and return the full character on actual alpha transparency.
+Keep the exact character design, pose, proportions and pixel-art appearance: big CRT television head with pale lavender casing and broad white smiling screen, twin bent aerials with purple tips, huge white left glove pointing toward the viewer, right white glove holding a black microphone near the face, red tailcoat, yellow/gold waistcoat and accessories, long black trousers, oversized bright yellow pointed shoes. Keep the existing pixel stepping and colored highlights, outlines, small suit markings and the full silhouette. Preserve the source art instead of redesigning it.
+Composition: one complete character, antenna tips through shoes, tightly framed portrait canvas with a small transparent margin around every edge. No clipping.
+Constraints: make every background checker square fully transparent, including the background gaps between the arms and legs. Keep the pale pixels of the TV screen and white gloves opaque. No checkerboard, flat background, floor, shadow, extra character, text caption, border, watermark, vector smoothing or 3D rendering.

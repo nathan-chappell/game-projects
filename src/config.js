@@ -30,19 +30,31 @@ const partyNames = ['Kris', 'Susie', 'Ralsey', 'Flowey'];
 
 const freshPartyHP = () => Object.fromEntries(partyNames.map((name) => [name, maxHP]));
 
-// An object groups related facts. This one describes each kind of healing item.
+// An object groups related facts. This one describes each kind of carried item.
 // minHeal and maxHeal are the smallest and largest possible healing amounts.
 const itemDefinitions = {
+  jackCandy: {
+    name: 'Jack.Candy',
+    minHeal: maxHP,
+    maxHeal: maxHP,
+    description: 'Restores one teammate to MAX HP. A gift from Jackenstein.',
+  },
   gCandy: {
     name: 'G. Candy',
     minHeal: 35,
     maxHeal: 45,
     description: 'Restores a random 35–45 HP. Picked from a tree.',
   },
+  tpElixir: {
+    name: 'TP Elixir',
+    tpGain: 15,
+    grazeTP: 4,
+    description: 'Battle only. Gain 15% TP now. Grazing grants 4% TP during Noelle’s next attack. Does not stack above 4%.',
+  },
 };
 
 // A function is a reusable recipe. This returns a new, empty inventory each time.
-const freshInventory = () => ({ items: { gCandy: 0 } });
+const freshInventory = () => ({ items: { gCandy: 0, tpElixir: 0, jackCandy: 0 } });
 
 const progressKey = 'little-lantern-save-slots-v1';
 
@@ -50,6 +62,7 @@ const progressFlags = ['met', 'joined', 'explained', 'foundFountain', 'fountainW
 
 // Pixels per second. Lenny: try 150, walk around, then try changing it back to 135.
 const movementSpeed = 135;
+const sprintMultiplier = 1.75;
 const followSpeed = 165;
 
 export {
@@ -67,5 +80,6 @@ export {
   progressKey,
   progressFlags,
   movementSpeed,
+  sprintMultiplier,
   followSpeed,
 };

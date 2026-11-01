@@ -1,12 +1,40 @@
+import {finaleConversation,createTennaEncounter} from './tenna-finale.js';
+import {createJackSprite} from './jackenstein.js';
+import {jackRevealConversation,jackRewardConversation,giveJackCandy} from './jack-story.js';
+import {createDarkEncounter} from './dark-battle.js';
+import {collisionConversation} from './collision-chamber.js';
+import physicalChallengeURL from '../assets/physical-challenge.png?inline';
 import { setupBattleControls } from './battle-controls.js';
 import {
   createEncounter,
+  battlePartyNames,
+  completeDarkShine,
+  completeTennaCue,
   startKrisTurn,
-  canKrisAct,
-  finishKrisTurn,
+  canPartyAct,
+  canUseBattleAction,
+  canControlSoul,
+  moveSoul,
   advanceBattleTime,
+  advanceSnowAttack,
+  skipFallenTurns,
   useHealingItem,
+  useBattleItem,
 } from './battle-rules.js';
+import { healAfterSnowgrave, afterBattleConversation, isRescueImportant } from './battle-aftermath.js';
+import { isProceedScene } from './battle-proceed.js';
+import { isPelletCast } from './battle-pellets.js';
+import { harvestTree, validTreeHarvests } from './tree-items.js';
+import { syncPartyStatus } from './battle-party-status.js';
+import { studioConversation } from './glitch-studio.js';
+import { createTennaSprite } from './tenna-sprite.js';
+import { createTennaEntrance, advanceTennaEntrance, tennaArrivalConversation, tennaBackstageConversation } from './tenna-story.js';
+import { storageGiftConversation, storageRepeatConversation, giveTennaElixirs } from './tenna-storage.js';
+import { createHallway, advanceHallway, hallwayCamera, hallwaySettings } from './storage-travel.js';
+import { createTraffic, advanceTraffic, nearbyTrafficStop, useTrafficStop } from './traffic.js';
+import { queenConversation, queenReminder, queenLetters, queenSuccess } from './queen-room.js';
+import {createQueenPuzzle,startQueenDemo,queenDemoActive,advanceQueenPuzzle,pressQueenTile} from './queen-puzzle.js';
+import { createQueenSprite } from './queen-sprite.js';
 import { createRenderer } from './renderer.js';
 
 import { setupEditor } from './editor.js';
@@ -27,6 +55,7 @@ import {
   tiles,
   followSpeed,
   movementSpeed,
+  sprintMultiplier,
 } from './config.js';
 import { validProject, defaults, readSavedBuild, upgradeProject, clone, validBuild, validColor } from './world.js';
 
@@ -39,6 +68,12 @@ export function startGame() {
   const $ = (id) => document.getElementById(id);
   const canvas = $('game'),
     ctx = canvas.getContext('2d');
+  const tennaPortrait=document.createElement('canvas');tennaPortrait.width=tennaPortrait.height=64;
+  createTennaSprite(tennaPortrait.getContext('2d')).portrait();
+  const jackPortrait=document.createElement('canvas');jackPortrait.width=jackPortrait.height=64;
+  createJackSprite(jackPortrait.getContext('2d')).portrait();
+  const queenPortrait=document.createElement('canvas');queenPortrait.width=queenPortrait.height=64;
+  createQueenSprite(queenPortrait.getContext('2d')).portrait();
 
   state.project = undefined;
   try {
@@ -69,6 +104,11 @@ export function startGame() {
   state.glitchComfort = null;
   state.glitchWaiting = null;
   state.bossEncounter = null;
+  state.tennaEntrance = null;
+    state.collisionBlackout=null;
+    state.queenPuzzle=null;state.queenDeparture=null;
+  state.storageHallway = null;
+  state.traffic = null;
   state.pendingBossRoom = null;
   function choiceDialogOpen() {
     return ['holeChoiceDialog', 'goldenDoorChoiceDialog', 'bossChoiceDialog'].some((id) => $(id).open);
@@ -90,6 +130,19 @@ export function startGame() {
     coreGlitchNoticed: false,
     glitchArrivalSeen: false,
     noelleGone: false,
+    noelleEscaped: false,
+    studioExplained: false,
+    tennaInvited: false,
+    tennaStorageInvited: false,
+    tennaElixirsReceived: false,
+    collisionSeen: false,
+    darkBattleSeen: false,
+    jackRevealed: false,
+    jackCandyReceived: false,
+    tennaFinaleExplained: false,
+    queenBriefed: false,
+    queenDemoSeen: false,
+    queenSolved: false,
   };
 
   state.partyHP = freshPartyHP();
@@ -271,7 +324,7 @@ export function startGame() {
   }
   function normalizeInventory(saved) {
     // Older saves store a party-wide total, including candy carried by teammates.
-    return saved?.items ? { items: clone(saved.items) } : { items: { gCandy: saved?.gCandy ?? 0 } };
+    return { items: { ...freshInventory().items, ...(saved?.items ? clone(saved.items) : { gCandy: saved?.gCandy ?? 0 }) } };
   }
   function validInventory(items) {
     if (!items || typeof items !== 'object') return false;
@@ -304,15 +357,7 @@ export function startGame() {
           ))) &&
       (slot.hp === undefined || (Number.isInteger(slot.hp) && slot.hp >= 0 && slot.hp <= maxHP)) &&
       (slot.inventory === undefined || validInventory(slot.inventory)) &&
-      (slot.treeHarvests === undefined ||
-        (slot.treeHarvests &&
-          typeof slot.treeHarvests === 'object' &&
-          !Array.isArray(slot.treeHarvests) &&
-          Object.keys(slot.treeHarvests).length <= 3840 &&
-          Object.entries(slot.treeHarvests).every(
-            ([key, count]) =>
-              /^\d{1,2}:\d{1,2},\d{1,2}$/.test(key) && Number.isInteger(count) && count >= 0 && count <= 6,
-          )))
+      validTreeHarvests(slot.treeHarvests)
     );
   }
   function validGlitchWaiting(waiting) {
@@ -345,6 +390,8 @@ export function startGame() {
           slot.savePoint.y >= 0 &&
           slot.savePoint.y < H)) &&
       validCandyProgress(slot) &&
+      (slot.hallwayX === undefined || (Number.isFinite(slot.hallwayX) && slot.hallwayX >= 0 && slot.hallwayX <= hallwaySettings.length)) &&
+      (slot.trafficCheckpoint === undefined || ['left','right'].includes(slot.trafficCheckpoint)) &&
       slot.version === 1 &&
       Number.isFinite(slot.savedAt) &&
       validProject(slot.project) &&
@@ -361,6 +408,19 @@ export function startGame() {
       ['up', 'down', 'left', 'right'].includes(slot.player.facing) &&
       slot.story &&
       (slot.story.noelleGone === undefined || typeof slot.story.noelleGone === 'boolean') &&
+      (slot.story.noelleEscaped === undefined || typeof slot.story.noelleEscaped === 'boolean') &&
+      (slot.story.studioExplained === undefined || typeof slot.story.studioExplained === 'boolean') &&
+      (slot.story.tennaInvited === undefined || typeof slot.story.tennaInvited === 'boolean') &&
+      (slot.story.tennaStorageInvited === undefined || typeof slot.story.tennaStorageInvited === 'boolean') &&
+      (slot.story.tennaElixirsReceived === undefined || typeof slot.story.tennaElixirsReceived === 'boolean') &&
+      (slot.story.tennaFinaleExplained === undefined || typeof slot.story.tennaFinaleExplained === 'boolean') &&
+      (slot.story.jackCandyReceived === undefined || typeof slot.story.jackCandyReceived === 'boolean') &&
+      (slot.story.jackRevealed === undefined || typeof slot.story.jackRevealed === 'boolean') &&
+      (slot.story.darkBattleSeen === undefined || typeof slot.story.darkBattleSeen === 'boolean') &&
+      (slot.story.collisionSeen === undefined || typeof slot.story.collisionSeen === 'boolean') &&
+      (slot.story.queenDemoSeen === undefined || typeof slot.story.queenDemoSeen === 'boolean') &&
+      (slot.story.queenSolved === undefined || typeof slot.story.queenSolved === 'boolean') &&
+      (slot.story.queenBriefed === undefined || typeof slot.story.queenBriefed === 'boolean') &&
       (slot.story.glitchArrivalSeen === undefined || typeof slot.story.glitchArrivalSeen === 'boolean') &&
       (slot.story.coreGlitchNoticed === undefined || typeof slot.story.coreGlitchNoticed === 'boolean') &&
       (slot.story.coreFroggitWarned === undefined || typeof slot.story.coreFroggitWarned === 'boolean') &&
@@ -433,6 +493,8 @@ export function startGame() {
               partyHP: freshPartyHP(),
               inventory: clone(state.inventory),
               treeHarvests: clone(state.treeHarvests),
+              hallwayX: state.storageHallway?.x,
+              trafficCheckpoint: state.traffic?.checkpoint,
               player: { x: state.player.x, y: state.player.y, facing: state.player.facing },
               story: {
                 ...Object.fromEntries(progressFlags.map((key) => [key, state.story[key]])),
@@ -442,6 +504,19 @@ export function startGame() {
                 coreGlitchNoticed: state.story.coreGlitchNoticed,
                 glitchArrivalSeen: state.story.glitchArrivalSeen,
                 noelleGone: state.story.noelleGone,
+                noelleEscaped: state.story.noelleEscaped,
+                studioExplained: state.story.studioExplained,
+                tennaInvited: state.story.tennaInvited,
+                tennaStorageInvited: state.story.tennaStorageInvited,
+                tennaElixirsReceived: state.story.tennaElixirsReceived,
+                collisionSeen: state.story.collisionSeen,
+                darkBattleSeen: state.story.darkBattleSeen,
+                jackRevealed: state.story.jackRevealed,
+                jackCandyReceived: state.story.jackCandyReceived,
+                tennaFinaleExplained: state.story.tennaFinaleExplained,
+                queenBriefed: state.story.queenBriefed,
+                queenDemoSeen: state.story.queenDemoSeen,
+                queenSolved: state.story.queenSolved,
               },
             };
             const latest = readProgressSlots();
@@ -515,6 +590,19 @@ export function startGame() {
       coreGlitchNoticed: slot.story.coreGlitchNoticed ?? false,
       glitchArrivalSeen: slot.story.glitchArrivalSeen ?? false,
       noelleGone: slot.story.noelleGone ?? false,
+      noelleEscaped: slot.story.noelleEscaped ?? false,
+      studioExplained: slot.story.studioExplained ?? false,
+      tennaInvited: slot.story.tennaInvited ?? false,
+      tennaStorageInvited: slot.story.tennaStorageInvited ?? false,
+      tennaElixirsReceived: slot.story.tennaElixirsReceived ?? false,
+      collisionSeen: slot.story.collisionSeen ?? false,
+      darkBattleSeen: slot.story.darkBattleSeen ?? false,
+      jackRevealed: slot.story.jackRevealed ?? false,
+      jackCandyReceived: slot.story.jackCandyReceived ?? false,
+      tennaFinaleExplained: slot.story.tennaFinaleExplained ?? false,
+      queenBriefed: slot.story.queenBriefed ?? false,
+      queenDemoSeen: slot.story.queenDemoSeen ?? false,
+      queenSolved: slot.story.queenSolved ?? false,
       emerging: -1,
       discussion: -1,
       reveal: slot.story.met ? 1 : 0,
@@ -522,6 +610,11 @@ export function startGame() {
     state.glitchWaiting = slot.glitchWaiting ? clone(slot.glitchWaiting) : null;
     Object.assign(state.player, slot.player, { moving: false, step: 0 });
     state.buster = null;
+    state.tennaEntrance = null;
+    state.collisionBlackout=null;
+    state.queenPuzzle=null;state.queenDeparture=null;
+    state.storageHallway=current().scene==='storageHallway'?createHallway(slot.hallwayX??hallwaySettings.start,state.player.y):null;
+    state.traffic=current().scene==='trafficCrossing'?createTraffic(slot.trafficCheckpoint??(state.player.x>=560?'right':'left')):null;
     state.dive = null;
     state.companions = [];
     state.follower = { x: state.player.x, y: state.player.y, trail: [] };
@@ -547,7 +640,7 @@ export function startGame() {
     return name === 'Kris' || (name === 'Flowey' ? state.story.joined : state.story.teamJoined && !friendsWaiting());
   }
   function friendsWaiting() {
-    return state.story.glitchArrivalSeen;
+    return state.story.glitchArrivalSeen && !state.story.noelleEscaped;
   }
   function ensureGlitchWaiting() {
     if (!friendsWaiting()) return;
@@ -588,7 +681,7 @@ export function startGame() {
     return (
       typeof room.scene === 'string' &&
       (room.scene.startsWith('dark') ||
-        ['coreEntrance', 'coreLower', 'coreDepths', 'glitchWorld', 'glitchBoss'].includes(room.scene))
+        ['coreEntrance', 'coreLower', 'coreDepths', 'glitchWorld', 'glitchBoss', 'glitchStudio', 'glitchBackstage', 'tennaStorage', 'storageHallway', 'trafficCrossing', 'neonRooftop', 'queenPasscode', 'collisionChamber'].includes(room.scene))
     );
   }
   function partyStageForRoom(room, index) {
@@ -630,13 +723,13 @@ export function startGame() {
         state.selectedItem = id;
         updateInventoryMenu();
         $('inventoryFeedback').textContent = '';
-        $('candyTarget').focus();
+        (id === 'tpElixir' ? $('useCandyButton') : $('candyTarget')).focus();
       };
       $('inventoryItem').append(button);
     }
     if (!carried.length) {
       const empty = document.createElement('p');
-      empty.textContent = 'No healing items yet.';
+      empty.textContent = 'No items yet.';
       $('inventoryItem').append(empty);
     }
     $('healingItemControls').hidden = !state.selectedItem;
@@ -667,7 +760,9 @@ export function startGame() {
     }
     $('candyTarget').value = state.candyTarget;
     const hp = state.partyHP[state.candyTarget],
-      item = itemDefinitions[state.selectedItem];
+      item = itemDefinitions[state.selectedItem],
+      tpItem = state.selectedItem === 'tpElixir';
+    $('itemHealingTarget').hidden = tpItem;
     $('inventoryHP').textContent = state.candyTarget + ' HP: ' + hp + ' / ' + maxHP;
     $('inventoryHPBar').value = hp;
     $('inventoryHPBar').max = maxHP;
@@ -678,14 +773,16 @@ export function startGame() {
         '.'
       : 'Kris has no items.';
     $('inventoryItemDescription').textContent = item
-      ? item.name + ' · ' + item.description
+      ? item.name + ' · ' + (tpItem&&state.bossEncounter?.kind==='dark'?'Gain 5% TP. Grazing stays at 1% TP in this battle.':item.description)
       : carried.length
         ? 'Select an item to see what it does.'
-        : 'Collect healing items to use them here.';
-    const waitingForTurn = state.bossEncounter && !canKrisAct(state.bossEncounter);
-    $('useCandyButton').disabled = !item || hp >= maxHP || !!waitingForTurn;
-    $('useCandyButton').textContent = waitingForTurn
-      ? 'Wait for Kris’s turn'
+        : 'Collect items to use them here.';
+    const waitingForTurn = state.bossEncounter && !canUseBattleAction(state.bossEncounter, 'item');
+    $('useCandyButton').disabled = !item || (tpItem ? !state.bossEncounter : hp >= maxHP) || !!waitingForTurn;
+    $('useCandyButton').textContent = tpItem
+      ? !state.bossEncounter ? 'Use TP Elixir during battle' : waitingForTurn ? 'Wait for your party’s turn' : 'Use TP Elixir'
+      : waitingForTurn
+      ? 'Wait for your party’s turn'
       : hp >= maxHP
         ? state.candyTarget + ' has full HP'
         : item
@@ -698,7 +795,8 @@ export function startGame() {
     $('inventoryFeedback').textContent = '';
   };
   function toggleInventory() {
-    if (['proceedFlash', 'vanishing'].includes(state.bossEncounter?.phase)) return;
+    if (state.bossEncounter?.finalAttackComplete && state.bossEncounter.phase !== 'victory') return;
+    if (isProceedScene(state.bossEncounter) || isPelletCast(state.bossEncounter)) return;
     if (state.death || state.holeFall || state.padJump || choiceDialogOpen()) return;
     if ($('inventoryDialog').open) {
       $('inventoryDialog').close();
@@ -718,7 +816,7 @@ export function startGame() {
   $('inventoryButton').onclick = toggleInventory;
   $('closeInventoryButton').onclick = () => $('inventoryDialog').close();
   $('inventoryDialog').addEventListener('close', () => {
-    if (canKrisAct(state.bossEncounter)) {
+    if (canPartyAct(state.bossEncounter)) {
       state.bossEncounter.screen = 'menu';
       syncBossUI();
     }
@@ -730,35 +828,25 @@ export function startGame() {
       item = itemDefinitions[state.selectedItem];
     if (
       !$('inventoryDialog').open ||
-      (state.bossEncounter && !canKrisAct(state.bossEncounter)) ||
+      (state.bossEncounter && !canUseBattleAction(state.bossEncounter, 'item')) ||
       !item ||
       !(state.inventory.items[state.selectedItem] > 0) ||
-      hp >= maxHP ||
-      !memberInParty(state.candyTarget)
+      (state.selectedItem !== 'tpElixir' && (hp >= maxHP || !memberInParty(state.candyTarget)))
     )
       return;
-    const healing = useHealingItem(state.partyHP, state.inventory, state.selectedItem, state.candyTarget);
-    if (!healing) return;
-    const { restored } = healing;
+    const result = state.bossEncounter
+      ? useBattleItem(state.bossEncounter, state.partyHP, state.inventory, state.selectedItem, state.candyTarget)
+      : useHealingItem(state.partyHP, state.inventory, state.selectedItem, state.candyTarget);
+    if (!result) return;
+    const message = result.message || `${state.candyTarget} used ${item.name} and recovered ${result.restored} HP.`;
     if (state.bossEncounter) {
-      finishKrisTurn(state.bossEncounter, `${state.candyTarget} used ${item.name} and recovered ${restored} HP.`);
       syncBossUI();
       $('inventoryDialog').close();
     }
     storyUI();
     updateInventoryMenu();
-    $('inventoryFeedback').textContent =
-      state.candyTarget + ' used ' + item.name + ' and recovered ' + restored + ' HP.';
-    announce(
-      state.candyTarget +
-        ' recovered ' +
-        restored +
-        ' HP. HP: ' +
-        state.partyHP[state.candyTarget] +
-        ' of ' +
-        maxHP +
-        '.',
-    );
+    $('inventoryFeedback').textContent = message;
+    announce(message);
   };
   document.addEventListener(
     'keydown',
@@ -800,6 +888,12 @@ export function startGame() {
       : [];
   }
   function partyFriends() {
+    if (state.mode === 'play' && current().scene === 'glitchBoss' && state.story.noelleEscaped) {
+      return ['Ralsey', 'Susie'].map((name, index) => {
+        const spot = findStart(current(), { x: current().spawn.x + 3 + index * 2, y: current().spawn.y });
+        return { name, x: spot.x * T + T / 2, y: spot.y * T + T / 2, worried: name === 'Ralsey' };
+      });
+    }
     return state.story.teamJoined && state.mode === 'play'
       ? [...state.companions, ...roomWaitingFriends()]
       : fountainFriends();
@@ -898,7 +992,52 @@ export function startGame() {
     chapterUI();
   }
   function chapterUI() {
+    if(current().scene==='collisionChamber'){$('taskTitle').textContent='The Monochrome Chamber';$('taskDescription').textContent=state.story.jackRevealed?'Talk to Jackenstein and inspect the lever. The bottom passage returns backstage.':'Explore the strange room. The bottom passage returns backstage.';$('storySummary').textContent='Something from another universe stands beneath the spotlight.';return;}
+    if(current().scene==='queenPasscode') {
+      $('taskTitle').textContent='Queen’s Passcode';
+      $('taskDescription').textContent=state.story.queenBriefed?'Queen needs help with the passcode on the terminal.':'Flowey has something to explain to Queen.';
+      $('storySummary').textContent='A giant letter keyboard sits below a glowing green terminal.';return;
+    }
+    if(current().scene==='neonRooftop') {
+      $('taskTitle').textContent='Neon Rooftops';
+      $('taskDescription').textContent='Explore the green walkway above the city. Hold F to run.';
+      $('storySummary').textContent='Cyan windows glow beneath green lights crisscrossing the night sky.';return;
+    }
+    if(current().scene==='storageHallway') {
+      $('taskTitle').textContent='The Long Storage Hall';
+      $('taskDescription').textContent='Keep following the corridor. A door waits at the far end.';
+      $('storySummary').textContent='Rows of cameras and equipment stretch far into the dark.';return;
+    }
+    if(current().scene==='trafficCrossing') {
+      $('taskTitle').textContent='The Glitched Crossing';
+      $('taskDescription').textContent='Use C or Z at a stop sign to slow the cars, then cross to the other side.';
+      $('storySummary').textContent='A car hit sends the party back to the last stop-sign checkpoint.';return;
+    }
+    if(current().scene==='tennaStorage') {
+      $('taskTitle').textContent='Tenna’s Storage';
+      $('taskDescription').textContent=state.story.tennaElixirsReceived?'Explore the hanging cameras and equipment.':'Find Tenna among the stored cameras. Press Z or C to talk.';
+      $('storySummary').textContent=state.story.tennaElixirsReceived?'Tenna gave you three TP Elixirs to help with the glitches.':'Spare cameras hang above a dark room filled with old show equipment.';
+      return;
+    }
+    if(current().scene==='glitchBackstage') {
+      $('taskTitle').textContent='Backstage';
+      $('taskDescription').textContent=state.story.jackCandyReceived?'Tenna is waiting here for the Finale. Talk to him to enter the fight.':state.story.tennaStorageInvited?'Follow Tenna into his storage through the doorway on the right.':'Flowey has more to explain about the glitches.';
+      $('storySummary').textContent='Behind the star-covered wings, the host is ready to hear about the fusing worlds.';
+      return;
+    }
+    if (current().scene === 'glitchStudio') {
+      $('taskTitle').textContent = 'The Glitched Studio';
+      $('taskDescription').textContent = state.story.tennaInvited ? 'Meet Tenna backstage. Take the doorway on the right.' : 'The scoreboard keeps changing. Stay close to your friends.';
+      $('storySummary').textContent = state.story.tennaInvited ? 'Tenna wants to hear more about the fusing worlds, away from the cameras.' : 'Broken lights flicker above the stage. A familiar show is struggling through the static.';
+      return;
+    }
     if (current().scene === 'glitchBoss') {
+      if (state.story.noelleEscaped || state.story.noelleGone) {
+        $('taskTitle').textContent = 'After the battle';
+        $('taskDescription').textContent = 'Follow the glowing doorway on the right to the studio.';
+        $('storySummary').textContent = 'Ralsey and Susie confront Kris about what happened.';
+        return;
+      }
       $('taskTitle').textContent = 'A silent figure';
       $('taskDescription').textContent = 'Kris and Flowey face the figure ahead.';
       $('storySummary').textContent = 'The gray road leads to a familiar face in the white silence.';
@@ -1032,15 +1171,29 @@ export function startGame() {
   }
   function changeRoom(index, throughDoor = false, preferred, bossConfirmed = false) {
     const next = state.project.rooms[index];
+    const previousScene=current().scene;
     if (!next || !findStart(next)) {
       toast('That room needs an open floor tile and a starting spot.');
       return false;
     }
-    if (next.scene === 'glitchBoss' && state.mode === 'play' && !bossConfirmed) {
+    if(next.scene==='glitchBackstage'&&state.mode==='play'&&!state.story.tennaInvited) {
+      toast('Wait for Tenna’s backstage invitation.');return false;
+    }
+    if(next.scene==='tennaStorage'&&state.mode==='play'&&!state.story.tennaStorageInvited) {
+      toast('Listen to Tenna’s storage invitation first.');return false;
+    }
+    if(!preferred&&next.scene==='glitchBackstage'&&previousScene==='tennaStorage')preferred={x:14,y:8};
+    if(!preferred&&next.scene==='glitchStudio'&&previousScene==='glitchBackstage')preferred={x:14,y:8};
+    if(!preferred&&next.scene==='tennaStorage'&&previousScene==='storageHallway')preferred={x:14,y:8};
+    if(!preferred&&next.scene==='trafficCrossing'&&previousScene==='neonRooftop')preferred={x:14,y:7};
+    if(!preferred&&next.scene==='glitchBackstage'&&previousScene==='collisionChamber')preferred={x:1,y:8};
+    if(!preferred&&next.scene==='neonRooftop'&&previousScene==='queenPasscode')preferred={x:14,y:9};
+    if (next.scene === 'glitchBoss' && state.mode === 'play' && !bossConfirmed && !state.story.noelleEscaped && !state.story.noelleGone) {
       offerBossEntry(index);
       return false;
     }
     resetBossEncounter();
+    state.tennaEntrance=null;
     state.roomIndex = index;
     preparePartyForRoom();
     state.lastPadContact = null;
@@ -1048,6 +1201,15 @@ export function startGame() {
     state.lastSpikeContact = null;
     state.cameraShakeTime = 0;
     positionPlayer(next, preferred);
+    state.storageHallway=next.scene==='storageHallway'
+      ?createHallway(previousScene==='trafficCrossing'?hallwaySettings.length-hallwaySettings.start:hallwaySettings.start):null;
+    state.traffic=next.scene==='trafficCrossing'?createTraffic(previousScene==='neonRooftop'?'right':'left'):null;
+    if(state.storageHallway) {
+      state.storageHallway.direction=previousScene==='trafficCrossing'?-1:1;
+      state.player.x=state.storageHallway.x-hallwayCamera(state.storageHallway.x);state.player.y=state.storageHallway.y;
+      state.player.facing=previousScene==='trafficCrossing'?'left':'right';
+    }
+    if(next.scene==='glitchBackstage'&&previousScene==='glitchStudio')state.player.facing='down';
     state.doorCooldown = 0.8;
     state.fade = throughDoor ? 0.32 : 0;
     closeDialogue();
@@ -1058,6 +1220,13 @@ export function startGame() {
     return true;
   }
   function defaultRoomBackground(room = current()) {
+    if (room.scene === 'glitchStudio') return '#090914';
+    if (room.scene === 'glitchBackstage') return '#170e08';
+    if (room.scene === 'tennaStorage') return '#05080d';
+    if (['storageHallway','trafficCrossing'].includes(room.scene)) return '#050a16';
+    if(room.scene==='neonRooftop')return '#171427';
+    if(room.scene==='queenPasscode')return '#000000';
+    if(room.scene==='collisionChamber')return '#292724';
     if (['glitchWorld', 'glitchBoss'].includes(room.scene)) return '#ffffff';
     return ['darkGoldenHall', 'darkFurnace', 'coreEntrance', 'coreLower', 'coreDepths'].includes(room.scene)
       ? '#000000'
@@ -1128,6 +1297,7 @@ export function startGame() {
     storyUI();
   }
   function setMode(next) {
+    if(state.tennaEntrance) {toast('Finish Tenna’s entrance before opening Build.');return;}
     if (state.holeFall || state.padJump || choiceDialogOpen()) return;
     if (state.death) {
       toast('Use Try again to continue after your party falls.');
@@ -1180,7 +1350,9 @@ export function startGame() {
     canvas.focus({ preventScroll: true });
   }
   function roomNpcs() {
-    return current().npcs || [];
+    const npcs=(current().npcs||[]).filter(n=>!(state.mode==='play'&&n.id==='jackenstein'&&!state.story.jackRevealed)).filter(n=>!(state.mode==='play'&&n.id==='queen-terminal'&&(state.story.queenSolved||state.queenDeparture!=null)));
+    return state.mode==='play'&&current().scene==='glitchBackstage'&&state.story.tennaStorageInvited&&!state.story.jackCandyReceived
+      ?npcs.filter(npc=>npc.id!=='tenna-backstage'):npcs;
   }
   const { selectTool, updateNpcUI, roomObjectGroups, endStroke, npcAt } = setupEditor(state, {
     roomNpcs,
@@ -1254,7 +1426,7 @@ export function startGame() {
   // Game shortcuts work even when the canvas has not been clicked yet.
   document.addEventListener('keydown', (e) => {
     if (
-      !['c', 'C', 'l', 'L'].includes(e.key) ||
+      !['c', 'C', 'l', 'L', 'f', 'F'].includes(e.key) ||
       e.defaultPrevented ||
       e.ctrlKey ||
       e.metaKey ||
@@ -1281,6 +1453,13 @@ export function startGame() {
     )
       return;
     e.preventDefault();
+    if(e.key.toLowerCase()==='f') {
+      if(!state.dialogue&&!state.bossEncounter&&state.story.emerging<0&&state.story.discussion<0&&!isImportantCutscene()) {
+        canvas.focus({preventScroll:true});
+        state.keys.add('sprint');
+      }
+      return;
+    }
     if (e.repeat) return;
     canvas.focus({ preventScroll: true });
     if (e.key.toLowerCase() === 'l') skipDialogue();
@@ -1288,6 +1467,7 @@ export function startGame() {
   });
   window.addEventListener('keyup', (e) => {
     if (dirKeys[e.key]) state.keys.delete(dirKeys[e.key]);
+    if(e.key.toLowerCase()==='f')state.keys.delete('sprint');
   });
   window.addEventListener('blur', () => {
     state.keys.clear();
@@ -1314,6 +1494,18 @@ export function startGame() {
     b.addEventListener('keyup', () => state.keys.delete(b.dataset.dir));
     b.addEventListener('blur', () => state.keys.delete(b.dataset.dir));
   });
+  const sprintButton=$('sprintButton');
+  function startSprint(e) {
+    if(state.mode!=='play'||state.bossEncounter||state.dialogue||isImportantCutscene()||state.death||state.holeFall||state.padJump||choiceDialogOpen()||$('helpDialog').open||$('saveDialog').open||$('inventoryDialog').open)return;
+    e.preventDefault();
+    if(e.pointerId!==undefined){canvas.focus({preventScroll:true});sprintButton.setPointerCapture(e.pointerId);}
+    state.keys.add('sprint');
+  }
+  sprintButton.addEventListener('pointerdown',startSprint);
+  for(const event of ['pointerup','pointercancel','lostpointercapture','blur'])
+    sprintButton.addEventListener(event,()=>state.keys.delete('sprint'));
+  sprintButton.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key))startSprint(e);});
+  sprintButton.addEventListener('keyup',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();state.keys.delete('sprint');}});
   function floweyPosition() {
     if (state.mode === 'build')
       return state.roomIndex === 1 ? { x: current().flowey.x * T + 20, y: current().flowey.y * T + 24 } : null;
@@ -1339,8 +1531,25 @@ export function startGame() {
     return null;
   }
   function speakToNpc(npc) {
-    openDialogue(npc.speech, 'npc', npc.name);
+    if(npc.id==='jackenstein')openDialogue(npc.speech.map(text=>`[Jackenstein] * ${text}`),'jackChat');
+    else if(npc.id==='queen-terminal')openDialogue((state.story.queenBriefed?queenReminder:queenConversation).map(line=>`[${line.speaker}] * ${line.text}`),state.story.queenBriefed?'queenChat':'queenIntro');
+    else if(npc.id==='tenna-backstage'&&state.story.jackCandyReceived)openDialogue(finaleConversation.map(line=>`[${line.speaker}] * ${line.text}`),'tennaFinale');
+    else if(npc.id==='tenna-backstage')openDialogue(tennaBackstageConversation.map(line=>`[${line.speaker}] * ${line.text}`),'tennaBackstage');
+    else if(npc.id==='tenna-storage') {
+      const received=state.story.tennaElixirsReceived;
+      openDialogue((received?storageRepeatConversation:storageGiftConversation).map(line=>`[${line.speaker}] * ${line.text}`),received?'tennaStorageChat':'tennaStorageGift');
+    }
+    else openDialogue(npc.speech, 'npc', npc.name);
     state.dialogue.npcId = npc.id;
+  }
+  function interactTrafficStop() {
+    if(current().scene!=='trafficCrossing')return false;
+    const side=nearbyTrafficStop(state.player);
+    if(!side)return false;
+    if(!state.traffic)state.traffic=createTraffic();
+    useTrafficStop(state.traffic,side);
+    toast('Cars slowed for 5 seconds. '+(side==='left'?'Left':'Right')+' stop-sign checkpoint set.');
+    announce('Cars slowed for five seconds. Checkpoint set.');return true;
   }
   function nearbyObject() {
     const direction = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[state.player.facing];
@@ -1470,18 +1679,21 @@ export function startGame() {
   function takeTreeCandy() {
     const tree = nearbyCandyTree();
     if (!tree) return false;
-    const key = state.roomIndex + ':' + tree.x + ',' + tree.y,
-      taken = state.treeHarvests[key] || 0;
-    if (taken >= (tree.candy ?? 2)) openDialogue(['[Narrator] * There are no more candys.'], 'treeCandy');
+    const item = harvestTree(tree, state.roomIndex, state.treeHarvests, state.inventory);
+    if (!item) openDialogue(['[Narrator] * There are no more items in this tree.'], 'treeCandy');
     else {
-      state.treeHarvests[key] = taken + 1;
-      state.inventory.items.gCandy = (state.inventory.items.gCandy || 0) + 1;
       storyUI();
-      openDialogue(['[Narrator] * You got G. Candy!'], 'treeCandy');
+      openDialogue([`[Narrator] * You got ${item.name}!`], 'treeCandy');
     }
     return true;
   }
+  function inspectJackLever() {
+    const lever=current().jackLever;
+    if(current().scene!=='collisionChamber'||!state.story.jackRevealed||!lever||Math.hypot(state.player.x-(lever.x*T+20),state.player.y-(lever.y*T+20))>68)return false;
+    openDialogue(['[Narrator] * A lever. Jackenstein was told to stop anyone from pressing it.'],'jackLever');return true;
+  }
   function inspectObject() {
+    if((state.tennaEntrance||state.collisionBlackout)&&!state.dialogue)return;
     if (state.death || state.holeFall || state.padJump || choiceDialogOpen()) return;
     if (state.bossEncounter && !state.dialogue) return;
     if (
@@ -1497,6 +1709,8 @@ export function startGame() {
       advanceDialogue();
       return;
     }
+    if (inspectJackLever()) return;
+    if (interactTrafficStop()) return;
     if (inspectGoldenDoor()) return;
     if (nearHole()) {
       offerHoleJump();
@@ -1525,7 +1739,7 @@ export function startGame() {
   function dialoguePages(lines, customSpeaker = null) {
     const pages = [];
     for (const line of lines) {
-      const match = customSpeaker ? null : line.match(/^\[(Kris|Flowey|Ralsey|Susie|Narrator)\]\s*/i);
+      const match = customSpeaker ? null : line.match(/^\[(Kris|Flowey|Ralsey|Susie|Tenna|Queen|Jackenstein|Narrator|\?\?\?)\]\s*/i);
       const speaker = customSpeaker || (match ? match[1][0].toUpperCase() + match[1].slice(1).toLowerCase() : 'Flowey');
       let text = match ? line.slice(match[0].length) : line;
       while (text.length > 140) {
@@ -1551,6 +1765,7 @@ export function startGame() {
     renderDialogue();
   }
   function talk() {
+    if((state.tennaEntrance||state.collisionBlackout)&&!state.dialogue)return;
     if (state.death || state.holeFall || state.padJump || choiceDialogOpen()) return;
     if (state.bossEncounter && !state.dialogue) return;
     if (state.mode !== 'play' || state.buster || (state.dive && state.dive.phase !== 'hesitate')) return;
@@ -1559,6 +1774,8 @@ export function startGame() {
       return;
     }
     if (state.story.emerging >= 0 || state.story.discussion >= 0) return;
+    if (inspectJackLever()) return;
+    if (interactTrafficStop()) return;
     if (inspectGoldenDoor()) return;
     if (nearHole()) {
       offerHoleJump();
@@ -1637,19 +1854,32 @@ export function startGame() {
     if (!state.dialogue) return;
     const page = state.dialogue.lines[state.dialogue.index],
       text = page.text;
+    if(state.dialogue.kind==='queenIntro'&&text.includes('Watch What Happens')){state.queenPuzzle??=createQueenPuzzle();startQueenDemo(state.queenPuzzle);}
+    if(state.dialogue.kind==='collisionIntro'&&page.speaker==='Susie')state.player.facing='right';
     const portraits = {
       Narrator: ['◇', '#d1ccdc'],
       Kris: ['◆', '#91bbeb'],
       Flowey: ['✿', '#efcb84'],
       Ralsey: ['♧', '#99dfb5'],
       Susie: ['★', '#d19de0'],
+      Tenna: ['▣', '#d6c9ff'],
+      Queen: ['♛', '#a1bbff'],
+      Jackenstein: ['◆', '#ee9a45'],
+      '???': ['••','#c44500'],
     };
     const portrait = state.dialogue.kind === 'npc' ? ['♧', '#eeeadd'] : portraits[page.speaker];
     $('speakerName').textContent =
       state.dialogue.kind !== 'npc' && page.speaker === 'Narrator' ? 'Examine' : page.speaker;
-    $('speakerPortrait').textContent = portrait[0];
+    if(page.speaker==='Tenna')$('speakerPortrait').replaceChildren(tennaPortrait);
+    else if(page.speaker==='Jackenstein')$('speakerPortrait').replaceChildren(jackPortrait);
+    else if(page.speaker==='Queen')$('speakerPortrait').replaceChildren(queenPortrait);
+    else $('speakerPortrait').textContent = portrait[0];
     $('speakerPortrait').style.color = portrait[1];
     $('dialogueText').textContent = text.slice(0, Math.floor(state.dialogue.shown));
+    if(page.speaker==='Tenna'&&['queenSuccess','jackReveal','jackReward','tennaFinale'].includes(state.dialogue.kind)){
+      const shown=text.slice(0,Math.floor(state.dialogue.shown)),parts=shown.split(/(Physical challenge)/ig);
+      $('dialogueText').replaceChildren(...parts.map(part=>{if(!/^Physical challenge$/i.test(part))return document.createTextNode(part);const img=document.createElement('img');img.src=physicalChallengeURL;img.alt=part;img.className='physical-challenge-word';return img;}));
+    }
     const buttons = 'C / Z / Enter';
     const prompt =
       state.dialogue.shown < text.length
@@ -1668,11 +1898,30 @@ export function startGame() {
     'floweyHesitate',
     'fountainArrival',
     'coreIntro',
+    'noelleAftermath',
+    'studioIntro',
+    'tennaArrival',
+    'tennaBackstage',
+    'tennaStorageGift',
+    'queenIntro',
+    'queenSuccess',
+    'collisionIntro',
+    'darkIntro',
+    'darkShine',
+    'jackReveal',
+    'jackReward',
+    'tennaFinale',
+    'tennaHelpers',
   ]);
   function isImportantCutscene() {
     return (
       !!state.dive ||
       !!state.buster ||
+      !!state.tennaEntrance ||
+      !!state.collisionBlackout ||
+      isRescueImportant(state.bossEncounter) ||
+      isProceedScene(state.bossEncounter) ||
+      isPelletCast(state.bossEncounter) ||
       !!(state.dialogue && importantKinds.has(state.dialogue.kind)) ||
       (state.story.discussion >= 0 && current().scene === 'fountain')
     );
@@ -1706,6 +1955,7 @@ export function startGame() {
   }
   function advanceDialogue() {
     if (!state.dialogue) return;
+    if(state.dialogue.kind==='queenIntro'&&queenDemoActive(state.queenPuzzle))return;
     const text = state.dialogue.lines[state.dialogue.index].text;
     if (state.dialogue.shown < text.length) state.dialogue.shown = text.length;
     else if (state.dialogue.index < state.dialogue.lines.length - 1) {
@@ -1716,6 +1966,34 @@ export function startGame() {
       const kind = state.dialogue.kind,
         npcId = state.dialogue.npcId;
       closeDialogue();
+      if (kind === 'studioIntro') {
+        state.story.studioExplained = true;
+        beginTennaArrival();
+        storyUI();
+      }
+      if(kind==='tennaArrival') {
+        state.story.tennaInvited=true;
+        state.tennaEntrance={stage:'depart',age:0};state.keys.clear();storyUI();
+      }
+      if(kind==='tennaBackstage') {
+        state.story.tennaStorageInvited=true;state.keys.clear();storyUI();
+      }
+      if(kind==='tennaStorageGift') {
+        const received=giveTennaElixirs(state.story,state.inventory);
+        storyUI();if(received)toast('Received 3 TP Elixirs!');
+      }
+      if(kind==='jackReveal'||kind==='jackReward'){const received=giveJackCandy(state.story,state.inventory);storyUI();if(received)toast('Received Jack.Candy! Restores a teammate to MAX HP.');}
+      if(kind==='collisionIntro'){state.story.collisionSeen=true;state.collisionBlackout={age:0,spoken:false};storyUI();}
+      if(kind==='darkShine'){completeDarkShine(state.bossEncounter);syncBossUI();}
+      if(kind==='tennaHelpers'){completeTennaCue(state.bossEncounter);syncBossUI();canvas.focus({preventScroll:true});}
+      if(kind==='tennaFinale'){state.story.tennaFinaleExplained=true;state.bossEncounter=createTennaEncounter();syncBossUI();storyUI();canvas.focus({preventScroll:true});}
+      if(kind==='darkIntro'){state.collisionBlackout=null;state.story.darkBattleSeen=true;state.bossEncounter=createDarkEncounter();syncBossUI();canvas.focus({preventScroll:true});}
+      if(kind==='queenSuccess'){state.story.queenSolved=true;state.queenDeparture=0;storyUI();}
+      if(kind==='queenIntro'){state.story.queenBriefed=true;state.story.queenDemoSeen=true;state.keys.clear();storyUI();}
+      if (kind === 'noelleAftermath') {
+        const studio = state.project.rooms.findIndex(room => room.scene === 'glitchStudio');
+        if (studio >= 0) changeRoom(studio, true);
+      }
       if (npcId === 'core-warning-froggit') state.story.coreFroggitWarned = true;
       if (kind === 'coreGlitch') state.story.coreGlitchNoticed = true;
       if (kind === 'coreIntro') {
@@ -1870,13 +2148,14 @@ export function startGame() {
     const r = current(),
       cx = Math.floor(state.player.x / T),
       cy = Math.floor(state.player.y / T);
-    const tile = [
+    const offsets = current().scene==='glitchBackstage'&&cx===3&&cy===5
+      ?[[0,-1],[-1,0],[1,0],[0,1]]:[
       [-1, 0],
       [0, 1],
       [1, 0],
       [0, -1],
-    ]
-      .map(([dx, dy]) => ({ x: cx + dx, y: cy + dy }))
+    ];
+    const tile = offsets.map(([dx, dy]) => ({ x: cx + dx, y: cy + dy }))
       .find((p) => cellOpen(r, p.x, p.y, false));
     const point = tile ? { x: tile.x * T + 20, y: tile.y * T + 20 } : { x: state.player.x, y: state.player.y };
     state.follower = { x: point.x, y: point.y, trail: routeToPlayer(point) };
@@ -1919,7 +2198,8 @@ export function startGame() {
       distance += Math.hypot(point.x - previous.x, point.y - previous.y);
       previous = point;
     }
-    let budget = Math.min(followSpeed * dt, Math.max(0, distance - gap));
+    const pace=state.keys.has('sprint')?sprintMultiplier:1;
+    let budget = Math.min(followSpeed * pace * dt, Math.max(0, distance - gap));
     while (member.trail.length && budget > 0) {
       const point = member.trail[0],
         dx = point.x - member.x,
@@ -1988,6 +2268,15 @@ export function startGame() {
     state.story.coreGlitchNoticed = false;
     state.story.glitchArrivalSeen = false;
     state.story.noelleGone = false;
+    state.story.noelleEscaped = false;
+    state.story.studioExplained = false;
+    state.story.tennaInvited = false;
+    state.story.tennaStorageInvited = false;
+    state.story.tennaElixirsReceived = false;
+    state.story.tennaFinaleExplained=false;state.story.jackCandyReceived=false;state.story.jackRevealed=false;state.story.collisionSeen=false;state.story.darkBattleSeen=false;state.story.queenBriefed = false;state.story.queenDemoSeen=false;state.story.queenSolved=false;
+    state.tennaEntrance = null;
+    state.collisionBlackout=null;
+    state.queenPuzzle=null;state.queenDeparture=null;
     state.companions = [];
     state.buster = null;
     state.dive = null;
@@ -2155,11 +2444,24 @@ export function startGame() {
   }
 
   function syncBossUI() {
+    healAfterSnowgrave(state.bossEncounter, state.partyHP);
+    syncPartyStatus(state.bossEncounter, state.partyHP);
+    if (state.bossEncounter && !state.death) skipFallenTurns(state.bossEncounter, state.partyHP);
     battleControls.sync();
   }
   function resetBossEncounter() {
     state.bossEncounter = null;
     syncBossUI();
+  }
+  function finishNoelleConfrontation() {
+    state.story.noelleGone = true;
+    state.story.noelleEscaped = true;
+    resetBossEncounter();
+    state.player.facing = 'right';
+    state.doorCooldown = 0.8;
+    openDialogue(afterBattleConversation.map(line => `[${line.speaker}] * ${line.text}`), 'noelleAftermath');
+    storyUI();
+    canvas.focus({ preventScroll: true });
   }
   function offerBossEntry(index) {
     if (state.mode !== 'play' || state.dialogue || choiceDialogOpen() || state.bossEncounter) return;
@@ -2196,7 +2498,7 @@ export function startGame() {
     state.story.glitchArrivalSeen = true;
     ensureGlitchWaiting();
     state.companions = [];
-    state.bossEncounter = createEncounter(state.story.noelleGone);
+    state.bossEncounter = createEncounter(state.story.noelleGone, state.story.noelleEscaped);
     syncBossUI();
     storyUI();
     if (!state.story.noelleGone)
@@ -2204,6 +2506,9 @@ export function startGame() {
     canvas.focus({ preventScroll: true });
   };
   $('leaveBossButton').onclick = () => {
+    if(['dark','tenna'].includes(state.bossEncounter?.kind)){resetBossEncounter();state.collisionBlackout=null;canvas.focus({preventScroll:true});return;}
+    if (isProceedScene(state.bossEncounter) || isPelletCast(state.bossEncounter)) return;
+    if (state.bossEncounter?.finalAttackComplete && state.bossEncounter.phase !== 'victory') return;
     const walkway = state.project.rooms.findIndex((room) => room.scene === 'glitchWorld');
     if (walkway >= 0) changeRoom(walkway, true, { x: 14, y: 6 });
     canvas.focus({ preventScroll: true });
@@ -2420,6 +2725,7 @@ export function startGame() {
   }
 
   function partyHasFallen() {
+    if (state.bossEncounter) return battlePartyNames(state.bossEncounter).every(name=>state.partyHP[name]<=0);
     return partyNames.filter(memberInParty).every((name) => state.partyHP[name] <= 0);
   }
   function beginDeath() {
@@ -2455,6 +2761,11 @@ export function startGame() {
     }
   };
 
+  function beginTennaArrival() {
+    state.tennaEntrance=createTennaEntrance();state.keys.clear();state.player.moving=false;
+    announce('Tenna jumps into the studio!');
+  }
+
   // dt means elapsed seconds. Multiplying speed by dt keeps walking steady on different screens.
   function update(dt) {
     if (state.mode === 'play' && !state.death && partyHasFallen()) beginDeath();
@@ -2482,6 +2793,11 @@ export function startGame() {
       $('inventoryDialog').open
     )
       return;
+    if(state.collisionBlackout&&!state.dialogue){
+      state.keys.clear();state.player.moving=false;state.collisionBlackout.age+=dt;
+      if(state.collisionBlackout.age>=.7&&!state.collisionBlackout.spoken){state.collisionBlackout.spoken=true;openDialogue(['[Flowey] * Who turned the lights off?!'],'darkIntro');}
+      return;
+    }
     if (state.padJump) {
       updatePadJump(dt);
       return;
@@ -2529,23 +2845,72 @@ export function startGame() {
       }
       return;
     }
+    if(state.bossEncounter?.phase==='tennaCue'&&!state.dialogue){openDialogue(['[Tenna] * Hey Minions- i mean Helpers, attack! It will come to your paycheck...'],'tennaHelpers');syncBossUI();canvas.focus({preventScroll:true});return;}
+    if(state.bossEncounter?.phase==='jackReveal'){
+      state.story.jackRevealed=true;state.story.darkBattleSeen=true;state.story.collisionSeen=true;state.collisionBlackout=null;
+      resetBossEncounter();state.keys.clear();
+      Object.assign(state.player,{x:180,y:330,facing:'right',moving:false});Object.assign(state.follower,{x:270,y:330,trail:[]});
+      state.companions=[{name:'Ralsey',x:355,y:330,trail:[]},{name:'Susie',x:425,y:350,trail:[]}];
+      openDialogue(jackRevealConversation.map(l=>`[${l.speaker}] * ${l.text}`),'jackReveal');storyUI();canvas.focus({preventScroll:true});return;
+    }
+    if(state.bossEncounter?.phase==='shine'){state.bossEncounter.animationAge+=dt;if(!state.dialogue){openDialogue(['[???] * NOT THE LAIGHT!'],'darkShine');syncBossUI();canvas.focus({preventScroll:true});return;}}
     if (state.bossEncounter && !state.dialogue) {
-      if (advanceBattleTime(state.bossEncounter, dt)) {
-        if (state.bossEncounter.phase === 'victory') state.story.noelleGone = true;
-        syncBossUI();
+      let changed = advanceBattleTime(state.bossEncounter, dt, state.partyHP);
+      if (canControlSoul(state.bossEncounter)) moveSoul(state.bossEncounter, state.keys, dt);
+      changed = advanceSnowAttack(state.bossEncounter, state.partyHP, dt) || changed;
+      if (state.bossEncounter.phase === 'aftermath') {
+        finishNoelleConfrontation();
+        return;
       }
-      state.keys.clear();
+      if (state.bossEncounter.phase === 'victory'&&!['dark','tenna'].includes(state.bossEncounter.kind)) {
+        state.story.noelleGone = true;
+        state.story.noelleEscaped = state.bossEncounter.noelleEscaped;
+      }
+      if (partyHasFallen()) beginDeath();
+      if (changed || state.death) syncBossUI();
+      if (!canControlSoul(state.bossEncounter) || state.death) state.keys.clear();
       state.player.moving = false;
       return;
     }
     if (state.glitchComfort) updateGlitchComfort(dt);
+    if(current().scene==='queenPasscode'){
+      state.queenPuzzle??=createQueenPuzzle(state.story.queenDemoSeen,state.story.queenSolved);
+      if(advanceQueenPuzzle(state.queenPuzzle,dt)==='success')openDialogue(queenSuccess.map(l=>`[${l.speaker}] * ${l.text}`),'queenSuccess');
+      if(state.queenDeparture!==null&&state.queenDeparture!==undefined){state.queenDeparture+=dt;if(state.queenDeparture>3)state.queenDeparture=null;}
+    }
     if (state.dialogue) {
       state.dialogue.shown += dt * 45;
       renderDialogue();
       state.player.moving = false;
       return;
     }
-    if (current().scene === 'glitchBoss' && !state.bossEncounter) {
+    if(state.tennaEntrance) {
+      state.keys.clear();state.player.moving=false;
+      const next=advanceTennaEntrance(state.tennaEntrance,dt);
+      if(next==='talk')openDialogue(tennaArrivalConversation.map(line=>`[${line.speaker}] * ${line.text}`),'tennaArrival');
+      else if(next==='done')state.tennaEntrance=null;
+      return;
+    }
+    if (current().scene === 'glitchStudio' && !state.story.studioExplained) {
+      openDialogue(studioConversation.map(line => `[${line.speaker}] * ${line.text}`), 'studioIntro');
+      return;
+    }
+    if(current().scene==='glitchStudio'&&!state.story.tennaInvited) {beginTennaArrival();return;}
+    if(current().scene==='glitchBackstage'&&state.story.jackCandyReceived&&!state.story.tennaFinaleExplained){openDialogue(finaleConversation.map(l=>`[${l.speaker}] * ${l.text}`),'tennaFinale');return;}
+    if(current().scene==='glitchBackstage'&&!state.story.tennaStorageInvited) {
+      openDialogue(tennaBackstageConversation.map(line=>`[${line.speaker}] * ${line.text}`),'tennaBackstage');return;
+    }
+    if(current().scene==='collisionChamber'&&state.story.jackRevealed&&!state.story.jackCandyReceived){openDialogue(jackRewardConversation.map(l=>`[${l.speaker}] * ${l.text}`),'jackReward');return;}
+    if(current().scene==='collisionChamber'&&state.story.collisionSeen&&!state.story.darkBattleSeen&&!state.story.jackRevealed){state.collisionBlackout={age:0,spoken:false};return;}
+    if(current().scene==='collisionChamber'&&!state.story.collisionSeen){
+      Object.assign(state.player,{x:180,y:330,facing:'up'});Object.assign(state.follower,{x:270,y:330,trail:[]});
+      state.companions=[{name:'Ralsey',x:355,y:330,trail:[]},{name:'Susie',x:460,y:330,trail:[]}];
+      openDialogue(collisionConversation.map(l=>`[${l.speaker}] * ${l.text}`),'collisionIntro');return;
+    }
+    if(current().scene==='queenPasscode'&&(!state.story.queenBriefed||(!state.story.queenDemoSeen&&!state.story.queenSolved))) {
+      openDialogue(queenConversation.map(line=>`[${line.speaker}] * ${line.text}`),'queenIntro');return;
+    }
+    if (current().scene === 'glitchBoss' && !state.bossEncounter && !state.story.noelleEscaped && !state.story.noelleGone) {
       offerBossEntry(state.roomIndex);
       return;
     }
@@ -2577,6 +2942,20 @@ export function startGame() {
       openGoldenDoorConversation();
       return;
     }
+    const pace=state.keys.has('sprint')?sprintMultiplier:1;
+    if(current().scene==='storageHallway') {
+      if(!state.storageHallway)state.storageHallway=createHallway();
+      const next=advanceHallway(state.storageHallway,state.keys,dt);
+      state.player.x=state.storageHallway.x-hallwayCamera(state.storageHallway.x);state.player.y=state.storageHallway.y;
+      state.player.moving=state.storageHallway.moving;
+      if(state.player.moving)state.player.step+=dt*10*pace;
+      if(state.keys.has('right')||state.keys.has('left'))state.player.facing=state.storageHallway.direction>0?'right':'left';
+      if(next&&!state.doorCooldown) {
+        const room=current(),target=room.doorLinks?.[next==='storage'?'0,8':'15,8'];
+        if(Number.isInteger(target))changeRoom(target,true);
+      }
+      return;
+    }
     let dx = (state.keys.has('right') ? 1 : 0) - (state.keys.has('left') ? 1 : 0),
       dy = (state.keys.has('down') ? 1 : 0) - (state.keys.has('up') ? 1 : 0);
     state.player.moving = !!(dx || dy);
@@ -2584,13 +2963,21 @@ export function startGame() {
       if (dx) state.player.facing = dx > 0 ? 'right' : 'left';
       else state.player.facing = dy > 0 ? 'down' : 'up';
       const len = Math.hypot(dx, dy);
-      dx = (dx / len) * movementSpeed * dt;
-      dy = (dy / len) * movementSpeed * dt;
+      dx = (dx / len) * movementSpeed * pace * dt;
+      dy = (dy / len) * movementSpeed * pace * dt;
       if (!collides(state.player.x + dx, state.player.y)) state.player.x += dx;
       if (!collides(state.player.x, state.player.y + dy)) state.player.y += dy;
-      state.player.step += dt * 10;
+      state.player.step += dt * 10 * pace;
     }
     updateFollower(dt);
+    if(current().scene==='queenPasscode'&&state.queenPuzzle)pressQueenTile(state.queenPuzzle,state.player,queenLetters,state.story.queenBriefed&&!state.story.queenSolved);
+    if(current().scene==='trafficCrossing') {
+      if(!state.traffic)state.traffic=createTraffic();
+      if(advanceTraffic(state.traffic,state.player,dt)) {
+        state.keys.clear();state.player.moving=false;resetFollower();state.cameraShakeTime=0.15;
+        toast('A car hit you! Back at the '+state.traffic.checkpoint+' stop sign.');
+      }
+    }
     const tx = Math.floor(state.player.x / T),
       ty = Math.floor(state.player.y / T);
     if (tryCoreSpikeFall()) return;
@@ -2668,6 +3055,7 @@ export function startGame() {
   const battleControls = setupBattleControls(state, {
     $,
     canvas,
+    directionKeys: dirKeys,
     openItems: toggleInventory,
     announce,
     onChange: syncBossUI,

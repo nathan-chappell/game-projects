@@ -1,0 +1,4 @@
+Mode: built-in image_gen, background-extraction.
+Edit target: supplied Jackenstein reference (codex-clipboard-aa602c0a-ec98-4d68-aa56-710c4ed6b3ba.png).
+
+Use case: background-extraction. Edit target: supplied Jackenstein character reference. Remove ONLY the white/light grey rounded rectangular background and any faint border. Keep the entire pumpkin-headed patchwork monster exactly as shown, including both fists, horns, hair, tail, stitches, orange pumpkin head and shoulder patches, pale green-gray body, feet and original expression. Preserve the original pixel-art outlines, colors, pose and proportions. Do not redesign or add details. Output a clean fully visible character on a genuine transparent alpha background, no shadow, text, frame, or checkerboard. Keep a small transparent margin.

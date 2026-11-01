@@ -1,9 +1,15 @@
+import {createJackSprite} from './jackenstein.js';
 // Drawing is like placing colored blocks on graph paper. It changes the picture, not HP or story.
 import goldenDoorUrl from '../assets/golden-door.png?inline';
 import noelleBossUrl from '../assets/noelle-boss.png?inline';
 import { T } from './config.js';
+import { createTennaSprite } from './tenna-sprite.js';
+import { createQueenSprite } from './queen-sprite.js';
 
 export function createSprites(ctx, state) {
+  const {draw:drawTenna}=createTennaSprite(ctx);
+  const {draw:drawQueen}=createQueenSprite(ctx);
+  const {draw:drawJack}=createJackSprite(ctx);
   const current = () => state.project.rooms[state.roomIndex];
   function rect(x, y, w, h, color) {
     ctx.fillStyle = color;
@@ -205,8 +211,8 @@ export function createSprites(ctx, state) {
       rect(x - 8, y - 38, 7, 6, '#274c44');
       rect(x + 2, y - 38, 7, 6, '#274c44');
       rect(x - 1, y - 36, 3, 2, '#274c44');
-      rect(x - 6, y - 36, 3, 2, '#d7e9d4');
-      rect(x + 4, y - 36, 3, 2, '#d7e9d4');
+      rect(x - (n.lookRight?3:6), y - 36, 3, 2, '#d7e9d4');
+      rect(x + (n.lookRight?6:4), y - 36, 3, 2, '#d7e9d4');
       rect(x - 2, y - 29, 5, 2, '#6d696d');
       if (n.worried) {
         rect(x - 3, y - 31, 6, 2, '#6d696d');
@@ -248,7 +254,7 @@ export function createSprites(ctx, state) {
       rect(x - 35, y - 48, 12, 6, '#d9cde0');
       rect(x - 25, y - 43, 9, 9, '#8e85a8');
     }
-    pixelText(n.name, x - n.name.length * 3, y + 17, n.name === 'Ralsey' ? '#addfc1' : '#d7a8e5', 10);
+    if (!n.hideName) pixelText(n.name, x - n.name.length * 3, y + 17, n.name === 'Ralsey' ? '#addfc1' : '#d7a8e5', 10);
   }
 
   const frogPixels = [
@@ -278,6 +284,13 @@ export function createSprites(ctx, state) {
   ];
 
   function drawNpc(npc) {
+    if(['tenna','queen','jackenstein'].includes(npc.sprite)) {
+      (npc.sprite==='jackenstein'?drawJack:npc.sprite==='queen'?drawQueen:drawTenna)(npc.x*T+20,npc.y*T+24);
+      if(state.mode==='build'&&npc.id===state.selectedNpcId) {
+        ctx.strokeStyle='#efcb84';ctx.lineWidth=2;ctx.strokeRect(npc.x*T+1,npc.y*T+1,38,38);
+      }
+      return;
+    }
     const x = npc.x * T + 20,
       y = npc.y * T + 24,
       scale = 2,
@@ -320,7 +333,7 @@ export function createSprites(ctx, state) {
     }
   }
 
-  function drawFlowey(x, y, time) {
+  function drawFlowey(x, y, time,lookRight=false) {
     const growth = state.mode === 'build' || state.story.joined || state.story.met ? 1 : state.story.reveal;
     if (growth <= 0) return;
     const sway = state.mode === 'play' ? Math.round(Math.sin(time * 3)) : 0;
@@ -348,8 +361,8 @@ export function createSprites(ctx, state) {
     }
     rect(x - 10, -34, 20, 17, '#eae5d9');
     rect(x - 7, -37, 14, 23, '#f5f1e6');
-    rect(x - 6, -31, 3, 5, '#29252d');
-    rect(x + 3, -31, 3, 5, '#29252d');
+    rect(x - (lookRight?3:6), -31, 3, 5, '#29252d');
+    rect(x + (lookRight?6:3), -31, 3, 5, '#29252d');
     rect(x - 6, -23, 2, 3, '#29252d');
     rect(x + 4, -23, 2, 3, '#29252d');
     rect(x - 4, -21, 8, 2, '#29252d');
@@ -400,6 +413,7 @@ export function createSprites(ctx, state) {
     drawDarkTree,
     drawFountainFriend,
     drawNpc,
+    drawTenna,
     drawFlowey,
     drawPlayer,
   };

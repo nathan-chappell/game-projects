@@ -95,7 +95,7 @@ export function createParticles(ctx, state, helpers) {
   function drawDarkWorldParticles(time, foreground) {
     if (
       current().theme !== 'dark' ||
-      ['darkFurnace', 'coreEntrance', 'coreLower', 'coreDepths', 'glitchWorld', 'glitchBoss'].includes(current().scene)
+      ['darkFurnace', 'coreEntrance', 'coreLower', 'coreDepths', 'glitchWorld', 'glitchBoss', 'queenPasscode', 'collisionChamber'].includes(current().scene)
     )
       return;
     const t = reducedParticleMotion.matches ? 0 : time;

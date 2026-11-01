@@ -1,4 +1,12 @@
 import { buildKey, H, W, tiles, T } from './config.js';
+import { createStudioRoom, glitchStudioScene } from './glitch-studio.js';
+import { createBackstageRoom, backstageScene } from './backstage.js';
+import { createStorageRoom, storageScene } from './tenna-storage.js';
+import { createHallwayRoom } from './storage-travel.js';
+import { createTrafficRoom } from './traffic.js';
+import { createRooftopRoom, rooftopScene } from './neon-rooftop.js';
+import {createCollisionChamber,addJackToChamber} from './collision-chamber.js';
+import { createQueenRoom, queenScene } from './queen-room.js';
 
 // Rooms are grids of tile numbers. These updates add story rooms without replacing saved edits.
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -112,7 +120,7 @@ function validNpcs(npcs) {
           n &&
           typeof n.id === 'string' &&
           n.id.length <= 80 &&
-          n.sprite === 'frog' &&
+          ['frog','tenna','queen','jackenstein'].includes(n.sprite) &&
           typeof n.name === 'string' &&
           n.name.length > 0 &&
           n.name.length <= 32 &&
@@ -135,6 +143,7 @@ const validColor = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.tes
 function validTreeStyle(tree) {
   return (
     (tree.candy === undefined || (Number.isInteger(tree.candy) && tree.candy >= 0 && tree.candy <= 6)) &&
+    (tree.tpElixirs === undefined || (Number.isInteger(tree.tpElixirs) && tree.tpElixirs >= 0 && tree.tpElixirs <= 6)) &&
     ['canopyColor', 'accentColor', 'trunkColor'].every((key) => tree[key] === undefined || validColor(tree[key]))
   );
 }
@@ -181,7 +190,7 @@ function validProject(p) {
     Number.isFinite(p.updatedAt) &&
     Array.isArray(p.rooms) &&
     p.rooms.length >= 2 &&
-    p.rooms.length <= 20 &&
+    p.rooms.length <= 27 &&
     p.rooms.every(
       (r) =>
         r &&
@@ -1021,6 +1030,137 @@ function addGlitchBossRoom(p) {
   return p;
 }
 
+function addGlitchStudioRoom(p) {
+  const boss=p.rooms.findIndex(room=>room.scene==='glitchBoss');
+  if(boss<0) return p;
+  let studio=p.rooms.findIndex(room=>room.scene===glitchStudioScene);
+  if(studio<0) {
+    if(p.rooms.length>=20) return p;
+    studio=p.rooms.length;p.rooms.push(createStudioRoom(boss));
+  }
+  const room=p.rooms[boss];
+  if(room.glitchStudioExitVersion!==1) {
+    const y=[8,7,9,6,10].find(y=>[0,5].includes(room.map[y][15]) &&
+      room.doorLinks?.[`15,${y}`]===undefined &&
+      !['npcs','trees','spikes','savePoints','jumpPads'].some(field=>room[field]?.some(point=>point.x===15&&point.y===y)));
+    if(y!==undefined) {
+      room.map[y][15]=6;room.doorLinks={...room.doorLinks,[`15,${y}`]:studio};
+      room.glitchStudioExitVersion=1;
+    }
+  }
+  return p;
+}
+
+function addBackstageRoom(p) {
+  const studio=p.rooms.findIndex(room=>room.scene===glitchStudioScene);
+  if(studio<0)return p;
+  let backstage=p.rooms.findIndex(room=>room.scene===backstageScene);
+  if(backstage<0) {
+    // Reserve one story slot even when an older Build already used all 20 rooms.
+    if(p.rooms.length>=21)return p;
+    backstage=p.rooms.length;p.rooms.push(createBackstageRoom(studio));
+  }
+  const backstageRoom=p.rooms[backstage];
+  if(backstageRoom.backstageEntryVersion!==1) {
+    if(backstageRoom.doorLinks?.['0,8']===studio) {
+      backstageRoom.map[8][0]=1;delete backstageRoom.doorLinks['0,8'];
+    }
+    backstageRoom.map[3][3]=6;backstageRoom.map[4][3]=0;
+    backstageRoom.doorLinks={...backstageRoom.doorLinks,'3,3':studio};
+    if(backstageRoom.spawn.x===3&&backstageRoom.spawn.y===8)backstageRoom.spawn={x:3,y:5};
+    backstageRoom.flowey={x:3,y:4};backstageRoom.backstageEntryVersion=1;
+  }
+  const room=p.rooms[studio];
+  if(room.backstageExitVersion!==1) {
+    const y=[8,7,9,6,10].find(y=>[0,1,5].includes(room.map[y][15])&&room.doorLinks?.[`15,${y}`]===undefined&&
+      !['npcs','trees','spikes','savePoints','jumpPads'].some(field=>room[field]?.some(point=>point.x===15&&point.y===y)));
+    if(y!==undefined) {
+      room.map[y][15]=6;room.doorLinks={...room.doorLinks,[`15,${y}`]:backstage};room.backstageExitVersion=1;
+    }
+  }
+  return p;
+}
+
+function addTennaStorage(p) {
+  const backstage=p.rooms.findIndex(room=>room.scene===backstageScene);
+  if(backstage<0)return p;
+  let storage=p.rooms.findIndex(room=>room.scene===storageScene);
+  if(storage<0) {
+    if(p.rooms.length>=22)return p;
+    storage=p.rooms.length;p.rooms.push(createStorageRoom(backstage));
+  }
+  const room=p.rooms[backstage];
+  if(room.storageExitVersion!==1) {
+    const y=[8,7,9,6,10].find(y=>[0,1,5].includes(room.map[y][15])&&room.doorLinks?.[`15,${y}`]===undefined&&
+      !['npcs','trees','spikes','savePoints','jumpPads'].some(field=>room[field]?.some(point=>point.x===15&&point.y===y)));
+    if(y!==undefined) {
+      room.map[y][15]=6;room.doorLinks={...room.doorLinks,[`15,${y}`]:storage};room.storageExitVersion=1;
+    }
+  }
+  return p;
+}
+
+function addStorageCrossing(p) {
+  const storage=p.rooms.findIndex(r=>r.scene===storageScene);
+  if(storage<0)return p;
+  let hall=p.rooms.findIndex(r=>r.scene==='storageHallway'),traffic=p.rooms.findIndex(r=>r.scene==='trafficCrossing');
+  if(p.rooms.length+Number(hall<0)+Number(traffic<0)>24)return p;
+  if(hall<0){hall=p.rooms.length;p.rooms.push(createHallwayRoom(storage));}
+  if(traffic<0){traffic=p.rooms.length;p.rooms.push(createTrafficRoom(hall));}
+  const corridor=p.rooms[hall];
+  if(corridor.crossingExitVersion!==1) {
+    corridor.doorLinks={...corridor.doorLinks,'15,8':traffic};corridor.crossingExitVersion=1;
+  }
+  const room=p.rooms[storage];
+  if(room.hallwayExitVersion!==1) {
+    const y=[8,7,9,6,10].find(y=>[0,1,5].includes(room.map[y][15])&&room.doorLinks?.[`15,${y}`]===undefined&&
+      !['npcs','trees','spikes','savePoints','jumpPads'].some(field=>room[field]?.some(point=>point.x===15&&point.y===y)));
+    if(y!==undefined){room.map[y][15]=6;room.doorLinks={...room.doorLinks,[`15,${y}`]:hall};room.hallwayExitVersion=1;}
+  }
+  return p;
+}
+
+function addNeonRooftop(p) {
+  const crossing=p.rooms.findIndex(r=>r.scene==='trafficCrossing');
+  if(crossing<0)return p;
+  let roof=p.rooms.findIndex(r=>r.scene===rooftopScene);
+  if(roof<0){if(p.rooms.length>=25)return p;roof=p.rooms.length;p.rooms.push(createRooftopRoom(crossing));}
+  const room=p.rooms[crossing];
+  if(room.rooftopExitVersion!==1) {
+    const y=[7,6,5].find(y=>[0,1,5].includes(room.map[y][15])&&room.doorLinks?.[`15,${y}`]===undefined&&
+      !['npcs','trees','spikes','savePoints','jumpPads'].some(field=>room[field]?.some(point=>point.x===15&&point.y===y)));
+    if(y!==undefined){room.map[y][15]=6;room.doorLinks={...room.doorLinks,[`15,${y}`]:roof};room.rooftopExitVersion=1;}
+  }
+  return p;
+}
+
+function addQueenRoom(p) {
+  const roof=p.rooms.findIndex(r=>r.scene===rooftopScene);
+  if(roof<0)return p;
+  let queen=p.rooms.findIndex(r=>r.scene===queenScene);
+  if(queen<0){if(p.rooms.length>=26)return p;queen=p.rooms.length;p.rooms.push(createQueenRoom(roof));}
+  const room=p.rooms[roof];
+  if(room.queenExitVersion!==1) {
+    const y=[9,8].find(y=>[0,1,5].includes(room.map[y][15])&&room.doorLinks?.[`15,${y}`]===undefined&&
+      !['npcs','trees','spikes','savePoints','jumpPads'].some(field=>room[field]?.some(point=>point.x===15&&point.y===y)));
+    if(y!==undefined){room.map[y][15]=6;room.doorLinks={...room.doorLinks,[`15,${y}`]:queen};room.queenExitVersion=1;}
+  }
+  return p;
+}
+
+function addCollisionChamber(p){
+ const back=p.rooms.findIndex(r=>r.scene==='glitchBackstage');if(back<0)return p;
+ let chamber=p.rooms.findIndex(r=>r.scene==='collisionChamber');
+ if(chamber<0){if(p.rooms.length>=27)return p;chamber=p.rooms.length;p.rooms.push(createCollisionChamber(back));}
+ addJackToChamber(p.rooms[chamber]);
+ const room=p.rooms[back];
+ if(room.collisionExitVersion!==1){
+  const y=[8,7,9,6,10].find(y=>[0,1,5].includes(room.map[y][0])&&room.doorLinks?.[`0,${y}`]===undefined&&!['npcs','trees','spikes','savePoints'].some(f=>room[f]?.some(o=>o.x===0&&o.y===y)));
+  if(y!==undefined){room.map[y][0]=6;room.doorLinks={...room.doorLinks,[`0,${y}`]:chamber};room.collisionExitVersion=1;}
+ }
+ return p;
+}
+
 // Run room updates in story order. Each update keeps the player's existing Build edits.
 function upgradeProject(project) {
   const updates = [
@@ -1040,6 +1180,13 @@ function upgradeProject(project) {
     addDeeperCore,
     addGlitchWorld,
     addGlitchBossRoom,
+    addGlitchStudioRoom,
+    addBackstageRoom,
+    addTennaStorage,
+    addStorageCrossing,
+    addNeonRooftop,
+    addQueenRoom,
+    addCollisionChamber,
   ];
   for (const update of updates) project = update(project);
   return project;

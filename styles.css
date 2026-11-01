@@ -278,6 +278,45 @@ canvas:focus-visible {
   padding-top: 15px;
 }
 
+.portrait canvas {
+  width: 44px;
+  height: 44px;
+  image-rendering: pixelated;
+}
+
+.dialogue.battle-dialogue {
+  grid-template-columns: clamp(64px, 12vw, 96px) 1fr;
+}
+
+.dialogue.battle-dialogue.text-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.battle-dialogue.text-only .portrait {
+  display: none;
+}
+
+.battle-dialogue .portrait {
+  padding-top: 0;
+  align-self: center;
+}
+
+.battle-dialogue .portrait canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.dialogue.battle-dialogue.symbol-portrait {
+  grid-template-columns: 46px 1fr;
+}
+
+.battle-dialogue.symbol-portrait .portrait {
+  padding-top: 15px;
+  align-self: start;
+}
+
 .speaker {
   font:
     700 10px system-ui,
@@ -730,6 +769,28 @@ dialog .primary {
     grid-template-columns: 30px 1fr;
   }
 
+  .dialogue.battle-dialogue {
+    grid-template-columns: 44px 1fr;
+    padding: 6px 9px;
+    bottom: 2%;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .battle-dialogue .speaker {
+    font-size: 8px;
+    margin-bottom: 3px;
+  }
+
+  .dialogue.battle-dialogue.symbol-portrait {
+    grid-template-columns: 30px 1fr;
+  }
+
+  .battle-dialogue .next {
+    font-size: 8px;
+    margin-top: 4px;
+  }
+
   .portrait {
     font-size: 25px;
   }
@@ -856,3 +917,14 @@ dialog .primary {
   min-height: 1.5em;
   margin-top: 10px;
 }
+
+#battleSoulControls .dpad {
+  grid-template-columns: 44px 44px 44px;
+  grid-template-rows: 44px 44px;
+}
+
+#battleSoulControls button {
+  margin-top: 0;
+}
+
+.physical-challenge-word { display: inline-block; width: 182px; height: 27px; object-fit: contain; vertical-align: middle; image-rendering: pixelated; }

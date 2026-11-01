@@ -6,14 +6,24 @@ import { freshPartyHP, freshInventory } from '../src/config.js';
 
 const originalWorld = JSON.parse(await readFile(new URL('./fixtures/original-world.json', import.meta.url), 'utf8'));
 
-test('the refactored starter world matches the existing game', () => {
+test('the starter world keeps its existing rooms while appending the studio and storage route', () => {
   const project = upgradeProject(defaults());
   assert.ok(validProject(project));
-  assert.deepEqual(project, originalWorld);
+  const legacy=clone(project),chamber=legacy.rooms.pop(),queen=legacy.rooms.pop(),roof=legacy.rooms.pop(),traffic=legacy.rooms.pop(),hall=legacy.rooms.pop(),storage=legacy.rooms.pop(),backstage=legacy.rooms.pop(),studio=legacy.rooms.pop();
+  assert.equal(chamber.scene,'collisionChamber');
+  assert.equal(queen.scene,'queenPasscode');
+  assert.equal(roof.scene,'neonRooftop');
+  assert.equal(traffic.scene,'trafficCrossing');assert.equal(hall.scene,'storageHallway');
+  assert.equal(storage.scene,'tennaStorage');
+  assert.equal(backstage.scene,'glitchBackstage');
+  assert.equal(studio.scene,'glitchStudio');
+  const boss=legacy.rooms.find(room=>room.scene==='glitchBoss');
+  boss.map[8][15]=0;delete boss.doorLinks['15,8'];delete boss.glitchStudioExitVersion;
+  assert.deepEqual(legacy, originalWorld);
 });
 
 test('room upgrades can run repeatedly without resetting a saved Build', () => {
-  const project = clone(originalWorld);
+  const project = upgradeProject(clone(originalWorld));
   const room = project.rooms.find((room) => room.scene === 'glitchWorld');
   room.name = "Lenny's room";
   room.tileColors = { '3,6': '#123456' };
@@ -36,7 +46,7 @@ test('a two-room older project still upgrades to the complete world', () => {
   assert.ok(validProject(old));
   const upgraded = upgradeProject(old);
   assert.equal(upgraded.rooms[0].name, 'My old bedroom');
-  assert.equal(upgraded.rooms.length, originalWorld.rooms.length);
+  assert.equal(upgraded.rooms.length, originalWorld.rooms.length+8);
   assert.ok(validProject(upgraded));
 });
 

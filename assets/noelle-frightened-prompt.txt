@@ -1,0 +1,2 @@
+Edited with the built-in imagegen tool from the user's frightened Noelle reference.
+Final prompt: Remove all gray diagonal lettering from the black background on both sides of Noelle and replace it with solid black. Preserve the frightened expression, pink face, blonde hair, antlers, ears, eyes, mouth, chunky pixel-art shapes, palette, composition, and black backdrop. No text, letters, or watermark. Do not redesign or smooth the portrait.

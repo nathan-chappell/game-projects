@@ -1,0 +1,4 @@
+Mode: built-in image_gen, background-extraction.
+Edit target: assets/chamber-statue-reference.png.
+
+Use case: background-extraction. Edit target: the supplied small grayscale pixel-art statue screenshot. Remove ALL surrounding gray wall, black floor line, patterned floor, and scenery. Keep ONLY the pale statue figure, including its curled crest, round face, folded arms, curled legs and the small pale pedestal directly under its feet. Preserve the exact original pose, proportions, gray and white colors, face details, pixel shapes and hard edges. Do not redesign, redraw, add detail, smooth, or invent anything. Center the complete statue on a genuinely transparent alpha background with a small clear margin. No shadow, text, checkerboard or other background pixels.
