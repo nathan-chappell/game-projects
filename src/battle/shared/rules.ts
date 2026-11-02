@@ -1,4 +1,5 @@
-import { advanceShootingMinigame, beginTennaMinigame, settleShootingMinigame } from '../tenna/minigame.ts';
+import { advanceSurfer } from '../tenna/surfers.ts';
+import { advanceShootingMinigame, beginTennaMinigame, settleTennaMinigame } from '../tenna/minigame.ts';
 import { itemDefinitions, maxHP } from '../../game/config.ts';
 import { present } from '../../game/invariants.ts';
 import { useHealingItem } from '../../inventory/healing.ts';
@@ -662,7 +663,7 @@ export function requestTennaMinigame(encounter: Encounter) {
 }
 export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: () => number = Math.random) {
   if (encounter.kind !== 'tenna' || encounter.phase !== 'minigame') return false;
-  const result = settleShootingMinigame(encounter, hp, random);
+  const result = settleTennaMinigame(encounter, hp, random);
   if (!result) return false;
   syncPartyStatus(encounter, hp);
   encounter.phase = 'kris';
@@ -672,7 +673,7 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
     .join(', ');
   finishPartyTurn(
     encounter,
-    `Minigame complete! +${result.points} points.${damage ? ' ' + damage + '.' : ''}`,
+    `Minigame complete! ${result.points >= 0 ? '+' : ''}${result.points} points.${damage ? ' ' + damage + '.' : ''}`,
   );
   skipFallenTurns(encounter, hp);
   return true;
@@ -681,9 +682,12 @@ export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: Pa
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
   if (encounter.phase === 'minigame' && encounter.minigame && partyHP) {
-    const before = encounter.minigame.misses;
-    if (advanceShootingMinigame(encounter.minigame, dt)) return finishTennaMinigame(encounter, partyHP);
-    return encounter.minigame.misses !== before;
+    const m = encounter.minigame,
+      before = m.misses,
+      beforePoints = m.kind === 'surf' ? m.points : 0;
+    if (m.kind === 'surf' ? advanceSurfer(m, dt) : advanceShootingMinigame(m, dt))
+      return finishTennaMinigame(encounter, partyHP);
+    return m.misses !== before || (m.kind === 'surf' && m.points !== beforePoints);
   }
   if (encounter.darkHeal) {
     encounter.darkHeal.age += dt;

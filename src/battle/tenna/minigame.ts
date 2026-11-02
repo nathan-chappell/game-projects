@@ -1,3 +1,5 @@
+import { createSurferMinigame } from './surfers.ts';
+import type { SurferMinigame } from './surfers.ts';
 import type { PartyHP, PartyName } from '../../inventory/types.ts';
 import type { Encounter } from '../shared/types.ts';
 export const minigameSettings = {
@@ -20,6 +22,7 @@ interface Target {
   shot: boolean;
 }
 export interface ShootingMinigame {
+  kind: 'shooting';
   age: number;
   misses: number;
   hits: number;
@@ -30,6 +33,7 @@ export interface ShootingMinigame {
   feedback: string;
   feedbackAge: number;
 }
+export type TennaMinigame = ShootingMinigame | SurferMinigame;
 export const minigamePoints = (misses: number) => Math.max(0, 100 - 10 * misses);
 export function createShootingMinigame(random: () => number = Math.random): ShootingMinigame {
   let previous = -1;
@@ -46,6 +50,7 @@ export function createShootingMinigame(random: () => number = Math.random): Shoo
     };
   });
   return {
+    kind: 'shooting',
     age: 0,
     misses: 0,
     hits: 0,
@@ -61,7 +66,9 @@ export function beginTennaMinigame(b: Encounter, random: () => number = Math.ran
   if (b.kind !== 'tenna' || b.phase !== 'minigameIntro') return false;
   b.minigameIntroSeen = true;
   b.phase = 'minigame';
-  b.minigame = createShootingMinigame(random);
+  const count = b.minigameCount ?? 0;
+  b.minigame = count % 2 === 0 ? createShootingMinigame(random) : createSurferMinigame();
+  b.minigameCount = count + 1;
   return true;
 }
 export function visibleGalleryTargets(m: ShootingMinigame) {
@@ -111,12 +118,12 @@ export function advanceShootingMinigame(m: ShootingMinigame, dt: number) {
     }
   return m.age >= minigameSettings.duration;
 }
-export function settleShootingMinigame(b: Encounter, hp: PartyHP, random: () => number = Math.random) {
+export function settleTennaMinigame(b: Encounter, hp: PartyHP, random: () => number = Math.random) {
   const m = b.minigame;
   if (!m) return null;
-  const points = minigamePoints(m.misses),
+  const points = m.kind === 'surf' ? m.points : minigamePoints(m.misses),
     damage: Partial<Record<PartyName, number>> = {};
-  if (!b.invincible)
+  if (m.kind === 'shooting' && !b.invincible)
     for (let miss = 0; miss < m.misses; miss++) {
       const living = (['Kris', 'Flowey', 'Susie', 'Ralsey'] as const).filter((name) => hp[name] > 0);
       for (let pick = 0; pick < 2 && living.length; pick++) {
@@ -127,7 +134,7 @@ export function settleShootingMinigame(b: Encounter, hp: PartyHP, random: () => 
         damage[name] = (damage[name] ?? 0) + lost;
       }
     }
-  b.score = (b.score ?? 0) + points;
+  b.score = Math.max(0, (b.score ?? 0) + points);
   b.minigame = null;
   return { points, damage };
 }

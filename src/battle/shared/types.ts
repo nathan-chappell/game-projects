@@ -1,4 +1,4 @@
-import type { ShootingMinigame } from '../tenna/minigame.ts';
+import type { TennaMinigame } from '../tenna/minigame.ts';
 import type { TvBolts } from '../tenna/tv-bolts.ts';
 import type { PartyName } from '../../inventory/types.ts';
 import type { Point } from '../../world/types.ts';
@@ -204,7 +204,8 @@ export interface EncounterBase {
   darkAttackCount?: number;
   lastDarkPattern?: number;
   minigameIntroSeen?: boolean;
-  minigame?: ShootingMinigame | null;
+  minigameCount?: number;
+  minigame?: TennaMinigame | null;
   score?: number;
   tennaCueSeen?: boolean;
   darkShinePending?: boolean;

@@ -366,8 +366,8 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
   await frames(page, 2);
   await expect(page.locator('#dialogue')).not.toBeVisible();
   await expect(page.locator('#battleMinigameControls')).toBeVisible();
-  await expect(page.locator('#battleMinigameStatus')).toContainText('Misses: 0');
-  await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 100');
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Surfers');
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 0');
   await frames(page, 1);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('shooting-gallery-fresh-round.png') });
 });
@@ -403,4 +403,58 @@ test('Tenna cuts every party attack and heals to full before the next turn', asy
   await page.keyboard.press('Enter');
   await expect(page.locator('#dialogueText')).toContainText('Hey Minions- i mean Helpers, attack!');
   await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-restored-after-attacks.png') });
+});
+
+test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey reward', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let i = 0; i < 5; i++) await confirmRoomDialogue(page);
+  await page.locator('#battleAct').click();
+  await page.locator('#battleProceedButton').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('Shift');
+  for (let i = 0; i < 3; i++) await page.locator('#battleDefend').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('Shift');
+  await page.locator('#battleAct').click();
+  await expect(page.locator('#battleProceedCount')).toContainText('Surfers');
+  await page.locator('#battleProceedButton').click();
+  await expect(page.locator('#dialogue')).not.toBeVisible();
+  await expect(page.locator('#battleTurnText')).toHaveText('Surfers');
+  await expect(page.locator('#battleMinigameShoot')).toHaveText('Jump · Space / ↑');
+  let stepped = 0;
+  for (let rock = 0; rock < 9; rock++) {
+    const jumpFrame = Math.ceil((1.637 + rock * 1.4) * 60);
+    await frames(page, jumpFrame - stepped);
+    stepped = jumpFrame;
+    if (rock === 0) await page.locator('#battleMinigameShoot').click();
+    else {
+      await page.locator('#game').focus();
+      await page.keyboard.press(rock % 2 ? 'ArrowUp' : 'Space');
+    }
+    if (rock === 4) {
+      await frames(page, 22);
+      stepped += 22;
+      await expect(page.locator('#battleMinigameStatus')).toContainText('Purple coin: collected');
+      await page.locator('#game').screenshot({ path: testInfo.outputPath('surfers-flowey-purple-coin.png') });
+    }
+  }
+  await frames(page, 894 - stepped);
+  await expect(page.locator('#battleMinigameControls')).toBeVisible();
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Crashes: 0');
+  await frames(page, 10);
+  await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
+  await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
+  await expect(page.locator('#battleFeedback')).toContainText('points.');
+  await page.locator('#inventoryButton').click();
+  await expect(page.getByText('Kris · HP: 100 / 100', { exact: true })).toBeVisible();
 });

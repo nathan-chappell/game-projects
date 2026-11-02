@@ -64,6 +64,8 @@ test('perfect shooting awards 100, mistakes reduce it by ten, and scoring never 
   const b = start(),
     m = b.minigame!,
     hp = freshPartyHP();
+  assert.equal(m.kind, 'shooting');
+  if (m.kind !== 'shooting') throw new Error('Expected shooting gallery');
   for (const target of m.targets) {
     advanceShootingMinigame(m, target.spawn + 0.2 - m.age);
     if (target.kind === 'enemy') {

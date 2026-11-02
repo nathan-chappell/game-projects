@@ -42,6 +42,7 @@ export interface GameElements {
   battleMenuBack: HTMLButtonElement;
   battleMinigameControls: HTMLElement;
   battleMinigameStatus: HTMLElement;
+  battleMinigameHint: HTMLElement;
   battleMinigameShoot: HTMLButtonElement;
   battleSoulControls: HTMLElement;
   battleSnowText: HTMLElement;

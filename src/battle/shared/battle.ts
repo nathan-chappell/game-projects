@@ -1,3 +1,4 @@
+import { drawSurferMinigame } from '../tenna/surfers-drawing.ts';
 import { drawShootingMinigame } from '../tenna/minigame-drawing.ts';
 import { drawTvBolts } from '../tenna/tv-bolts.ts';
 import { createGlitchStudioDrawing } from '../../rooms/glitch-studio/glitch-studio-drawing.ts';
@@ -630,7 +631,14 @@ export function createBattleDrawing(
       t = reducedParticleMotion.matches ? 0 : time;
     const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
-    if (encounter?.phase === 'minigame' && encounter.minigame) {
+    if (encounter?.phase === 'minigame' && encounter.minigame?.kind === 'surf') {
+      drawSurferMinigame(ctx, encounter.minigame, encounter.score ?? 0, (x, y) =>
+        drawBattleKris(x, y, 0.65, null),
+      );
+      $('gameHint').textContent = 'Surfers · Space / Up / tap to jump · Gold +5 · Purple +10 · Rocks -10';
+      return;
+    }
+    if (encounter?.phase === 'minigame' && encounter.minigame?.kind === 'shooting') {
       drawShootingMinigame(ctx, encounter.minigame, encounter.score ?? 0, () => {
         drawBattleKris(124, 367, 0.48);
         drawBattleFlowey(84, 367, t, 0.48);
