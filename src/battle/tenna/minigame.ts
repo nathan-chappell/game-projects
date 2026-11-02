@@ -59,6 +59,7 @@ export function createShootingMinigame(random: () => number = Math.random): Shoo
 }
 export function beginTennaMinigame(b: Encounter, random: () => number = Math.random) {
   if (b.kind !== 'tenna' || b.phase !== 'minigameIntro') return false;
+  b.minigameIntroSeen = true;
   b.phase = 'minigame';
   b.minigame = createShootingMinigame(random);
   return true;

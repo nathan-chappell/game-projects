@@ -1,4 +1,4 @@
-import { advanceShootingMinigame, settleShootingMinigame } from '../tenna/minigame.ts';
+import { advanceShootingMinigame, beginTennaMinigame, settleShootingMinigame } from '../tenna/minigame.ts';
 import { itemDefinitions, maxHP } from '../../game/config.ts';
 import { present } from '../../game/invariants.ts';
 import { useHealingItem } from '../../inventory/healing.ts';
@@ -657,6 +657,7 @@ export function requestTennaMinigame(encounter: Encounter) {
     return false;
   encounter.phase = 'minigameIntro';
   encounter.screen = 'menu';
+  if (encounter.minigameIntroSeen) return beginTennaMinigame(encounter);
   return true;
 }
 export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: () => number = Math.random) {

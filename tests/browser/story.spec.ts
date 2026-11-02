@@ -364,7 +364,8 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
   await page.locator('#battleAct').click();
   await page.locator('#battleProceedButton').click();
   await frames(page, 2);
-  await confirmRoomDialogue(page);
+  await expect(page.locator('#dialogue')).not.toBeVisible();
+  await expect(page.locator('#battleMinigameControls')).toBeVisible();
   await expect(page.locator('#battleMinigameStatus')).toContainText('Misses: 0');
   await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 100');
   await frames(page, 1);

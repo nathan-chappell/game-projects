@@ -203,6 +203,7 @@ export interface EncounterBase {
   darkUnlocked?: boolean;
   darkAttackCount?: number;
   lastDarkPattern?: number;
+  minigameIntroSeen?: boolean;
   minigame?: ShootingMinigame | null;
   score?: number;
   tennaCueSeen?: boolean;

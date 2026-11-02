@@ -135,3 +135,24 @@ test('keyboard aiming moves around all nine windows', () => {
   assert.equal(m.aim, 2);
   assert.deepEqual(m.cursor, galleryWindows[2]);
 });
+
+test('the first minigame waits for Tenna’s speech and later uses start immediately; a fresh fight resets it', () => {
+  const b = createTennaEncounter(),
+    hp = freshPartyHP();
+  requestTennaMinigame(b);
+  assert.equal(b.phase, 'minigameIntro');
+  assert.equal(b.minigame, undefined);
+  assert.equal(b.minigameIntroSeen, undefined);
+  beginTennaMinigame(b, () => 0);
+  assert.equal(b.minigameIntroSeen, true);
+  finishTennaMinigame(b, hp, () => 0);
+  b.turn = 'Kris';
+  b.phase = 'kris';
+  requestTennaMinigame(b);
+  assert.equal(b.phase, 'minigame');
+  assert.equal(b.minigame!.misses, 0);
+  assert.equal(b.score, 100);
+  const fresh = createTennaEncounter();
+  requestTennaMinigame(fresh);
+  assert.equal(fresh.phase, 'minigameIntro');
+});
