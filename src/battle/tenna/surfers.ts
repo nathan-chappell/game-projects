@@ -1,6 +1,6 @@
 export const surferSettings = {
   duration: 15,
-  speed: 220,
+  speed: 300,
   playerX: 140,
   waterY: 320,
   gravity: 1000,
@@ -10,7 +10,6 @@ interface Rock {
   x: number;
   height: number;
   hit: boolean;
-  flowey: boolean;
 }
 interface Coin {
   x: number;
@@ -18,7 +17,15 @@ interface Coin {
   purple: boolean;
   collected: boolean;
 }
+interface WaterPlatform {
+  x: number;
+  y: number;
+  width: number;
+  landed: boolean;
+}
 export interface SurferMinigame {
+  platform: WaterPlatform;
+  onPlatform: boolean;
   kind: 'surf';
   age: number;
   misses: number;
@@ -33,20 +40,28 @@ export interface SurferMinigame {
   feedbackAge: number;
 }
 export function createSurferMinigame(): SurferMinigame {
-  const rocks = Array.from({ length: 9 }, (_, i) => ({
-    x: 680 + (-0.5 + i * 1.4) * surferSettings.speed,
-    height: [30, 36, 38, 32, 40, 34, 30, 38, 32][i],
-    hit: false,
-    flowey: i === 4,
-  }));
+  const rocks = Array.from({ length: 13 }, (_, i) => i)
+    .filter((i) => i !== 5 && i !== 6)
+    .map((i) => ({
+      x: surferSettings.playerX + (1.4 + i * 1.05) * surferSettings.speed,
+      height: [30, 36, 38, 32, 34, 30, 36, 38, 32, 36, 40, 32, 38][i],
+      hit: false,
+    }));
+  const platform = {
+    x: surferSettings.playerX + 7.7 * surferSettings.speed,
+    y: surferSettings.waterY - 44,
+    width: 128,
+    landed: false,
+  };
   const coins: Coin[] = rocks.flatMap((r) => [
     { x: r.x - 40, y: surferSettings.waterY - 24, purple: false, collected: false },
     { x: r.x + 40, y: surferSettings.waterY - 65, purple: false, collected: false },
   ]);
-  const flower = rocks[4];
-  coins.push({ x: flower.x, y: surferSettings.waterY - flower.height - 42, purple: true, collected: false });
+  coins.push({ x: platform.x - 20, y: platform.y - 32, purple: true, collected: false });
   return {
     kind: 'surf',
+    platform,
+    onPlatform: false,
     age: 0,
     misses: 0,
     points: 0,
@@ -56,13 +71,18 @@ export function createSurferMinigame(): SurferMinigame {
     coins,
     coinsCollected: 0,
     purpleCollected: false,
-    feedback: 'Jump over rocks and collect coins!',
+    feedback: 'Jump rocks. Land on Flowey’s water platform!',
     feedbackAge: 2,
   };
 }
 export function jumpSurfer(m: SurferMinigame) {
-  if (m.age >= surferSettings.duration || m.feetY < surferSettings.waterY - 0.01 || m.velocity !== 0)
+  if (
+    m.age >= surferSettings.duration ||
+    (m.feetY < surferSettings.waterY - 0.01 && !m.onPlatform) ||
+    m.velocity !== 0
+  )
     return false;
+  m.onPlatform = false;
   m.velocity = -surferSettings.jumpSpeed;
   return true;
 }
@@ -75,8 +95,20 @@ export function advanceSurfer(m: SurferMinigame, dt: number) {
   for (let i = 0; i < steps; i++) {
     m.age = Math.min(surferSettings.duration, m.age + step);
     m.feedbackAge = Math.max(0, m.feedbackAge - step);
+    const previousFeetY = m.feetY;
+    m.platform.x -= surferSettings.speed * step;
     m.feetY += m.velocity * step + 0.5 * surferSettings.gravity * step * step;
     m.velocity += surferSettings.gravity * step;
+    const overPlatform = Math.abs(m.platform.x - surferSettings.playerX) < m.platform.width / 2 + 8;
+    if (
+      (m.onPlatform && overPlatform) ||
+      (overPlatform && m.velocity >= 0 && previousFeetY <= m.platform.y && m.feetY >= m.platform.y)
+    ) {
+      m.feetY = m.platform.y;
+      m.velocity = 0;
+      m.onPlatform = true;
+      m.platform.landed = true;
+    } else m.onPlatform = false;
     if (m.feetY >= surferSettings.waterY) {
       m.feetY = surferSettings.waterY;
       m.velocity = 0;
@@ -99,6 +131,7 @@ export function advanceSurfer(m: SurferMinigame, dt: number) {
       c.x -= surferSettings.speed * step;
       if (
         !c.collected &&
+        (!c.purple || m.onPlatform) &&
         Math.abs(c.x - surferSettings.playerX) < 23 &&
         c.y >= m.feetY - 53 &&
         c.y <= m.feetY + 8

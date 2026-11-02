@@ -48,16 +48,28 @@ test('each rock crash removes ten points once and gold coins give five each', ()
   assert.equal(m.points, -5);
   assert.equal(m.coinsCollected, 1);
 });
-test('Flowey appears on exactly one rock and offers exactly one ten-point purple coin', () => {
+test('Flowey’s water platform awards its one purple coin only after landing', () => {
   const m = createSurferMinigame();
-  assert.equal(m.rocks.filter((r) => r.flowey).length, 1);
+  assert.equal(m.platform.width, 128);
+  assert.equal(m.platform.landed, false);
   assert.equal(m.coins.filter((c) => c.purple).length, 1);
   for (const r of m.rocks) r.x = 10000;
   for (const c of m.coins) c.x = 10000;
   const purple = m.coins.find((c) => c.purple)!;
   purple.x = 140;
-  purple.y = 300;
+  purple.y = m.platform.y - 32;
+  m.platform.x = 140;
+  m.feetY = 250;
+  m.velocity = -20;
   advanceSurfer(m, 0.01);
+  assert.equal(m.purpleCollected, false);
+  m.platform.x = 140;
+  purple.x = 140;
+  m.feetY = 270;
+  m.velocity = 100;
+  advanceSurfer(m, 0.06);
+  assert.equal(m.onPlatform, true);
+  assert.equal(m.platform.landed, true);
   assert.equal(m.points, 10);
   assert.equal(m.purpleCollected, true);
   advanceSurfer(m, 0.1);
@@ -68,13 +80,15 @@ test('jumping clears every rock and reaches Flowey’s coin at different frame r
     const m = createSurferMinigame();
     let done = false;
     for (let i = 0; i < fps * 16 && !done; i++) {
-      if (m.rocks.some((r) => r.x > 140 && r.x < 212)) jumpSurfer(m);
+      if (m.rocks.some((r) => r.x > 140 && r.x < 212) || (m.platform.x > 340 && m.platform.x < 370))
+        jumpSurfer(m);
       done = advanceSurfer(m, 1 / fps);
     }
     assert.equal(done, true);
     assert.equal(m.age, 15);
     assert.equal(m.misses, 0);
     assert.equal(m.purpleCollected, true);
+    assert.equal(m.platform.landed, true);
     assert.ok(m.points >= 10);
   }
   const m = createSurferMinigame();
@@ -118,4 +132,15 @@ test('Surfers ends at fifteen seconds, settles coin/rock points without X damage
   round.points = -50;
   finishTennaMinigame(b, hp);
   assert.equal(b.score, 0);
+});
+
+test('rocks scroll faster and arrive more frequently while leaving a gap at Flowey’s platform', () => {
+  const m = createSurferMinigame();
+  assert.equal(surferSettings.speed, 300);
+  assert.ok(m.rocks.length > 9);
+  const x = m.rocks[0].x;
+  advanceSurfer(m, 0.1);
+  assert.ok(Math.abs(m.rocks[0].x - (x - 30)) < 1e-8);
+  assert.ok((m.rocks[1].x - m.rocks[0].x) / surferSettings.speed < 1.4);
+  assert.ok(m.rocks.every((r) => Math.abs(r.x - m.platform.x) > m.platform.width));
 });

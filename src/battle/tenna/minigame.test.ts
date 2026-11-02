@@ -158,3 +158,12 @@ test('the first minigame waits for Tenna’s speech and later uses start immedia
   requestTennaMinigame(fresh);
   assert.equal(fresh.phase, 'minigameIntro');
 });
+
+test('shooting Flowey’s cowboy hat counts as shooting Flowey', () => {
+  const m = createShootingMinigame(() => 0.37);
+  m.age = m.targets[2].spawn + 0.1;
+  const p = galleryWindows[m.targets[2].slot];
+  assert.equal(shootGallery(m, p.x, p.y - 38), true);
+  assert.equal(m.misses, 1);
+  assert.equal(m.targets[2].shot, true);
+});

@@ -330,10 +330,22 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
       continue; // Let this enemy shoot: one X.
     else if (target === 2 || target % 4 !== 2) {
       // Shoot Flowey once; leave the later Floweys alone.
-      if (target === 2)
+      if (target === 2) {
         await page
           .locator('#game')
           .screenshot({ path: testInfo.outputPath('shooting-gallery-flowey-target.png') });
+        const box = await page.locator('#game').boundingBox();
+        if (!box) throw new Error('Missing canvas');
+        await page.screenshot({
+          path: testInfo.outputPath('cowboy-flowey.png'),
+          clip: {
+            x: box.x + (480 * box.width) / 640,
+            y: box.y + (60 * box.height) / 480,
+            width: (100 * box.width) / 640,
+            height: (105 * box.height) / 480,
+          },
+        });
+      }
       const p = target % 2 === 0 ? { x: 530, y: 112 } : { x: 318, y: 207 };
       const bounds = await page.locator('#game').boundingBox();
       if (!bounds) throw new Error('Missing canvas');
@@ -432,18 +444,24 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
   await expect(page.locator('#battleTurnText')).toHaveText('Surfers');
   await expect(page.locator('#battleMinigameShoot')).toHaveText('Jump · Space / ↑');
   let stepped = 0;
-  for (let rock = 0; rock < 9; rock++) {
-    const jumpFrame = Math.ceil((1.637 + rock * 1.4) * 60);
+  const events = [
+    ...Array.from({ length: 13 }, (_, i) => i)
+      .filter((i) => i !== 5 && i !== 6)
+      .map((i) => ({ time: 1.17 + i * 1.05, platform: false })),
+    { time: 6.99, platform: true },
+  ].sort((a, b) => a.time - b.time);
+  for (const [index, event] of events.entries()) {
+    const jumpFrame = Math.ceil(event.time * 60);
     await frames(page, jumpFrame - stepped);
     stepped = jumpFrame;
-    if (rock === 0) await page.locator('#battleMinigameShoot').click();
+    if (index === 0) await page.locator('#battleMinigameShoot').click();
     else {
       await page.locator('#game').focus();
-      await page.keyboard.press(rock % 2 ? 'ArrowUp' : 'Space');
+      await page.keyboard.press(index % 2 ? 'ArrowUp' : 'Space');
     }
-    if (rock === 4) {
-      await frames(page, 22);
-      stepped += 22;
+    if (event.platform) {
+      await frames(page, 41);
+      stepped += 41;
       await expect(page.locator('#battleMinigameStatus')).toContainText('Purple coin: collected');
       await page.locator('#game').screenshot({ path: testInfo.outputPath('surfers-flowey-purple-coin.png') });
     }

@@ -83,7 +83,10 @@ export function shootGallery(m: ShootingMinigame, x = m.cursor.x, y = m.cursor.y
   m.cursor = { x, y };
   m.shotFlash = 0.12;
   const target = visibleGalleryTargets(m).find(
-    (t) => Math.abs(x - galleryWindows[t.slot].x) <= 31 && Math.abs(y - galleryWindows[t.slot].y) <= 33,
+    (t) =>
+      Math.abs(x - galleryWindows[t.slot].x) <= 31 &&
+      y >= galleryWindows[t.slot].y - (t.kind === 'flowey' ? 43 : 33) &&
+      y <= galleryWindows[t.slot].y + 33,
   );
   if (!target) {
     m.feedback = 'Miss!';

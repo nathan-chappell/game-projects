@@ -66,18 +66,28 @@ export function drawSurferMinigame(
       ],
       '#566071',
     );
-    if (rock.flowey) {
-      const cy = y - rock.height - 17;
-      for (let p = 0; p < 6; p++) {
-        const a = (p * Math.PI) / 3;
-        r(x + Math.cos(a) * 10 - 4, cy + Math.sin(a) * 10 - 4, 8, 8, '#ffe049');
-      }
-      r(x - 7, cy - 7, 14, 15, '#fff8df');
-      r(x - 4, cy - 3, 2, 4, '#222');
-      r(x + 3, cy - 3, 2, 4, '#222');
-      r(x - 3, cy + 4, 6, 2, '#222');
-      r(x - 2, cy + 8, 4, 12, '#53ac64');
+  }
+  const platform = m.platform;
+  if (platform.x > -100 && platform.x < 740) {
+    const x = platform.x,
+      y = platform.y;
+    r(x - platform.width / 2, y, platform.width, 7, '#c6f9ff');
+    r(x - platform.width / 2 + 5, y + 7, platform.width - 10, 8, '#50cae5');
+    r(x - platform.width / 2 + 14, y + 15, platform.width - 28, 5, '#1b90bc');
+    for (let i = 0; i < 5; i++)
+      r(x - platform.width / 2 + 9 + i * 24, y - 2 + Math.sin(m.age * 4 + i) * 2, 16, 3, '#efffff');
+    const flowerX = x + 25,
+      cy = y - 22;
+    for (let p = 0; p < 6; p++) {
+      const a = (p * Math.PI) / 3;
+      r(flowerX + Math.cos(a) * 10 - 4, cy + Math.sin(a) * 10 - 4, 8, 8, '#ffe049');
     }
+    r(flowerX - 7, cy - 7, 14, 15, '#fff8df');
+    r(flowerX - 4, cy - 3, 2, 4, '#222');
+    r(flowerX + 3, cy - 3, 2, 4, '#222');
+    r(flowerX - 3, cy + 4, 6, 2, '#222');
+    r(flowerX - 2, cy + 8, 4, 14, '#53ac64');
+    text('LAND HERE', x - 48, y + 36, '#d7fbff', 12);
   }
   for (const c of m.coins) {
     if (c.collected || c.x < -20 || c.x > 660) continue;

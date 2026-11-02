@@ -59,6 +59,30 @@ export function drawShootingMinigame(
       r(p.x - 2, p.y + 4, 4, 19, '#3b9d4d');
       r(p.x - 12, p.y + 13, 12, 5, '#3b9d4d');
       r(p.x + 2, p.y + 10, 12, 5, '#3b9d4d');
+      // A broad curled brim, pinched crown and hatband keep Flowey recognizable.
+      ctx.fillStyle = '#35241e';
+      ctx.beginPath();
+      ctx.moveTo(p.x - 23, p.y - 29);
+      ctx.lineTo(p.x - 17, p.y - 25);
+      ctx.lineTo(p.x - 12, p.y - 27);
+      ctx.lineTo(p.x - 12, p.y - 40);
+      ctx.lineTo(p.x - 5, p.y - 43);
+      ctx.lineTo(p.x + 2, p.y - 39);
+      ctx.lineTo(p.x + 9, p.y - 41);
+      ctx.lineTo(p.x + 13, p.y - 27);
+      ctx.lineTo(p.x + 19, p.y - 29);
+      ctx.lineTo(p.x + 24, p.y - 33);
+      ctx.lineTo(p.x + 22, p.y - 24);
+      ctx.lineTo(p.x + 14, p.y - 21);
+      ctx.lineTo(p.x - 15, p.y - 21);
+      ctx.lineTo(p.x - 23, p.y - 24);
+      ctx.closePath();
+      ctx.fill();
+      r(p.x - 10, p.y - 38, 20, 11, '#ad7846');
+      r(p.x - 7, p.y - 40, 5, 3, '#c59a5e');
+      r(p.x - 11, p.y - 28, 24, 4, '#6c3834');
+      r(p.x + 2, p.y - 28, 4, 4, '#ffd371');
+      r(p.x - 18, p.y - 24, 35, 2, '#dcb57c');
     } else {
       ctx.strokeStyle = '#eee';
       ctx.lineWidth = 3;
