@@ -1088,6 +1088,7 @@ export function startGame() {
     'tennaOpening',
     'tennaMinigame',
     'tennaHelpers',
+    'tennaCut',
   ]);
   // A short path connects Flowey to Kris initially. After that he follows the
   // actual movement trail, so he takes the same turns around the castle walls.

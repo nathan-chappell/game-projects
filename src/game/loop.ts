@@ -156,6 +156,12 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       return;
     }
+    if (state.bossEncounter?.phase === 'tennaCut' && !state.dialogue) {
+      dependencies.openDialogue(['[Tenna] * We cant have That Violence in TV, Mike, cut!'], 'tennaCut');
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'minigameIntro' && !state.dialogue) {
       dependencies.openDialogue(
         ['[Tenna] * Oh yeah! 1500 Points and i give up! Or else you work for ME!'],

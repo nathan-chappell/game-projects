@@ -545,13 +545,8 @@ export function damageEnemy(encounter: Encounter, amount: number) {
     encounter.hitAge = 0;
     encounter.hitActor = encounter.turn;
     encounter.hitDamage = damage;
-    if (encounter.enemy.hp === 0) {
-      encounter.phase = 'victory';
-      encounter.turn = null;
-      encounter.enemy.visible = false;
-      encounter.soul = encounter.snowAttack = null;
-      encounter.screen = 'menu';
-    }
+    encounter.phase = 'tennaCut';
+    encounter.screen = 'menu';
     return damage;
   }
   const lethal = !encounter.finalAttackUsed && amount >= encounter.enemy.hp,
@@ -566,6 +561,13 @@ export function damageEnemy(encounter: Encounter, amount: number) {
   encounter.hitActor = encounter.turn;
   encounter.hitDamage = damage;
   return damage;
+}
+export function completeTennaCut(encounter: Encounter) {
+  if (encounter.kind !== 'tenna' || encounter.phase !== 'tennaCut' || !encounter.turn) return false;
+  encounter.enemy.hp = encounter.enemy.maxHP;
+  encounter.enemy.visible = true;
+  encounter.phase = encounter.turn.toLowerCase();
+  return finishPartyTurn(encounter, 'Mike cuts the violence. Tenna restores all his HP!');
 }
 export function attackEnemy(encounter: Encounter) {
   if (!encounter || !canUseBattleAction(encounter, 'attack')) return false;

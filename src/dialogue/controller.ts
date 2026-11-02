@@ -4,7 +4,12 @@ import { createDarkEncounter } from '../battle/dark/dark-battle.ts';
 import { isRescueImportant } from '../battle/noelle/aftermath.ts';
 import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
-import { completeDarkShine, completeTennaCue, startKrisTurn } from '../battle/shared/rules.ts';
+import {
+  completeDarkShine,
+  completeTennaCue,
+  completeTennaCut,
+  startKrisTurn,
+} from '../battle/shared/rules.ts';
 import type { Elements } from '../game/dom.ts';
 import { present } from '../game/invariants.ts';
 import type { GameState } from '../game/types.ts';
@@ -348,6 +353,11 @@ export function createDialogue(dependencies: Dependencies) {
         openDialogue(['[Tenna] * Mike! Stop the glitching!!'], 'tennaOpening');
         dependencies.syncBossUI();
         dependencies.storyUI();
+        dependencies.canvas.focus({ preventScroll: true });
+      }
+      if (kind === 'tennaCut' && state.bossEncounter) {
+        completeTennaCut(state.bossEncounter);
+        dependencies.syncBossUI();
         dependencies.canvas.focus({ preventScroll: true });
       }
       if (kind === 'tennaMinigame' && state.bossEncounter) {

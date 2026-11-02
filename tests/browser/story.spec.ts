@@ -370,3 +370,36 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
   await frames(page, 1);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('shooting-gallery-fresh-round.png') });
 });
+
+test('Tenna cuts every party attack and heals to full before the next turn', async ({ page }, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  for (const name of ['Kris', 'Flowey', 'Susie', 'Ralsey']) {
+    await expect(page.locator('#battleTurnText')).toHaveText(`${name}’s turn`);
+    await page.locator('#battleAttack').click();
+    await page.locator('#battleTargetButton').click();
+    await frames(page, 2);
+    await expect(page.locator('#speakerName')).toHaveText('Tenna');
+    await expect(page.locator('#battleAttack')).toBeDisabled();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#dialogueText')).toHaveText('* We cant have That Violence in TV, Mike, cut!');
+    await page.keyboard.press('l');
+    await expect(page.locator('#dialogue')).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#battleFeedback')).toContainText('Tenna restores all his HP!');
+    if (name !== 'Ralsey') {
+      await page.locator('#battleAttack').click();
+      await expect(page.locator('#battleTargetButton')).toHaveText('Tenna · HP 4000 / 4000');
+      await page.locator('#battleMenuBack').click();
+    }
+  }
+  await frames(page, 2);
+  await expect(page.locator('#speakerName')).toHaveText('Tenna');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('Hey Minions- i mean Helpers, attack!');
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-restored-after-attacks.png') });
+});
