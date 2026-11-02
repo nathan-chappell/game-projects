@@ -67,15 +67,45 @@ export function drawSurferMinigame(
       '#566071',
     );
   }
+  for (const step of m.steps) {
+    if (step.x < -110 || step.x > 750) continue;
+    const x = step.x,
+      y = step.y;
+    r(x - step.width / 2, y, step.width, 7, '#c6f9ff');
+    r(x - step.width / 2 + 5, y + 7, step.width - 10, 8, '#50cae5');
+    r(x - step.width / 2 + 14, y + 15, step.width - 28, 5, '#1b90bc');
+    for (let i = 0; i < 6; i++)
+      r(x - step.width / 2 + 9 + i * 24, y - 2 + Math.sin(m.age * 4 + i) * 2, 16, 3, '#efffff');
+  }
   const platform = m.platform;
-  if (platform.x > -100 && platform.x < 740) {
+  if (platform.x > -110 && platform.x < 750) {
     const x = platform.x,
       y = platform.y;
-    r(x - platform.width / 2, y, platform.width, 7, '#c6f9ff');
-    r(x - platform.width / 2 + 5, y + 7, platform.width - 10, 8, '#50cae5');
-    r(x - platform.width / 2 + 14, y + 15, platform.width - 28, 5, '#1b90bc');
-    for (let i = 0; i < 5; i++)
-      r(x - platform.width / 2 + 9 + i * 24, y - 2 + Math.sin(m.age * 4 + i) * 2, 16, 3, '#efffff');
+    // The pale shaft is scenery that Kris can pass through safely.
+    r(x - 18, y + 22, 36, surferSettings.waterY - y - 34, '#c8cdd1');
+    r(x - 18, y + 22, 8, surferSettings.waterY - y - 34, '#e1e4e6');
+    poly(
+      [
+        [x - 46, surferSettings.waterY + 8],
+        [x - 31, surferSettings.waterY - 20],
+        [x + 22, surferSettings.waterY - 22],
+        [x + 48, surferSettings.waterY + 8],
+      ],
+      '#747b86',
+    );
+    poly(
+      [
+        [x - platform.width / 2, y + 6],
+        [x - platform.width / 2 + 10, y - 2],
+        [x - platform.width / 2 + 39, y - 7],
+        [x + platform.width / 2 - 8, y],
+        [x + platform.width / 2, y + 23],
+        [x + platform.width / 2 - 14, y + 31],
+        [x - platform.width / 2 + 12, y + 27],
+      ],
+      '#81868e',
+    );
+    r(x - platform.width / 2 + 12, y, platform.width - 26, 4, '#b6bdc3');
     const flowerX = x + 25,
       cy = y - 22;
     for (let p = 0; p < 6; p++) {
@@ -87,7 +117,7 @@ export function drawSurferMinigame(
     r(flowerX + 3, cy - 3, 2, 4, '#222');
     r(flowerX - 3, cy + 4, 6, 2, '#222');
     r(flowerX - 2, cy + 8, 4, 14, '#53ac64');
-    text('LAND HERE', x - 48, y + 36, '#d7fbff', 12);
+    text('FLOWEY', x - 23, y + 48, '#465b74', 12);
   }
   for (const c of m.coins) {
     if (c.collected || c.x < -20 || c.x > 660) continue;

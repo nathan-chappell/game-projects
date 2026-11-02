@@ -50,7 +50,7 @@ test('each rock crash removes ten points once and gold coins give five each', ()
 });
 test('Flowey’s water platform awards its one purple coin only after landing', () => {
   const m = createSurferMinigame();
-  assert.equal(m.platform.width, 128);
+  assert.equal(m.platform.width, 160);
   assert.equal(m.platform.landed, false);
   assert.equal(m.coins.filter((c) => c.purple).length, 1);
   for (const r of m.rocks) r.x = 10000;
@@ -59,13 +59,13 @@ test('Flowey’s water platform awards its one purple coin only after landing', 
   purple.x = 140;
   purple.y = m.platform.y - 32;
   m.platform.x = 140;
-  m.feetY = 250;
+  m.feetY = m.platform.y - 26;
   m.velocity = -20;
   advanceSurfer(m, 0.01);
   assert.equal(m.purpleCollected, false);
   m.platform.x = 140;
   purple.x = 140;
-  m.feetY = 270;
+  m.feetY = m.platform.y - 6;
   m.velocity = 100;
   advanceSurfer(m, 0.06);
   assert.equal(m.onPlatform, true);
@@ -80,7 +80,10 @@ test('jumping clears every rock and reaches Flowey’s coin at different frame r
     const m = createSurferMinigame();
     let done = false;
     for (let i = 0; i < fps * 16 && !done; i++) {
-      if (m.rocks.some((r) => r.x > 140 && r.x < 212) || (m.platform.x > 340 && m.platform.x < 370))
+      if (
+        m.rocks.some((r) => r.x > 140 && r.x < 212) ||
+        [...m.steps, m.platform].some((p) => !p.landed && p.x > 340 && p.x < 370)
+      )
         jumpSurfer(m);
       done = advanceSurfer(m, 1 / fps);
     }
@@ -89,6 +92,7 @@ test('jumping clears every rock and reaches Flowey’s coin at different frame r
     assert.equal(m.misses, 0);
     assert.equal(m.purpleCollected, true);
     assert.equal(m.platform.landed, true);
+    assert.ok(m.steps.every((p) => p.landed));
     assert.ok(m.points >= 10);
   }
   const m = createSurferMinigame();
@@ -137,10 +141,34 @@ test('Surfers ends at fifteen seconds, settles coin/rock points without X damage
 test('rocks scroll faster and arrive more frequently while leaving a gap at Flowey’s platform', () => {
   const m = createSurferMinigame();
   assert.equal(surferSettings.speed, 300);
-  assert.ok(m.rocks.length > 9);
+  assert.equal(m.rocks.length, 9);
   const x = m.rocks[0].x;
   advanceSurfer(m, 0.1);
   assert.ok(Math.abs(m.rocks[0].x - (x - 30)) < 1e-8);
   assert.ok((m.rocks[1].x - m.rocks[0].x) / surferSettings.speed < 1.4);
   assert.ok(m.rocks.every((r) => Math.abs(r.x - m.platform.x) > m.platform.width));
+});
+
+test('the route rises through two water platforms and a stone cap; its pale support is safely pass-through', () => {
+  const m = createSurferMinigame();
+  assert.equal(m.steps.length, 2);
+  assert.deepEqual(
+    [...m.steps, m.platform].map((p) => p.y),
+    [276, 232, 188],
+  );
+  for (const r of m.rocks) r.x = 10000;
+  for (const c of m.coins) c.x = 10000;
+  m.platform.x = 140;
+  advanceSurfer(m, 0.1);
+  assert.equal(m.misses, 0);
+  assert.equal(m.points, 0);
+  assert.equal(m.feetY, 320);
+  m.platform.x = 140;
+  m.feetY = m.platform.y + 10;
+  m.velocity = -200;
+  advanceSurfer(m, 0.1);
+  assert.equal(m.misses, 0);
+  assert.equal(m.points, 0);
+  assert.equal(m.onPlatform, false);
+  assert.equal(m.platform.landed, false);
 });

@@ -446,9 +446,11 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
   let stepped = 0;
   const events = [
     ...Array.from({ length: 13 }, (_, i) => i)
-      .filter((i) => i !== 5 && i !== 6)
+      .filter((i) => i < 5 || i > 8)
       .map((i) => ({ time: 1.17 + i * 1.05, platform: false })),
-    { time: 6.99, platform: true },
+    { time: 6.3, platform: false },
+    { time: 7.15, platform: false },
+    { time: 8.05, platform: true },
   ].sort((a, b) => a.time - b.time);
   for (const [index, event] of events.entries()) {
     const jumpFrame = Math.ceil(event.time * 60);
@@ -459,9 +461,14 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
       await page.locator('#game').focus();
       await page.keyboard.press(index % 2 ? 'ArrowUp' : 'Space');
     }
+    if (event.time === 7.15) {
+      await frames(page, 15);
+      stepped += 15;
+      await page.locator('#game').screenshot({ path: testInfo.outputPath('surfers-stepped-route.png') });
+    }
     if (event.platform) {
-      await frames(page, 41);
-      stepped += 41;
+      await frames(page, 48);
+      stepped += 48;
       await expect(page.locator('#battleMinigameStatus')).toContainText('Purple coin: collected');
       await page.locator('#game').screenshot({ path: testInfo.outputPath('surfers-flowey-purple-coin.png') });
     }
