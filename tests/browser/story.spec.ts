@@ -484,7 +484,7 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
   await expect(page.getByText('Kris · HP: 100 / 100', { exact: true })).toBeVisible();
 });
 
-test('third minigame lets Susie throw hammers at incoming TVs and dodge lanes', async ({
+test('third minigame keeps Susie stationary while mouse and arrows aim hammers', async ({
   page,
 }, testInfo) => {
   await controlFrames(page);
@@ -522,7 +522,15 @@ test('third minigame lets Susie throw hammers at incoming TVs and dodge lanes', 
   await frames(page, 12);
   await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 10');
   await page.locator('#game').focus();
-  await page.keyboard.press('ArrowUp');
+  await page.keyboard.down('ArrowUp');
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 24);
+  await page.keyboard.up('ArrowUp');
+  await page.keyboard.up('ArrowRight');
+  await page.keyboard.press('z');
+  await frames(page, 2);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('hammer-keyboard-aim.png') });
+  await page.keyboard.press('2');
   await frames(page, 750);
   await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
   await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');

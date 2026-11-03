@@ -22,7 +22,7 @@ export function drawHammerMinigame(
   glow.addColorStop(1, '#171629');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 47, 640, 361);
-  drawSusie(98, hammerLanes[m.lane] + 28);
+  drawSusie(98, 288);
   for (const tv of m.tvs) {
     if (tv.resolved || m.age < tv.spawn) continue;
     ctx.save();
@@ -95,7 +95,7 @@ export function drawHammerMinigame(
   rect(0, 408, 640, 72, '#0c0c18');
   text(`Xs: ${m.misses}   ROUND +${m.points}`, 16, 433, '#ffcaea');
   text(`TIME ${Math.ceil(Math.max(0, hammerSettings.duration - m.age))}`, 526, 433);
-  text('Mouse aims · Click / Z throws · ↑ / ↓ dodges', 16, 459, '#d9d2ee', 13);
+  text('Mouse / arrows aim · Click / Z / Space throws', 16, 459, '#d9d2ee', 13);
   if (m.feedbackAge > 0) text(m.feedback, 140, 106, m.feedback.includes('X') ? '#ff647f' : '#ffdf80', 14);
   ctx.restore();
 }

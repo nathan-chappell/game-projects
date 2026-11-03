@@ -1,4 +1,4 @@
-import { moveHammerLane, throwHammer } from '../tenna/hammers.ts';
+import { setHammerAimKey, throwHammer } from '../tenna/hammers.ts';
 import { jumpSurfer } from '../tenna/surfers.ts';
 import { shootGallery, moveGalleryAim, minigamePoints } from '../tenna/minigame.ts';
 import { requestTennaMinigame, finishTennaMinigame } from './rules.ts';
@@ -178,10 +178,20 @@ export function setupBattleControls(
     if (!m || (m.kind !== 'shooting' && m.kind !== 'hammers') || state.bossEncounter?.phase !== 'minigame')
       return;
     const b = canvas.getBoundingClientRect();
+    if (m.kind === 'hammers') m.aimKeys = [];
     m.cursor = {
       x: ((event.clientX - b.left) * 640) / b.width,
       y: ((event.clientY - b.top) * 480) / b.height,
     };
+  });
+
+  document.addEventListener('keyup', (event) => {
+    const m = state.bossEncounter?.minigame;
+    if (m?.kind === 'hammers') setHammerAimKey(m, event.key, false);
+  });
+  window.addEventListener('blur', () => {
+    const m = state.bossEncounter?.minigame;
+    if (m?.kind === 'hammers') m.aimKeys = [];
   });
 
   function blocked() {
@@ -263,7 +273,7 @@ export function setupBattleControls(
           if (event.key.startsWith('Arrow')) {
             if (m.kind === 'surf') {
               if (event.key === 'ArrowUp') jumpSurfer(m);
-            } else if (m.kind === 'hammers') moveHammerLane(m, event.key);
+            } else if (m.kind === 'hammers') setHammerAimKey(m, event.key, true);
             else moveGalleryAim(m, event.key);
           } else if (event.key === 'Shift') finishTennaMinigame(b, state.partyHP);
           else if (event.key === '2') b.invincible = !b.invincible;
@@ -415,7 +425,7 @@ export function setupBattleControls(
     $('battleMinigameHint').textContent = surf
       ? 'Jump over rocks and collect coins. Space, Up, or tap to jump.'
       : hammers
-        ? 'Mouse aims; click or Z / Space throws. Up / Down dodges. Avoid Flowey TVs!'
+        ? 'Mouse or arrow keys aim; click or Z / Space throws. Susie stays on the left. Avoid Flowey TVs!'
         : 'Click or tap an enemy. Arrow keys aim; Z / Space shoots. Do not shoot Flowey!';
     $('battleMinigameStatus').textContent = encounter?.minigame
       ? encounter.minigame.kind === 'surf'

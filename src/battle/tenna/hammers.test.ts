@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { advanceHammers, createHammerMinigame, moveHammerLane, throwHammer } from './hammers.ts';
+import { advanceHammers, createHammerMinigame, setHammerAimKey, throwHammer } from './hammers.ts';
 import { beginTennaMinigame, settleTennaMinigame } from './minigame.ts';
 import { createTennaEncounter } from '../../rooms/backstage/tenna-finale.ts';
 import { freshPartyHP } from '../../game/config.ts';
@@ -21,29 +21,51 @@ test('hammer hits award five for Tenna and one X for Flowey, once per TV', () =>
     assert.equal(m.misses, flowey ? 1 : 0);
   }
 });
-test('TV collisions add one X; changing lanes safely dodges both kinds of TV', () => {
+test('TV collisions add one X and aiming never moves Susie out of the fixed position', () => {
   for (const flowey of [false, true]) {
-    const hit = target(flowey);
-    advanceHammers(hit, 2);
-    assert.equal(hit.misses, 1);
-    const dodge = target(flowey);
-    moveHammerLane(dodge, 'ArrowUp');
-    advanceHammers(dodge, 2);
-    assert.equal(dodge.misses, 0);
-    assert.equal(dodge.points, 0);
+    const m = target(flowey);
+    setHammerAimKey(m, 'ArrowUp', true);
+    advanceHammers(m, 2);
+    assert.equal(m.misses, 1);
+    advanceHammers(m, 1);
+    assert.equal(m.misses, 1);
+    assert.equal(m.points, 0);
   }
 });
-test('pointer throws aim toward the crosshair and dodging stays in bounds', () => {
+test('mouse and keyboard aim hammers freely while Susie throws from a fixed position', () => {
   const m = target();
   throwHammer(m, 358, 400);
-  assert.equal(m.lane, 1);
+  assert.equal(m.hammers[0].x, 126);
+  assert.equal(m.hammers[0].y, 260);
   assert.ok(m.hammers[0].vy > 0);
   assert.ok(m.hammers[0].vx > 0);
-  moveHammerLane(m, 'ArrowDown');
-  moveHammerLane(m, 'ArrowDown');
-  assert.equal(m.lane, 2);
-  for (let i = 0; i < 4; i++) moveHammerLane(m, 'ArrowUp');
-  assert.equal(m.lane, 0);
+  m.tvs = [];
+  setHammerAimKey(m, 'ArrowUp', true);
+  setHammerAimKey(m, 'ArrowLeft', true);
+  advanceHammers(m, 0.2);
+  assert.ok(m.cursor.x < 400);
+  assert.ok(m.cursor.y < 358);
+  setHammerAimKey(m, 'ArrowUp', false);
+  setHammerAimKey(m, 'ArrowLeft', false);
+  const stopped = { ...m.cursor };
+  advanceHammers(m, 0.3);
+  assert.deepEqual(m.cursor, stopped);
+  throwHammer(m);
+  assert.equal(m.hammers.at(-1)?.y, 260);
+});
+test('crosshair movement is frame independent and stays within the target area', () => {
+  for (const fps of [30, 60, 144]) {
+    const m = target();
+    m.tvs = [];
+    setHammerAimKey(m, 'ArrowRight', true);
+    for (let i = 0; i < fps / 2; i++) advanceHammers(m, 1 / fps);
+    assert.ok(Math.abs(m.cursor.x - 550) < 0.01);
+    advanceHammers(m, 3);
+    assert.equal(m.cursor.x, 610);
+    setHammerAimKey(m, 'ArrowUp', true);
+    advanceHammers(m, 3);
+    assert.equal(m.cursor.y, 120);
+  }
 });
 test('faster TV waves leave a clear gap and a different height after every Flowey', () => {
   for (const random of [() => 0, () => 0.5, () => 0.99, Math.random]) {

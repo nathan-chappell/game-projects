@@ -5,7 +5,7 @@ export interface HammerMinigame {
   age: number;
   misses: number;
   points: number;
-  lane: number;
+  aimKeys: string[];
   cooldown: number;
   cursor: { x: number; y: number };
   tvs: { x: number; lane: number; flowey: boolean; resolved: boolean; spawn: number }[];
@@ -30,22 +30,23 @@ export function createHammerMinigame(random: () => number = Math.random): Hammer
     age: 0,
     misses: 0,
     points: 0,
-    lane: 1,
+    aimKeys: [],
     cooldown: 0,
     tvs,
     cursor: { x: 400, y: 260 },
     hammers: [],
-    feedback: 'Hit Tenna TVs! Dodge Flowey TVs!',
+    feedback: 'Aim at Tenna TVs. Do not hit Flowey!',
     feedbackAge: 2,
   };
 }
-export function moveHammerLane(m: HammerMinigame, key: string) {
-  m.lane = Math.max(0, Math.min(2, m.lane + (key === 'ArrowUp' ? -1 : key === 'ArrowDown' ? 1 : 0)));
+export function setHammerAimKey(m: HammerMinigame, key: string, held: boolean) {
+  m.aimKeys = m.aimKeys.filter((k) => k !== key);
+  if (held && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) m.aimKeys.push(key);
 }
 export function throwHammer(m: HammerMinigame, y?: number, x = m.cursor.x) {
   if (m.age >= hammerSettings.duration || m.cooldown > 0) return false;
   if (y !== undefined) m.cursor = { x, y };
-  const startY = hammerLanes[m.lane],
+  const startY = 260,
     dx = m.cursor.x - 126,
     dy = m.cursor.y - startY;
   const distance = Math.max(1, Math.hypot(dx, dy));
@@ -68,6 +69,11 @@ export function advanceHammers(m: HammerMinigame, dt: number) {
   const steps = Math.max(1, Math.ceil(elapsed * 120)),
     step = elapsed / steps;
   for (let i = 0; i < steps; i++) {
+    const horizontal = Number(m.aimKeys.includes('ArrowRight')) - Number(m.aimKeys.includes('ArrowLeft'));
+    const vertical = Number(m.aimKeys.includes('ArrowDown')) - Number(m.aimKeys.includes('ArrowUp'));
+    const aimSpeed = 300 / Math.max(1, Math.hypot(horizontal, vertical));
+    m.cursor.x = Math.max(150, Math.min(610, m.cursor.x + horizontal * aimSpeed * step));
+    m.cursor.y = Math.max(120, Math.min(380, m.cursor.y + vertical * aimSpeed * step));
     const previous = m.age;
     m.age += step;
     m.cooldown = Math.max(0, m.cooldown - step);
@@ -96,7 +102,7 @@ export function advanceHammers(m: HammerMinigame, dt: number) {
           m.feedback = 'Tenna TV! +5';
         }
         m.feedbackAge = 0.7;
-      } else if (Math.abs(tv.x - 100) < 36 && tv.lane === m.lane) {
+      } else if (Math.abs(tv.x - 100) < 36 && tv.lane === 1) {
         tv.resolved = true;
         m.misses++;
         m.feedback = 'TV hit Susie! X';
