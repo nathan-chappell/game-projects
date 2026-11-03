@@ -1,3 +1,4 @@
+import { moveHammerLane, throwHammer } from '../tenna/hammers.ts';
 import { jumpSurfer } from '../tenna/surfers.ts';
 import { shootGallery, moveGalleryAim, minigamePoints } from '../tenna/minigame.ts';
 import { requestTennaMinigame, finishTennaMinigame } from './rules.ts';
@@ -94,9 +95,11 @@ export function setupBattleControls(
       encounter.message =
         encounter.kind === 'tenna'
           ? encounter.turn === 'Kris'
-            ? (encounter.minigameCount ?? 0) % 2 === 1
+            ? (encounter.minigameCount ?? 0) % 3 === 1
               ? 'Minigame: Surfers. Jump rocks and collect coins. No TP cost.'
-              : 'Minigame: shoot enemies and do not shoot Flowey. No TP cost.'
+              : (encounter.minigameCount ?? 0) % 3 === 2
+                ? 'Minigame: Susie throws hammers at incoming TVs. Tenna +5; Flowey or collision adds X. No TP cost.'
+                : 'Minigame: shoot enemies and do not shoot Flowey. No TP cost.'
             : 'Check Tenna.'
           : encounter.kind === 'dark'
             ? `${darkActInfo(encounter).description} ${darkActLocked(encounter) ? 'Locked until Shine is used three times.' : ''}`
@@ -164,6 +167,7 @@ export function setupBattleControls(
     const m = state.bossEncounter?.minigame;
     if (m && state.bossEncounter?.phase === 'minigame') {
       if (m.kind === 'surf') jumpSurfer(m);
+      else if (m.kind === 'hammers') throwHammer(m);
       else shootGallery(m);
       refresh();
       canvas.focus({ preventScroll: true });
@@ -201,6 +205,7 @@ export function setupBattleControls(
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const m = state.bossEncounter.minigame;
         if (m.kind === 'surf') jumpSurfer(m);
+        else if (m.kind === 'hammers') throwHammer(m, y);
         else shootGallery(m, x, y);
         refresh();
         return;
@@ -257,10 +262,12 @@ export function setupBattleControls(
           if (event.key.startsWith('Arrow')) {
             if (m.kind === 'surf') {
               if (event.key === 'ArrowUp') jumpSurfer(m);
-            } else moveGalleryAim(m, event.key);
+            } else if (m.kind === 'hammers') moveHammerLane(m, event.key);
+            else moveGalleryAim(m, event.key);
           } else if (event.key === 'Shift') finishTennaMinigame(b, state.partyHP);
           else if (event.key === '2') b.invincible = !b.invincible;
           else if (m.kind === 'surf') jumpSurfer(m);
+          else if (m.kind === 'hammers') throwHammer(m);
           else shootGallery(m);
           refresh();
         }
@@ -397,15 +404,24 @@ export function setupBattleControls(
     }
     const minigame = encounter?.phase === 'minigame';
     $('battleMinigameControls').hidden = !minigame;
-    const surf = encounter?.minigame?.kind === 'surf';
-    $('battleMinigameShoot').textContent = surf ? 'Jump · Space / ↑' : 'Shoot · Z / Space';
+    const surf = encounter?.minigame?.kind === 'surf',
+      hammers = encounter?.minigame?.kind === 'hammers';
+    $('battleMinigameShoot').textContent = surf
+      ? 'Jump · Space / ↑'
+      : hammers
+        ? 'Throw hammer · Z / Space'
+        : 'Shoot · Z / Space';
     $('battleMinigameHint').textContent = surf
       ? 'Jump over rocks and collect coins. Space, Up, or tap to jump.'
-      : 'Click or tap an enemy. Arrow keys aim; Z / Space shoots. Do not shoot Flowey!';
+      : hammers
+        ? 'Up / Down changes lanes; Z / Space throws. Tap a lane to throw. Avoid Flowey TVs!'
+        : 'Click or tap an enemy. Arrow keys aim; Z / Space shoots. Do not shoot Flowey!';
     $('battleMinigameStatus').textContent = encounter?.minigame
       ? encounter.minigame.kind === 'surf'
         ? `Surfers · Coins: ${encounter.minigame.coinsCollected} · Crashes: ${encounter.minigame.misses} · Purple coin: ${encounter.minigame.purpleCollected ? 'collected' : 'waiting'} · Round points: ${encounter.minigame.points}`
-        : `Misses: ${encounter.minigame.misses} · Round points: ${minigamePoints(encounter.minigame.misses)}`
+        : encounter.minigame.kind === 'hammers'
+          ? `Hammer Time · Xs: ${encounter.minigame.misses} · Round points: ${encounter.minigame.points}`
+          : `Misses: ${encounter.minigame.misses} · Round points: ${minigamePoints(encounter.minigame.misses)}`
       : '';
     $('battleSpare').textContent = encounter?.kind === 'tenna' ? 'TV TIME!' : 'Spare';
     $('battleSpare').disabled = !acting || !canUseBattleAction(encounter, 'spare');
@@ -477,7 +493,9 @@ export function setupBattleControls(
       : encounter.phase === 'minigame'
         ? encounter.minigame?.kind === 'surf'
           ? 'Surfers'
-          : 'Shooting minigame'
+          : encounter.minigame?.kind === 'hammers'
+            ? 'Hammer Time'
+            : 'Shooting minigame'
         : encounter.phase === 'victory'
           ? encounter.kind === 'tenna'
             ? 'Tenna defeated.'
@@ -499,9 +517,11 @@ export function setupBattleControls(
     $('battleProceedCount').textContent =
       encounter?.kind === 'tenna'
         ? encounter.turn === 'Kris'
-          ? (encounter.minigameCount ?? 0) % 2 === 1
+          ? (encounter.minigameCount ?? 0) % 3 === 1
             ? 'Next: Surfers · Coins +5 · Rock hits -10 · Flowey coin +10 · 15 seconds.'
-            : 'Shoot enemies, avoid Flowey. 100 points minus 10 per X. No TP cost.'
+            : (encounter.minigameCount ?? 0) % 3 === 2
+              ? 'Next: Hammer Time · Tenna TVs +5 · Flowey / collisions add X.'
+              : 'Shoot enemies, avoid Flowey. 100 points minus 10 per X. No TP cost.'
           : 'Tenna is ready for the Finale.'
         : encounter?.kind === 'dark'
           ? encounter.turn === 'Kris'

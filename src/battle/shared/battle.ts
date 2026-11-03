@@ -1,3 +1,4 @@
+import { drawHammerMinigame } from '../tenna/hammers-drawing.ts';
 import { drawSurferMinigame } from '../tenna/surfers-drawing.ts';
 import { drawShootingMinigame } from '../tenna/minigame-drawing.ts';
 import { drawTvBolts } from '../tenna/tv-bolts.ts';
@@ -631,6 +632,17 @@ export function createBattleDrawing(
       t = reducedParticleMotion.matches ? 0 : time;
     const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
+    if (encounter?.phase === 'minigame' && encounter.minigame?.kind === 'hammers') {
+      drawHammerMinigame(ctx, encounter.minigame, encounter.score ?? 0, (x, y) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(0.9, 0.9);
+        helpers.drawFountainFriend({ name: 'Susie', x: 0, y: 0, hideName: true }, t);
+        ctx.restore();
+      });
+      $('gameHint').textContent = 'Hammer Time · Up / Down dodge · Z / Space throw · Tenna +5 · Avoid Flowey';
+      return;
+    }
     if (encounter?.phase === 'minigame' && encounter.minigame?.kind === 'surf') {
       drawSurferMinigame(ctx, encounter.minigame, encounter.score ?? 0, (x, y) =>
         drawBattleKris(x, y, 0.65, null),

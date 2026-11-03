@@ -1,3 +1,4 @@
+import { advanceHammers } from '../tenna/hammers.ts';
 import { advanceSurfer } from '../tenna/surfers.ts';
 import { advanceShootingMinigame, beginTennaMinigame, settleTennaMinigame } from '../tenna/minigame.ts';
 import { itemDefinitions, maxHP } from '../../game/config.ts';
@@ -684,10 +685,16 @@ export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: Pa
   if (encounter.phase === 'minigame' && encounter.minigame && partyHP) {
     const m = encounter.minigame,
       before = m.misses,
-      beforePoints = m.kind === 'surf' ? m.points : 0;
-    if (m.kind === 'surf' ? advanceSurfer(m, dt) : advanceShootingMinigame(m, dt))
+      beforePoints = m.kind !== 'shooting' ? m.points : 0;
+    if (
+      m.kind === 'surf'
+        ? advanceSurfer(m, dt)
+        : m.kind === 'hammers'
+          ? advanceHammers(m, dt)
+          : advanceShootingMinigame(m, dt)
+    )
       return finishTennaMinigame(encounter, partyHP);
-    return m.misses !== before || (m.kind === 'surf' && m.points !== beforePoints);
+    return m.misses !== before || (m.kind !== 'shooting' && m.points !== beforePoints);
   }
   if (encounter.darkHeal) {
     encounter.darkHeal.age += dt;

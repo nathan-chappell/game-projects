@@ -483,3 +483,43 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
   await page.locator('#inventoryButton').click();
   await expect(page.getByText('Kris · HP: 100 / 100', { exact: true })).toBeVisible();
 });
+
+test('third minigame lets Susie throw hammers at incoming TVs and dodge lanes', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let i = 0; i < 5; i++) await confirmRoomDialogue(page);
+  for (let round = 0; round < 2; round++) {
+    await page.locator('#battleAct').click();
+    await page.locator('#battleProceedButton').click();
+    if (round === 0) {
+      await frames(page, 2);
+      await confirmRoomDialogue(page);
+    }
+    await page.locator('#game').focus();
+    await page.keyboard.press('Shift');
+    for (let i = 0; i < 3; i++) await page.locator('#battleDefend').click();
+    await frames(page, 2);
+    if (round === 0) await confirmRoomDialogue(page);
+    await page.locator('#game').focus();
+    await page.keyboard.press('Shift');
+  }
+  await page.locator('#battleAct').click();
+  await expect(page.locator('#battleProceedCount')).toContainText('Hammer Time');
+  await page.locator('#battleProceedButton').click();
+  await expect(page.locator('#battleTurnText')).toHaveText('Hammer Time');
+  await frames(page, 90);
+  await page.locator('#battleMinigameShoot').click();
+  await frames(page, 60);
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 5');
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('hammer-time.png') });
+  await page.locator('#game').focus();
+  await page.keyboard.press('ArrowUp');
+  await frames(page, 750);
+  await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
+  await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
+});

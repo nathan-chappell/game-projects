@@ -1,3 +1,5 @@
+import { createHammerMinigame } from './hammers.ts';
+import type { HammerMinigame } from './hammers.ts';
 import { createSurferMinigame } from './surfers.ts';
 import type { SurferMinigame } from './surfers.ts';
 import type { PartyHP, PartyName } from '../../inventory/types.ts';
@@ -33,7 +35,7 @@ export interface ShootingMinigame {
   feedback: string;
   feedbackAge: number;
 }
-export type TennaMinigame = ShootingMinigame | SurferMinigame;
+export type TennaMinigame = ShootingMinigame | SurferMinigame | HammerMinigame;
 export const minigamePoints = (misses: number) => Math.max(0, 100 - 10 * misses);
 export function createShootingMinigame(random: () => number = Math.random): ShootingMinigame {
   let previous = -1;
@@ -67,7 +69,12 @@ export function beginTennaMinigame(b: Encounter, random: () => number = Math.ran
   b.minigameIntroSeen = true;
   b.phase = 'minigame';
   const count = b.minigameCount ?? 0;
-  b.minigame = count % 2 === 0 ? createShootingMinigame(random) : createSurferMinigame();
+  b.minigame =
+    count % 3 === 0
+      ? createShootingMinigame(random)
+      : count % 3 === 1
+        ? createSurferMinigame()
+        : createHammerMinigame(random);
   b.minigameCount = count + 1;
   return true;
 }
@@ -124,9 +131,9 @@ export function advanceShootingMinigame(m: ShootingMinigame, dt: number) {
 export function settleTennaMinigame(b: Encounter, hp: PartyHP, random: () => number = Math.random) {
   const m = b.minigame;
   if (!m) return null;
-  const points = m.kind === 'surf' ? m.points : minigamePoints(m.misses),
+  const points = m.kind !== 'shooting' ? m.points : minigamePoints(m.misses),
     damage: Partial<Record<PartyName, number>> = {};
-  if (m.kind === 'shooting' && !b.invincible)
+  if (m.kind !== 'surf' && !b.invincible)
     for (let miss = 0; miss < m.misses; miss++) {
       const living = (['Kris', 'Flowey', 'Susie', 'Ralsey'] as const).filter((name) => hp[name] > 0);
       for (let pick = 0; pick < 2 && living.length; pick++) {

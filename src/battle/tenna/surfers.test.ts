@@ -10,7 +10,7 @@ function currentMinigame(b: Encounter) {
   if (!b.minigame) throw new Error('Missing minigame');
   return b.minigame;
 }
-test('Surfers follows the gallery, preserves the one-time introduction, and cycles back to shooting', () => {
+test('Surfers follows the gallery, preserves the one-time introduction, then hands off to Hammer Time', () => {
   const b = createTennaEncounter(),
     hp = freshPartyHP();
   requestTennaMinigame(b);
@@ -26,7 +26,7 @@ test('Surfers follows the gallery, preserves the one-time introduction, and cycl
   b.phase = 'kris';
   b.turn = 'Kris';
   requestTennaMinigame(b);
-  assert.equal(currentMinigame(b).kind, 'shooting');
+  assert.equal(currentMinigame(b).kind, 'hammers');
 });
 test('each rock crash removes ten points once and gold coins give five each', () => {
   const m = createSurferMinigame();
