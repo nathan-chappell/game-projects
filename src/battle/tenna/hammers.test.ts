@@ -123,3 +123,29 @@ test('incoming TVs and hammer hits are consistent at 30, 60 and 144 FPS and end 
     assert.equal(throwHammer(m), false);
   }
 });
+
+test('left/right arrows and A/D move the crosshair across the full horizontal play area', () => {
+  for (const [left, right] of [
+    ['ArrowLeft', 'ArrowRight'],
+    ['a', 'd'],
+    ['A', 'D'],
+  ]) {
+    const m = target();
+    m.tvs = [];
+    setHammerAimKey(m, left, true);
+    advanceHammers(m, 0.5);
+    assert.ok(Math.abs(m.cursor.x - 250) < 0.01);
+    setHammerAimKey(m, left, false);
+    const stopped = m.cursor.x;
+    advanceHammers(m, 0.2);
+    assert.equal(m.cursor.x, stopped);
+    setHammerAimKey(m, right, true);
+    advanceHammers(m, 0.5);
+    assert.ok(Math.abs(m.cursor.x - 400) < 0.01);
+    setHammerAimKey(m, right, false);
+    setHammerAimKey(m, left, true);
+    advanceHammers(m, 2);
+    assert.equal(m.cursor.x, 30);
+    assert.equal(m.cursor.y, 260);
+  }
+});

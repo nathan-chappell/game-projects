@@ -40,6 +40,7 @@ export function createHammerMinigame(random: () => number = Math.random): Hammer
   };
 }
 export function setHammerAimKey(m: HammerMinigame, key: string, held: boolean) {
+  key = key.toLowerCase() === 'a' ? 'ArrowLeft' : key.toLowerCase() === 'd' ? 'ArrowRight' : key;
   m.aimKeys = m.aimKeys.filter((k) => k !== key);
   if (held && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) m.aimKeys.push(key);
 }
@@ -72,7 +73,7 @@ export function advanceHammers(m: HammerMinigame, dt: number) {
     const horizontal = Number(m.aimKeys.includes('ArrowRight')) - Number(m.aimKeys.includes('ArrowLeft'));
     const vertical = Number(m.aimKeys.includes('ArrowDown')) - Number(m.aimKeys.includes('ArrowUp'));
     const aimSpeed = 300 / Math.max(1, Math.hypot(horizontal, vertical));
-    m.cursor.x = Math.max(150, Math.min(610, m.cursor.x + horizontal * aimSpeed * step));
+    m.cursor.x = Math.max(30, Math.min(610, m.cursor.x + horizontal * aimSpeed * step));
     m.cursor.y = Math.max(120, Math.min(380, m.cursor.y + vertical * aimSpeed * step));
     const previous = m.age;
     m.age += step;

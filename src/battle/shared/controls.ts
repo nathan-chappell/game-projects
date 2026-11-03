@@ -257,6 +257,7 @@ export function setupBattleControls(
             'ArrowDown',
             'ArrowLeft',
             'ArrowRight',
+            ...(m.kind === 'hammers' ? ['a', 'A', 'd', 'D'] : []),
             'z',
             'Z',
             'c',
@@ -270,7 +271,7 @@ export function setupBattleControls(
           event.preventDefault();
           event.stopImmediatePropagation();
           if (event.repeat) return;
-          if (event.key.startsWith('Arrow')) {
+          if (event.key.startsWith('Arrow') || (m.kind === 'hammers' && /^[ad]$/i.test(event.key))) {
             if (m.kind === 'surf') {
               if (event.key === 'ArrowUp') jumpSurfer(m);
             } else if (m.kind === 'hammers') setHammerAimKey(m, event.key, true);
@@ -425,7 +426,7 @@ export function setupBattleControls(
     $('battleMinigameHint').textContent = surf
       ? 'Jump over rocks and collect coins. Space, Up, or tap to jump.'
       : hammers
-        ? 'Mouse or arrow keys aim; click or Z / Space throws. Susie stays on the left. Avoid Flowey TVs!'
+        ? 'Mouse or arrows aim; A/D also aims left/right. Click or Z / Space throws. Susie stays on the left. Avoid Flowey TVs!'
         : 'Click or tap an enemy. Arrow keys aim; Z / Space shoots. Do not shoot Flowey!';
     $('battleMinigameStatus').textContent = encounter?.minigame
       ? encounter.minigame.kind === 'surf'

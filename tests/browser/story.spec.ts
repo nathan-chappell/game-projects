@@ -531,6 +531,37 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
   await frames(page, 2);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('hammer-keyboard-aim.png') });
   await page.keyboard.press('2');
+  const crosshairX = () =>
+    page.locator('#game').evaluate((canvas) => {
+      const pixels = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 640, 480).data;
+      let total = 0,
+        count = 0;
+      for (let y = 120; y < 400; y++)
+        for (let x = 0; x < 640; x++) {
+          const i = (y * 640 + x) * 4;
+          if (pixels[i] === 255 && pixels[i + 1] === 70 && pixels[i + 2] === 92) {
+            total += x;
+            count++;
+          }
+        }
+      if (!count) throw new Error('Red crosshair missing');
+      return total / count;
+    });
+  for (const [left, right] of [
+    ['ArrowLeft', 'ArrowRight'],
+    ['a', 'd'],
+  ]) {
+    const before = await crosshairX();
+    await page.keyboard.down(left);
+    await frames(page, 12);
+    await page.keyboard.up(left);
+    const afterLeft = await crosshairX();
+    expect(afterLeft).toBeLessThan(before - 50);
+    await page.keyboard.down(right);
+    await frames(page, 12);
+    await page.keyboard.up(right);
+    expect(await crosshairX()).toBeGreaterThan(afterLeft + 50);
+  }
   await frames(page, 750);
   await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
   await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
