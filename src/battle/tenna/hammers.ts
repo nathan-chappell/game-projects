@@ -102,7 +102,7 @@ export function advanceHammers(m: HammerMinigame, dt: number) {
           m.feedback = 'Tenna TV! +5';
         }
         m.feedbackAge = 0.7;
-      } else if (Math.abs(tv.x - 100) < 36 && tv.lane === 1) {
+      } else if (!tv.flowey && tv.x <= 136) {
         tv.resolved = true;
         m.misses++;
         m.feedback = 'TV hit Susie! X';

@@ -21,15 +21,21 @@ test('hammer hits award five for Tenna and one X for Flowey, once per TV', () =>
     assert.equal(m.misses, flowey ? 1 : 0);
   }
 });
-test('TV collisions add one X and aiming never moves Susie out of the fixed position', () => {
-  for (const flowey of [false, true]) {
-    const m = target(flowey);
-    setHammerAimKey(m, 'ArrowUp', true);
-    advanceHammers(m, 2);
-    assert.equal(m.misses, 1);
-    advanceHammers(m, 1);
-    assert.equal(m.misses, 1);
-    assert.equal(m.points, 0);
+test('Tenna TVs at every height hit Susie once; unshot Flowey TVs pass harmlessly', () => {
+  for (const fps of [30, 60, 144]) {
+    for (const lane of [0, 1, 2]) {
+      for (const flowey of [false, true]) {
+        const m = target(flowey);
+        m.tvs[0].lane = lane;
+        setHammerAimKey(m, 'ArrowUp', true);
+        for (let i = 0; i < 2 * fps; i++) advanceHammers(m, 1 / fps);
+        assert.equal(m.misses, flowey ? 0 : 1);
+        assert.equal(m.tvs[0].resolved, true);
+        advanceHammers(m, 1);
+        assert.equal(m.misses, flowey ? 0 : 1);
+        assert.equal(m.points, 0);
+      }
+    }
   }
 });
 test('mouse and keyboard aim hammers freely while Susie throws from a fixed position', () => {
