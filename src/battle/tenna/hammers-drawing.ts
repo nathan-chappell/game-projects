@@ -95,7 +95,7 @@ export function drawHammerMinigame(
   rect(0, 408, 640, 72, '#0c0c18');
   text(`Xs: ${m.misses}   ROUND +${m.points}`, 16, 433, '#ffcaea');
   text(`TIME ${Math.ceil(Math.max(0, hammerSettings.duration - m.age))}`, 526, 433);
-  text('Mouse / arrows aim · Click / Z / Space throws', 16, 459, '#d9d2ee', 13);
+  text('Mouse / arrows aim · Hold Z / Space to throw', 16, 459, '#d9d2ee', 13);
   if (m.feedbackAge > 0) text(m.feedback, 140, 106, m.feedback.includes('X') ? '#ff647f' : '#ffdf80', 14);
   ctx.restore();
 }

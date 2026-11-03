@@ -1,4 +1,4 @@
-import { setHammerAimKey, throwHammer } from '../tenna/hammers.ts';
+import { setHammerAimKey, setHammerThrowKey, throwHammer } from '../tenna/hammers.ts';
 import { jumpSurfer } from '../tenna/surfers.ts';
 import { shootGallery, moveGalleryAim, minigamePoints } from '../tenna/minigame.ts';
 import { requestTennaMinigame, finishTennaMinigame } from './rules.ts';
@@ -187,11 +187,17 @@ export function setupBattleControls(
 
   document.addEventListener('keyup', (event) => {
     const m = state.bossEncounter?.minigame;
-    if (m?.kind === 'hammers') setHammerAimKey(m, event.key, false);
+    if (m?.kind === 'hammers') {
+      setHammerAimKey(m, event.key, false);
+      setHammerThrowKey(m, event.key, false);
+    }
   });
   window.addEventListener('blur', () => {
     const m = state.bossEncounter?.minigame;
-    if (m?.kind === 'hammers') m.aimKeys = [];
+    if (m?.kind === 'hammers') {
+      m.aimKeys = [];
+      m.throwKeys = [];
+    }
   });
 
   function blocked() {
@@ -279,8 +285,10 @@ export function setupBattleControls(
           } else if (event.key === 'Shift') finishTennaMinigame(b, state.partyHP);
           else if (event.key === '2') b.invincible = !b.invincible;
           else if (m.kind === 'surf') jumpSurfer(m);
-          else if (m.kind === 'hammers') throwHammer(m);
-          else shootGallery(m);
+          else if (m.kind === 'hammers') {
+            if (event.key.toLowerCase() === 'z' || event.key === ' ') setHammerThrowKey(m, event.key, true);
+            else throwHammer(m);
+          } else shootGallery(m);
           refresh();
         }
         return;
@@ -426,7 +434,7 @@ export function setupBattleControls(
     $('battleMinigameHint').textContent = surf
       ? 'Jump over rocks and collect coins. Space, Up, or tap to jump.'
       : hammers
-        ? 'Mouse or arrows aim; A/D also aims left/right. Click or Z / Space throws. Susie stays on the left. Avoid Flowey TVs!'
+        ? 'Mouse or arrows aim; A/D also aims left/right. Click throws; hold Z / Space to keep throwing. Susie stays on the left. Avoid Flowey TVs!'
         : 'Click or tap an enemy. Arrow keys aim; Z / Space shoots. Do not shoot Flowey!';
     $('battleMinigameStatus').textContent = encounter?.minigame
       ? encounter.minigame.kind === 'surf'

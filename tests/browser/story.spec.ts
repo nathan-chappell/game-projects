@@ -562,6 +562,27 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
     await page.keyboard.up(right);
     expect(await crosshairX()).toBeGreaterThan(afterLeft + 50);
   }
+  const aimBounds = (await page.locator('#game').boundingBox())!;
+  await page.mouse.move(
+    aimBounds.x + (500 / 640) * aimBounds.width,
+    aimBounds.y + (120 / 480) * aimBounds.height,
+  );
+  const hammerPixels = () =>
+    page.locator('#game').evaluate((canvas) => {
+      const pixels = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 640, 408).data;
+      let count = 0;
+      for (let i = 0; i < pixels.length; i += 4)
+        if (pixels[i] === 225 && pixels[i + 1] === 219 && pixels[i + 2] === 238) count++;
+      return count;
+    });
+  for (const key of ['z', ' ']) {
+    await page.keyboard.down(key);
+    await frames(page, 30);
+    expect(await hammerPixels()).toBeGreaterThan(250);
+    await page.keyboard.up(key);
+    await frames(page, 60);
+    expect(await hammerPixels()).toBe(0);
+  }
   await frames(page, 750);
   await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
   await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');

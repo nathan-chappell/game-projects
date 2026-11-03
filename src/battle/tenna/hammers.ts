@@ -6,6 +6,7 @@ export interface HammerMinigame {
   misses: number;
   points: number;
   aimKeys: string[];
+  throwKeys: string[];
   cooldown: number;
   cursor: { x: number; y: number };
   tvs: { x: number; lane: number; flowey: boolean; resolved: boolean; spawn: number }[];
@@ -31,6 +32,7 @@ export function createHammerMinigame(random: () => number = Math.random): Hammer
     misses: 0,
     points: 0,
     aimKeys: [],
+    throwKeys: [],
     cooldown: 0,
     tvs,
     cursor: { x: 400, y: 260 },
@@ -43,6 +45,15 @@ export function setHammerAimKey(m: HammerMinigame, key: string, held: boolean) {
   key = key.toLowerCase() === 'a' ? 'ArrowLeft' : key.toLowerCase() === 'd' ? 'ArrowRight' : key;
   m.aimKeys = m.aimKeys.filter((k) => k !== key);
   if (held && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) m.aimKeys.push(key);
+}
+export function setHammerThrowKey(m: HammerMinigame, key: string, held: boolean) {
+  key = key.toLowerCase();
+  if (key !== 'z' && key !== ' ') return;
+  m.throwKeys = m.throwKeys.filter((k) => k !== key);
+  if (held) {
+    m.throwKeys.push(key);
+    throwHammer(m);
+  }
 }
 export function throwHammer(m: HammerMinigame, y?: number, x = m.cursor.x) {
   if (m.age >= hammerSettings.duration || m.cooldown > 0) return false;
@@ -78,6 +89,7 @@ export function advanceHammers(m: HammerMinigame, dt: number) {
     const previous = m.age;
     m.age += step;
     m.cooldown = Math.max(0, m.cooldown - step);
+    if (m.throwKeys.length) throwHammer(m);
     m.feedbackAge = Math.max(0, m.feedbackAge - step);
     for (const h of m.hammers) {
       h.x += h.vx * step;

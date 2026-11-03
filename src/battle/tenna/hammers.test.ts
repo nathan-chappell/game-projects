@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { advanceHammers, createHammerMinigame, setHammerAimKey, throwHammer } from './hammers.ts';
+import {
+  advanceHammers,
+  createHammerMinigame,
+  setHammerAimKey,
+  setHammerThrowKey,
+  throwHammer,
+} from './hammers.ts';
 import { beginTennaMinigame, settleTennaMinigame } from './minigame.ts';
 import { createTennaEncounter } from '../../rooms/backstage/tenna-finale.ts';
 import { freshPartyHP } from '../../game/config.ts';
@@ -148,4 +154,33 @@ test('left/right arrows and A/D move the crosshair across the full horizontal pl
     assert.equal(m.cursor.x, 30);
     assert.equal(m.cursor.y, 260);
   }
+});
+
+test('holding Z or Space repeats at the throw cooldown and releasing stops new hammers at every frame rate', () => {
+  for (const key of ['z', 'Z', ' '])
+    for (const fps of [30, 60, 144]) {
+      const m = target();
+      m.tvs = [];
+      setHammerThrowKey(m, key, true);
+      for (let i = 0; i < fps / 2; i++) advanceHammers(m, 1 / fps);
+      assert.equal(m.hammers.length, 3);
+      setHammerThrowKey(m, key, false);
+      advanceHammers(m, 0.3);
+      assert.ok(m.hammers.every((h) => h.age >= 0.3));
+      advanceHammers(m, 1);
+      assert.equal(m.hammers.length, 0);
+    }
+});
+test('releasing one throw key keeps firing while the other remains held', () => {
+  const m = target();
+  m.tvs = [];
+  setHammerThrowKey(m, 'z', true);
+  setHammerThrowKey(m, ' ', true);
+  assert.equal(m.hammers.length, 1);
+  setHammerThrowKey(m, 'z', false);
+  advanceHammers(m, 0.5);
+  assert.equal(m.hammers.length, 3);
+  setHammerThrowKey(m, ' ', false);
+  advanceHammers(m, 1);
+  assert.equal(m.hammers.length, 0);
 });
