@@ -33,15 +33,31 @@ test('TV collisions add one X; changing lanes safely dodges both kinds of TV', (
     assert.equal(dodge.points, 0);
   }
 });
-test('pointer throws choose the closest lane and movement stays in bounds', () => {
+test('pointer throws aim toward the crosshair and dodging stays in bounds', () => {
   const m = target();
-  throwHammer(m, 358);
-  assert.equal(m.lane, 2);
-  assert.equal(m.hammers[0].lane, 2);
+  throwHammer(m, 358, 400);
+  assert.equal(m.lane, 1);
+  assert.ok(m.hammers[0].vy > 0);
+  assert.ok(m.hammers[0].vx > 0);
+  moveHammerLane(m, 'ArrowDown');
   moveHammerLane(m, 'ArrowDown');
   assert.equal(m.lane, 2);
   for (let i = 0; i < 4; i++) moveHammerLane(m, 'ArrowUp');
   assert.equal(m.lane, 0);
+});
+test('faster TV waves leave a clear gap and a different height after every Flowey', () => {
+  for (const random of [() => 0, () => 0.5, () => 0.99, Math.random]) {
+    const m = createHammerMinigame(random);
+    for (let i = 1; i < m.tvs.length; i++) {
+      const previous = m.tvs[i - 1],
+        next = m.tvs[i];
+      if (previous.flowey) {
+        assert.ok(next.spawn - previous.spawn >= 1.04);
+        assert.notEqual(next.lane, previous.lane);
+      }
+    }
+    assert.ok(m.tvs.length > 18);
+  }
 });
 test('Hammer Time is third, cycles to gallery, banks only hit points and applies delayed X damage', () => {
   const b = createTennaEncounter(),

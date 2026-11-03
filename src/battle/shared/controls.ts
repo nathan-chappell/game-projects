@@ -175,7 +175,8 @@ export function setupBattleControls(
   };
   canvas.addEventListener('pointermove', (event) => {
     const m = state.bossEncounter?.minigame;
-    if (!m || m.kind !== 'shooting' || state.bossEncounter?.phase !== 'minigame') return;
+    if (!m || (m.kind !== 'shooting' && m.kind !== 'hammers') || state.bossEncounter?.phase !== 'minigame')
+      return;
     const b = canvas.getBoundingClientRect();
     m.cursor = {
       x: ((event.clientX - b.left) * 640) / b.width,
@@ -205,7 +206,7 @@ export function setupBattleControls(
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const m = state.bossEncounter.minigame;
         if (m.kind === 'surf') jumpSurfer(m);
-        else if (m.kind === 'hammers') throwHammer(m, y);
+        else if (m.kind === 'hammers') throwHammer(m, y, x);
         else shootGallery(m, x, y);
         refresh();
         return;
@@ -414,7 +415,7 @@ export function setupBattleControls(
     $('battleMinigameHint').textContent = surf
       ? 'Jump over rocks and collect coins. Space, Up, or tap to jump.'
       : hammers
-        ? 'Up / Down changes lanes; Z / Space throws. Tap a lane to throw. Avoid Flowey TVs!'
+        ? 'Mouse aims; click or Z / Space throws. Up / Down dodges. Avoid Flowey TVs!'
         : 'Click or tap an enemy. Arrow keys aim; Z / Space shoots. Do not shoot Flowey!';
     $('battleMinigameStatus').textContent = encounter?.minigame
       ? encounter.minigame.kind === 'surf'

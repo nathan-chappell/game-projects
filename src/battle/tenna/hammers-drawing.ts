@@ -1,4 +1,4 @@
-import { hammerLanes, hammerSettings } from './hammers.ts';
+import { hammerLanes, hammerSettings, hammerTVScale } from './hammers.ts';
 import type { HammerMinigame } from './hammers.ts';
 export function drawHammerMinigame(
   ctx: CanvasRenderingContext2D,
@@ -17,17 +17,20 @@ export function drawHammerMinigame(
     ctx.fillText(s, x, y);
   };
   rect(0, 0, 640, 480, '#171629');
-  for (let i = 0; i < 3; i++) {
-    const y = hammerLanes[i];
-    rect(24, y - 42, 592, 84, i === m.lane ? '#42345f' : '#24273f');
-    rect(24, y + 40, 592, 3, '#8474c4');
-    for (let x = 170; x < 630; x += 62) rect(x, y + 28, 26, 3, '#61547e');
-  }
+  const glow = ctx.createRadialGradient(430, 245, 20, 430, 245, 420);
+  glow.addColorStop(0, '#36334e');
+  glow.addColorStop(1, '#171629');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 47, 640, 361);
   drawSusie(98, hammerLanes[m.lane] + 28);
   for (const tv of m.tvs) {
     if (tv.resolved || m.age < tv.spawn) continue;
-    const x = tv.x,
-      y = hammerLanes[tv.lane];
+    ctx.save();
+    ctx.translate(tv.x, hammerLanes[tv.lane]);
+    const scale = hammerTVScale(tv.x);
+    ctx.scale(scale, scale);
+    const x = 0,
+      y = 0;
     rect(x - 30, y - 29, 60, 55, '#090c19');
     rect(x - 27, y - 26, 54, 49, '#a9a7b8');
     rect(x - 23, y - 22, 42, 38, tv.flowey ? '#253d30' : '#352366');
@@ -61,10 +64,11 @@ export function drawHammerMinigame(
       rect(x - 7, y - 1, 12, 3, '#d94399');
       rect(x - 8, y + 11, 14, 6, '#e93f9c');
     }
+    ctx.restore();
   }
   for (const h of m.hammers) {
     ctx.save();
-    ctx.translate(h.x, hammerLanes[h.lane]);
+    ctx.translate(h.x, h.y);
     ctx.rotate(h.age * 15);
     rect(-3, -2, 6, 27, '#ce914f');
     rect(-15, -11, 30, 15, '#17121e');
@@ -72,6 +76,18 @@ export function drawHammerMinigame(
     rect(-12, -8, 5, 9, '#fff');
     ctx.restore();
   }
+  ctx.strokeStyle = '#ff465c';
+  ctx.lineWidth = 2;
+  const { x, y } = m.cursor;
+  ctx.beginPath();
+  for (const side of [-1, 1]) {
+    ctx.moveTo(x + side * 12, y);
+    ctx.lineTo(x + side * 28, y);
+    ctx.moveTo(x, y + side * 12);
+    ctx.lineTo(x, y + side * 28);
+  }
+  ctx.stroke();
+  ctx.strokeRect(x - 17, y - 17, 34, 34);
   rect(0, 0, 640, 47, '#0c0c18');
   text('SUSIE: HAMMER TIME!', 16, 29, '#f9b4ef', 20);
   text(`SCORE ${score + m.points}`, 447, 29, '#ffdd72');
@@ -79,7 +95,7 @@ export function drawHammerMinigame(
   rect(0, 408, 640, 72, '#0c0c18');
   text(`Xs: ${m.misses}   ROUND +${m.points}`, 16, 433, '#ffcaea');
   text(`TIME ${Math.ceil(Math.max(0, hammerSettings.duration - m.age))}`, 526, 433);
-  text('↑ / ↓ dodge · Z / Space throw · Tap a lane to throw', 16, 459, '#d9d2ee', 13);
+  text('Mouse aims · Click / Z throws · ↑ / ↓ dodges', 16, 459, '#d9d2ee', 13);
   if (m.feedbackAge > 0) text(m.feedback, 140, 106, m.feedback.includes('X') ? '#ff647f' : '#ffdf80', 14);
   ctx.restore();
 }

@@ -640,7 +640,7 @@ export function createBattleDrawing(
         helpers.drawFountainFriend({ name: 'Susie', x: 0, y: 0, hideName: true }, t);
         ctx.restore();
       });
-      $('gameHint').textContent = 'Hammer Time · Up / Down dodge · Z / Space throw · Tenna +5 · Avoid Flowey';
+      $('gameHint').textContent = 'Hammer Time · Mouse aims · Click / Z throws · Up / Down dodges · Tenna +5';
       return;
     }
     if (encounter?.phase === 'minigame' && encounter.minigame?.kind === 'surf') {

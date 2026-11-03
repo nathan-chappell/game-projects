@@ -517,6 +517,10 @@ test('third minigame lets Susie throw hammers at incoming TVs and dodge lanes', 
   await frames(page, 60);
   await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 5');
   await page.locator('#game').screenshot({ path: testInfo.outputPath('hammer-time.png') });
+  const bounds = (await page.locator('#game').boundingBox())!;
+  await page.mouse.click(bounds.x + (262 / 640) * bounds.width, bounds.y + (260 / 480) * bounds.height);
+  await frames(page, 12);
+  await expect(page.locator('#battleMinigameStatus')).toContainText('Round points: 10');
   await page.locator('#game').focus();
   await page.keyboard.press('ArrowUp');
   await frames(page, 750);
