@@ -26,7 +26,6 @@ import {
   fillTPForTesting,
   friendlynessPellets,
   proceed,
-  requestSpecialAttack,
   snowAttackStatus,
   spareInDark,
   startKrisTurn,
@@ -313,10 +312,9 @@ export function setupBattleControls(
       }
       const repeatKey = event.key === '6' || event.code === 'Numpad6',
         invincibleKey = event.key === '2' || event.code === 'Numpad2',
-        specialKey = event.key === '3' || event.code === 'Numpad3',
         fastKillKey = event.key === '4' || event.code === 'Numpad4',
         fillTPKey = ['1', '5'].includes(event.key) || ['Numpad1', 'Numpad5'].includes(event.code);
-      if (repeatKey || invincibleKey || specialKey || fastKillKey || fillTPKey) {
+      if (state.bossEncounter?.kind === 'tenna' && (repeatKey || invincibleKey || fastKillKey || fillTPKey)) {
         event.preventDefault();
         event.stopImmediatePropagation();
         if (event.repeat) return;
@@ -326,24 +324,22 @@ export function setupBattleControls(
             ? toggleInvincibility(present(state.bossEncounter))
             : fastKillKey
               ? toggleFastKill(present(state.bossEncounter))
-              : fillTPKey
-                ? fillTPForTesting(present(state.bossEncounter))
-                : requestSpecialAttack(present(state.bossEncounter));
+              : fillTPForTesting(present(state.bossEncounter));
         if (changed) {
-          if (specialKey) state.keys.clear();
           refresh();
         }
         return;
       }
-      if (event.key === 'Shift' && canControlSoul(state.bossEncounter)) {
+      if (
+        event.key === 'Shift' &&
+        state.bossEncounter?.kind === 'tenna' &&
+        canControlSoul(state.bossEncounter)
+      ) {
         event.preventDefault();
         event.stopImmediatePropagation();
         if (event.repeat) return;
-        const finalAttack = state.bossEncounter.snowAttack?.direction === 'snowgrave';
         startKrisTurn(state.bossEncounter, state.partyHP);
-        state.bossEncounter.message = finalAttack
-          ? 'Final attack skipped for playtesting.'
-          : 'Attack skipped for playtesting.';
+        state.bossEncounter.message = 'Attack skipped for playtesting.';
         state.keys.clear();
         refresh();
         return;
@@ -468,13 +464,12 @@ export function setupBattleControls(
     $('battleMovementHint').textContent +=
       ` Stay near hazards for +${encounter?.snowAttack?.grazeTP ?? (encounter?.kind === 'dark' ? 1 : battleSettings.grazeTP)}% TP every 0.5 seconds.`;
     $('battleTestStatus').textContent =
-      encounter?.phase === 'minigame'
-        ? `Playtesting · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
-        : encounter?.kind === 'dark'
-          ? `Playtesting · 1: Fill TP · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: Skip attack`
-          : `Playtesting · 1 / 5: Fill TP · 6: Repeat ${encounter?.repeatAttack ? 'ON' : 'OFF'} · 2: Invincible ${encounter?.invincible ? 'ON' : 'OFF'} · 3: Special${encounter?.specialAttackQueued ? ' QUEUED' : ''} → Buffed attacks · 4: Fast kill ${encounter?.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
-    $('battleTestStatus').hidden =
-      encounter?.phase === 'rescue' || isProceedScene(encounter) || isPelletCast(encounter);
+      encounter?.kind !== 'tenna'
+        ? ''
+        : encounter.phase === 'minigame'
+          ? `Playtesting · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
+          : `Playtesting · 1 / 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
+    $('battleTestStatus').hidden = encounter?.kind !== 'tenna';
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';
     $('battleMenuBack').hidden = !acting || encounter.screen === 'menu';

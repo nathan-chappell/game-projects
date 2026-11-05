@@ -867,7 +867,7 @@ export function createBattleDrawing(
     } else if (present(encounter).phase === 'rescue' || isProceedScene(encounter))
       rect(18, 353, 604, 115, '#101118');
     else drawBattleMenu();
-    const testingFlags = present(encounter).rescue
+    const statusFlags = present(encounter).rescue
       ? []
       : [
           present(encounter).snowAttack?.direction === 'snowgrave'
@@ -877,13 +877,9 @@ export function createBattleDrawing(
               : present(encounter).strongerAttacks && 'PHASE 2',
           present(encounter).nextAttackGrazeTP && 'NEXT ATTACK: 4% TP',
           (present(encounter).snowAttack?.grazeTP ?? 0) > battleSettings.grazeTP && 'GRAZE: 4% TP',
-          present(encounter).specialAttackQueued && 'SPECIAL QUEUED',
-          present(encounter).repeatAttack && 'REPEAT ATTACK',
-          present(encounter).invincible && 'INVINCIBLE',
-          present(encounter).fastKill && 'FAST KILL',
         ].filter(Boolean);
-    if (testingFlags.length) {
-      const label = testingFlags.join(' · ');
+    if (statusFlags.length) {
+      const label = statusFlags.join(' · ');
       rect(64, 0, 12 + label.length * 7, 18, '#050505');
       pixelText(label, 70, 13, '#fff32a', 11);
     }

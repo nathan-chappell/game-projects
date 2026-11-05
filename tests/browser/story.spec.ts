@@ -1,3 +1,4 @@
+import { installBattleFixture, prepareBattle, finishAttackFixture } from './battle-fixture.ts';
 import { queenKeyPath } from '../../src/rooms/queen-terminal/queen-puzzle.ts';
 import { confirmRoomDialogue, controlFrames, frames } from './frames.ts';
 import { seedProgress } from './progress.ts';
@@ -25,6 +26,7 @@ test('Queen accepts the adjacent keyboard route and begins the success conversat
 
 test('dark encounter retains Shine progression and returns to the lit chamber', async ({ page }) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'collisionChamber', {
     darkBattleSeen: false,
     jackRevealed: false,
@@ -38,7 +40,7 @@ test('dark encounter retains Shine progression and returns to the lit chamber', 
   await expect(page.locator('#battleAttack')).toBeDisabled();
   for (let shine = 1; shine <= 5; shine++) {
     await page.locator('#game').focus();
-    await page.keyboard.press('1');
+    await prepareBattle(page, { tp: 100 });
     await page.locator('#battleAct').click();
     await page.locator('#battleProceedButton').click();
     await frames(page, 2);
@@ -47,7 +49,7 @@ test('dark encounter retains Shine progression and returns to the lit chamber', 
     if (shine === 3) await expect(page.locator('#battleAttack')).toBeEnabled();
     for (let member = 0; member < 3; member++) await page.locator('#battleDefend').click();
     await page.locator('#game').focus();
-    await page.keyboard.press('Shift');
+    await finishAttackFixture(page);
   }
   await expect(page.locator('#bossControls')).not.toBeVisible();
   await expect(page.locator('#dialogue')).toBeVisible();
@@ -78,6 +80,7 @@ test('Noelle Snowgrave, rescue, and the three protected responses complete throu
 }) => {
   test.setTimeout(60000);
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBoss', { noelleGone: false, noelleEscaped: false });
   await page.goto('/');
   await frames(page, 2);
@@ -85,21 +88,16 @@ test('Noelle Snowgrave, rescue, and the three protected responses complete throu
   await confirmRoomDialogue(page);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('4');
-  await page.keyboard.press('2');
+  await prepareBattle(page, { enemyHP: 75 });
   const attack = async () => {
     await page.locator('#battleAttack').click();
     await page.locator('#battleTargetButton').click();
   };
   await attack();
-  await attack();
-  await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
-  await attack();
   await frames(page, 30);
   await expect(page.locator('#battleSnowText')).toContainText('Snowgrave');
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await finishAttackFixture(page);
   await attack();
   await frames(page, 240);
   await page.locator('#battleStoryNext').click();
@@ -122,6 +120,7 @@ test('Jackenstein at 1 HP reveals the lever, then reuses the Shine conversation 
   page,
 }) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'collisionChamber', {
     darkBattleSeen: false,
     jackRevealed: false,
@@ -133,20 +132,18 @@ test('Jackenstein at 1 HP reveals the lever, then reuses the Shine conversation 
   await frames(page, 2);
   for (let shine = 0; shine < 3; shine++) {
     await page.locator('#game').focus();
-    await page.keyboard.press('1');
+    await prepareBattle(page, { tp: 100 });
     await page.locator('#battleAct').click();
     await page.locator('#battleProceedButton').click();
     await frames(page, 2);
     await confirmRoomDialogue(page);
     for (let member = 0; member < 3; member++) await page.locator('#battleDefend').click();
     await page.locator('#game').focus();
-    await page.keyboard.press('Shift');
+    await finishAttackFixture(page);
   }
-  await page.keyboard.press('4');
-  for (let member = 0; member < 4; member++) {
-    await page.locator('#battleAttack').click();
-    await page.locator('#battleTargetButton').click();
-  }
+  await prepareBattle(page, { enemyHP: 75 });
+  await page.locator('#battleAttack').click();
+  await page.locator('#battleTargetButton').click();
   await frames(page, 2);
   await expect(page.locator('#speakerName')).toHaveText('Susie');
   await page.keyboard.press('Enter');
