@@ -1,3 +1,4 @@
+import type { UndyneAttack } from '../tenna/undyne.ts';
 import type { TennaMinigame } from '../tenna/minigame.ts';
 import type { TvBolts } from '../tenna/tv-bolts.ts';
 import type { PartyName } from '../../inventory/types.ts';
@@ -101,7 +102,17 @@ export interface Snowball extends Point {
   velocity?: number;
 }
 export type AttackDirection =
-  'down' | 'right' | 'path' | 'orbit' | 'crossing' | 'goal' | 'snowgrave' | 'dark' | 'saxophones' | 'tvBolts';
+  | 'down'
+  | 'right'
+  | 'path'
+  | 'orbit'
+  | 'crossing'
+  | 'goal'
+  | 'snowgrave'
+  | 'dark'
+  | 'saxophones'
+  | 'tvBolts'
+  | 'undyne';
 export interface AttackBase {
   direction: AttackDirection;
   grazeTP: number;
@@ -130,6 +141,7 @@ export interface AttackBase {
   darkPattern?: number;
   saxophones?: SaxAttack;
   tvBolts?: TvBolts;
+  undyne?: UndyneAttack;
 }
 export type Attack = AttackBase &
   (
@@ -141,6 +153,7 @@ export type Attack = AttackBase &
     | { direction: 'dark'; swords: SwordAttack; miniSwords: MiniAttack; darkPattern: number }
     | { direction: 'saxophones'; saxophones: SaxAttack }
     | { direction: 'tvBolts'; tvBolts: TvBolts }
+    | { direction: 'undyne'; undyne: UndyneAttack }
   );
 export type BattleAction = 'attack' | 'act' | 'item' | 'defend' | 'spare';
 export interface Rescue {
@@ -208,6 +221,11 @@ export interface EncounterBase {
   minigame?: TennaMinigame | null;
   score?: number;
   tennaCueSeen?: boolean;
+  tennaHeadGlitch?: boolean;
+  undyneJoined?: boolean;
+  undyneLeft?: boolean;
+  guestEvent?: 'enter' | 'leave' | null;
+  guestResumePhase?: string;
   darkShinePending?: boolean;
 }
 export type Encounter = EncounterBase & ({ kind?: 'noelle' } | { kind: 'dark' } | { kind: 'tenna' });

@@ -156,6 +156,17 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       return;
     }
+    if (state.bossEncounter?.phase === 'tennaGuest' && !state.dialogue) {
+      dependencies.openDialogue(
+        state.bossEncounter.guestEvent === 'enter'
+          ? ['[Tenna] * Lets bring a New Contestant!', '[Tenna] * UNDYNE THE UNDYING!!!']
+          : ['[Tenna] * Thank you, Undyne! Back to our regularly scheduled TV TIME!'],
+        'tennaGuest',
+      );
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'tennaCut' && !state.dialogue) {
       dependencies.openDialogue(['[Tenna] * We cant have That Violence in TV, Mike, cut!'], 'tennaCut');
       dependencies.syncBossUI();

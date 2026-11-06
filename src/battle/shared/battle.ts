@@ -1,3 +1,6 @@
+import { drawUndyneAttack } from '../tenna/undyne.ts';
+import { drawUndyne } from '../tenna/undyne-drawing.ts';
+import { undyneActive } from '../tenna/score-events.ts';
 import { drawHammerMinigame } from '../tenna/hammers-drawing.ts';
 import { drawSurferMinigame } from '../tenna/surfers-drawing.ts';
 import { drawShootingMinigame } from '../tenna/minigame-drawing.ts';
@@ -198,7 +201,9 @@ export function createBattleDrawing(
           encounter.kind === 'tenna'
             ? encounter.snowAttack?.direction === 'tvBolts'
               ? 'DODGE THE BOLTS'
-              : 'DODGE THE NOTES'
+              : encounter.snowAttack?.direction === 'undyne'
+                ? 'BLOCK THE SPEARS'
+                : 'DODGE THE NOTES'
             : encounter.kind === 'dark'
               ? encounter.snowAttack?.darkPattern === 2
                 ? 'DODGE THE WARNINGS'
@@ -222,7 +227,11 @@ export function createBattleDrawing(
                             : 'DODGE THE SNOW';
       pixelText(title, 38, 385, inSnow ? '#ffbd69' : '#ffffff', 19);
       pixelText(
-        encounter.snowAttack?.direction === 'goal' ? 'Left/right · Hold Up / W / Space' : 'Arrow keys / WASD',
+        encounter.snowAttack?.direction === 'goal'
+          ? 'Left/right · Hold Up / W / Space'
+          : encounter.snowAttack?.direction === 'undyne'
+            ? 'Arrows / WASD: Shield'
+            : 'Arrow keys / WASD',
         38,
         418,
         '#fff32a',
@@ -624,7 +633,13 @@ export function createBattleDrawing(
     for (let row = 0; row < rows.length; row++)
       for (let col = 0; col < rows[row].length; col++)
         if (rows[row][col] === '1')
-          rect(left + col * 3, top + row * 3, 3, 3, snow?.direction === 'goal' ? '#2675ff' : '#ff0000');
+          rect(
+            left + col * 3,
+            top + row * 3,
+            3,
+            3,
+            snow?.direction === 'undyne' ? '#23ed59' : snow?.direction === 'goal' ? '#2675ff' : '#ff0000',
+          );
     ctx.restore();
   }
   function drawBossEncounter(time: number) {
@@ -680,13 +695,33 @@ export function createBattleDrawing(
       drawPartyMember('Ralsey', 110, 270, 1, present(encounter).partyStatus.Ralsey, () =>
         helpers.drawFountainFriend({ name: 'Ralsey', x: 110, y: 270, hideName: true }, t),
       );
+      const drawHost = (x: number, y: number, scale: number) => {
+        drawTenna(x, y, scale);
+        if (present(encounter).tennaHeadGlitch || (present(encounter).score ?? 0) >= 1200) {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(scale, scale);
+          ctx.beginPath();
+          ctx.rect(-23, -126, 45, 39);
+          ctx.clip();
+          for (let strip = 0; strip < 7; strip++) {
+            const offset = Math.sin(t * 47 + strip * 9) * 9;
+            rect(-22 + offset, -124 + strip * 6, 35, 2 + (strip % 2), strip % 2 ? '#ff57ca' : '#65fff0');
+            rect(-18 - offset, -122 + strip * 6, 9, 2, '#fff');
+          }
+          ctx.restore();
+        }
+      };
       if (canControlSoul(encounter)) {
-        drawTenna(565, 147, 0.8);
+        drawHost(565, 147, 0.8);
         rect(205, 48, 230, 230, '#101118');
         ctx.strokeStyle = '#63eb8b';
         ctx.lineWidth = 4;
         ctx.strokeRect(205, 48, 230, 230);
-        if (encounter.snowAttack.direction === 'saxophones') {
+        if (encounter.snowAttack.direction === 'undyne') {
+          drawUndyne(ctx, 515, 262, t, 0.95);
+          drawUndyneAttack(ctx, encounter.snowAttack.undyne);
+        } else if (encounter.snowAttack.direction === 'saxophones') {
           const a = encounter.snowAttack.saxophones;
           for (let helper = 0; helper < 2; helper++) {
             ctx.save();
@@ -698,7 +733,14 @@ export function createBattleDrawing(
           drawTvBolts(ctx, encounter.snowAttack.tvBolts);
         drawGrazeRing(encounter);
         drawBattleSoul(encounter);
-      } else if (present(encounter).enemy.visible) drawTenna(495, 269, 1.77);
+      } else if (present(encounter).enemy.visible) {
+        drawHost(
+          undyneActive(present(encounter)) ? 565 : 495,
+          269,
+          undyneActive(present(encounter)) ? 1.1 : 1.77,
+        );
+        if (undyneActive(present(encounter))) drawUndyne(ctx, 465, 268, t, 1.2);
+      }
       pixelText('TENNA', 450, 31, '#ffda6b', 21);
 
       pixelText(`TP ${Math.floor(present(encounter).tp)}%`, 280, 293, '#ffca50', 15);

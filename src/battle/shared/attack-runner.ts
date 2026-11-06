@@ -1,3 +1,4 @@
+import { advanceUndyneAttack, undyneSettings } from '../tenna/undyne.ts';
 import { advanceTvBolts, boltTouches, tvBoltSettings } from '../tenna/tv-bolts.ts';
 import { present } from '../../game/invariants.ts';
 import type { PartyHP } from '../../inventory/types.ts';
@@ -16,7 +17,7 @@ import {
 } from '../noelle/snowgrave.ts';
 import { advanceSaxAttack, noteTouches, saxRimTouches, saxSettings } from '../tenna/saxophones.ts';
 import { battlePartyNames } from './availability.ts';
-import { bossAttackDamage, projectileDamage } from './resources.ts';
+import { bossAttackDamage, projectileDamage, gainBattleTP } from './resources.ts';
 import { battleArena, battleSettings } from './settings.ts';
 import type { Encounter, Snowball } from './types.ts';
 interface Dependencies {
@@ -70,6 +71,32 @@ export function createAttackRunner(dependencies: Dependencies) {
   function stepSnowAttack(encounter: Encounter, partyHP: PartyHP, dt: number, random: () => number) {
     const snow = present(encounter.snowAttack),
       soul = present(encounter.soul);
+    if (snow.direction === 'undyne') {
+      snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
+      const result = advanceUndyneAttack(snow.undyne, dt);
+      let changed = false;
+      if (result.blocked) {
+        gainBattleTP(encounter, result.blocked * snow.grazeTP, 'block');
+        changed = true;
+      }
+      if (result.hits && snow.hitCooldown <= 0) {
+        changed =
+          dependencies.damageLivingTeammate(
+            encounter,
+            partyHP,
+            projectileDamage(encounter, undyneSettings.damage),
+            'Undyne’s spear',
+            random,
+          ) || changed;
+        snow.hitCooldown = 0.5;
+      }
+      if (result.finished) {
+        dependencies.startKrisTurn(encounter, partyHP);
+        dependencies.skipFallenTurns(encounter, partyHP);
+        return true;
+      }
+      return changed;
+    }
     if (snow.direction === 'tvBolts') {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
       const finished = advanceTvBolts(snow.tvBolts, dt, random);

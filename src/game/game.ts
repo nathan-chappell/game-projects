@@ -1088,6 +1088,7 @@ export function startGame() {
     'tennaOpening',
     'tennaMinigame',
     'tennaHelpers',
+    'tennaGuest',
     'tennaCut',
   ]);
   // A short path connects Flowey to Kris initially. After that he follows the

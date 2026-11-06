@@ -178,7 +178,7 @@ test('Tenna’s paired saxophone paths replace each other and finish after five 
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('2');
+  await page.keyboard.press('i');
   await frames(page, 90);
   await expect(page.locator('#battleSoulControls')).toBeVisible();
   await page.locator('#game').screenshot({ path: testInfo.outputPath('paired-paths-wave-one.png') });
@@ -243,7 +243,7 @@ test('Tenna’s second attack moves a TV above the box and fires glitch bursts',
   await frames(page, 2);
   await expect(page.locator('#battleSnowText')).toContainText('TV bolts');
   await page.locator('#game').focus();
-  await page.keyboard.press('2');
+  await page.keyboard.press('i');
   await frames(page, 158);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('tv-glitch-warning.png') });
   await frames(page, 26);
@@ -527,7 +527,7 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
   await page.keyboard.press('z');
   await frames(page, 2);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('hammer-keyboard-aim.png') });
-  await page.keyboard.press('2');
+  await page.keyboard.press('i');
   const crosshairX = () =>
     page.locator('#game').evaluate((canvas) => {
       const pixels = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 640, 480).data;
@@ -583,4 +583,67 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
   await frames(page, 750);
   await expect(page.locator('#battleMinigameControls')).not.toBeVisible();
   await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
+});
+
+test('Tenna score milestones introduce Undyne, restore normal attacks, and glitch only the TV head', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('1');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(200);
+  await page.keyboard.press('2');
+  await frames(page, 2);
+  await expect(page.locator('#speakerName')).toHaveText('Tenna');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('Lets bring a New Contestant!');
+  await page.keyboard.press('Enter');
+  await confirmRoomDialogue(page);
+  await frames(page, 2);
+  expect(
+    await page.evaluate(() => ({
+      score: window.battleFixtureState.bossEncounter!.score,
+      joined: window.battleFixtureState.bossEncounter!.undyneJoined,
+      tp: window.battleFixtureState.bossEncounter!.tp,
+      invincible: window.battleFixtureState.bossEncounter!.invincible,
+    })),
+  ).toEqual({ score: 700, joined: true, tp: 0, invincible: false });
+  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
+  await expect(page.locator('#battleSnowText')).toContainText('Spear of Justice');
+  await page.locator('#game').focus();
+  await page.keyboard.press('i');
+  const soul = await page.evaluate(() => ({ ...window.battleFixtureState.bossEncounter!.soul }));
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 81);
+  await page.keyboard.up('ArrowRight');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.soul)).toEqual(soul);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-spear-of-justice.png') });
+  await page.keyboard.press('1');
+  await expect(page.locator('#battleSoulControls')).toBeVisible();
+  await page.keyboard.press('Shift');
+  await frames(page, 2);
+  await expect(page.locator('#dialogue')).toBeVisible();
+  await confirmRoomDialogue(page);
+  await frames(page, 2);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.undyneLeft)).toBe(true);
+  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await expect(page.locator('#battleSnowText')).toContainText('saxophone');
+  await page.keyboard.press('Shift');
+  await page.keyboard.press('2');
+  await frames(page, 2);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.tennaHeadGlitch)).toBe(true);
+  await expect(page.locator('#battleAct')).toBeEnabled();
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-glitching-head.png') });
+  await page.keyboard.press('1');
+  await frames(page, 2);
+  await expect(page.locator('#battleAct')).toBeEnabled();
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1600);
 });

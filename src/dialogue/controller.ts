@@ -1,3 +1,4 @@
+import { completeTennaScoreEvent } from '../battle/tenna/score-events.ts';
 import { beginTennaMinigame } from '../battle/tenna/minigame.ts';
 import physicalChallengeURL from '../../assets/physical-challenge.png?inline';
 import { createDarkEncounter } from '../battle/dark/dark-battle.ts';
@@ -340,6 +341,11 @@ export function createDialogue(dependencies: Dependencies) {
       if (kind === 'darkShine') {
         completeDarkShine(present(state.bossEncounter));
         dependencies.syncBossUI();
+      }
+      if (kind === 'tennaGuest' && state.bossEncounter) {
+        completeTennaScoreEvent(state.bossEncounter);
+        dependencies.syncBossUI();
+        dependencies.canvas.focus({ preventScroll: true });
       }
       if (kind === 'tennaHelpers') {
         completeTennaCue(present(state.bossEncounter));

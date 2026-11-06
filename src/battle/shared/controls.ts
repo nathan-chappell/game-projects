@@ -1,3 +1,4 @@
+import { addTennaTestingPoints } from '../tenna/score-events.ts';
 import { setHammerAimKey, setHammerThrowKey, throwHammer } from '../tenna/hammers.ts';
 import { jumpSurfer } from '../tenna/surfers.ts';
 import { shootGallery, moveGalleryAim, minigamePoints } from '../tenna/minigame.ts';
@@ -253,6 +254,22 @@ export function setupBattleControls(
         (event.target instanceof HTMLElement && event.target.isContentEditable)
       )
         return;
+      if (
+        state.bossEncounter?.kind === 'tenna' &&
+        (['1', '2'].includes(event.key) || ['Numpad1', 'Numpad2'].includes(event.code))
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (
+          !event.repeat &&
+          addTennaTestingPoints(
+            state.bossEncounter,
+            event.key === '1' || event.code === 'Numpad1' ? 200 : 500,
+          )
+        )
+          refresh();
+        return;
+      }
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const b = state.bossEncounter,
           m = present(b.minigame);
@@ -270,7 +287,8 @@ export function setupBattleControls(
             'Enter',
             ' ',
             'Shift',
-            '2',
+            'i',
+            'I',
           ].includes(event.key)
         ) {
           event.preventDefault();
@@ -282,7 +300,7 @@ export function setupBattleControls(
             } else if (m.kind === 'hammers') setHammerAimKey(m, event.key, true);
             else moveGalleryAim(m, event.key);
           } else if (event.key === 'Shift') finishTennaMinigame(b, state.partyHP);
-          else if (event.key === '2') b.invincible = !b.invincible;
+          else if (event.key.toLowerCase() === 'i') b.invincible = !b.invincible;
           else if (m.kind === 'surf') jumpSurfer(m);
           else if (m.kind === 'hammers') {
             if (event.key.toLowerCase() === 'z' || event.key === ' ') setHammerThrowKey(m, event.key, true);
@@ -311,9 +329,9 @@ export function setupBattleControls(
         return;
       }
       const repeatKey = event.key === '6' || event.code === 'Numpad6',
-        invincibleKey = event.key === '2' || event.code === 'Numpad2',
+        invincibleKey = event.key.toLowerCase() === 'i',
         fastKillKey = event.key === '4' || event.code === 'Numpad4',
-        fillTPKey = ['1', '5'].includes(event.key) || ['Numpad1', 'Numpad5'].includes(event.code);
+        fillTPKey = event.key === '5' || event.code === 'Numpad5';
       if (state.bossEncounter?.kind === 'tenna' && (repeatKey || invincibleKey || fastKillKey || fillTPKey)) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -456,19 +474,23 @@ export function setupBattleControls(
     $('battleSoulControls').hidden = !active || !!state.death || !canControlSoul(encounter);
     $('battleSnowText').textContent = snowAttackStatus(encounter);
     $('battleMovementHint').textContent =
-      encounter?.snowAttack?.direction === 'goal'
-        ? 'Blue soul: left/right to move. Tap Up, W, Space, or ↑ for a short hop; hold for a higher jump. Climb the right step to reach the upper goal.'
-        : encounter?.snowAttack?.direction === 'snowgrave'
-          ? 'Final Snowgrave: move into the narrow lit gap before each ice burst. Arrow keys or WASD.'
-          : 'Move your soul with the arrow keys, WASD, or these buttons.';
+      encounter?.snowAttack?.direction === 'undyne'
+        ? 'Green soul: arrow keys, WASD or direction buttons turn the shield. Block incoming spears!'
+        : encounter?.snowAttack?.direction === 'goal'
+          ? 'Blue soul: left/right to move. Tap Up, W, Space, or ↑ for a short hop; hold for a higher jump. Climb the right step to reach the upper goal.'
+          : encounter?.snowAttack?.direction === 'snowgrave'
+            ? 'Final Snowgrave: move into the narrow lit gap before each ice burst. Arrow keys or WASD.'
+            : 'Move your soul with the arrow keys, WASD, or these buttons.';
     $('battleMovementHint').textContent +=
-      ` Stay near hazards for +${encounter?.snowAttack?.grazeTP ?? (encounter?.kind === 'dark' ? 1 : battleSettings.grazeTP)}% TP every 0.5 seconds.`;
+      encounter?.snowAttack?.direction === 'undyne'
+        ? ` Each block gains ${encounter.snowAttack.grazeTP}% TP.`
+        : ` Stay near hazards for +${encounter?.snowAttack?.grazeTP ?? (encounter?.kind === 'dark' ? 1 : battleSettings.grazeTP)}% TP every 0.5 seconds.`;
     $('battleTestStatus').textContent =
       encounter?.kind !== 'tenna'
         ? ''
         : encounter.phase === 'minigame'
-          ? `Playtesting · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
-          : `Playtesting · 1 / 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
+          ? `Playtesting · 1: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
+          : `Playtesting · 1: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
     $('battleTestStatus').hidden = encounter?.kind !== 'tenna';
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';

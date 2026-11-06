@@ -113,6 +113,7 @@ test('a lone survivor is hit once per X, HP never becomes negative, and invincib
 test('points accumulate beyond 1500 without ending the fight; Xs reset for each minigame', () => {
   const b = start(),
     hp = freshPartyHP();
+  b.undyneJoined = b.undyneLeft = true;
   b.score = 1490;
   b.minigame!.misses = 1;
   finishTennaMinigame(b, hp, () => 0);

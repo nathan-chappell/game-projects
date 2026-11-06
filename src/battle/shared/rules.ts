@@ -1,3 +1,4 @@
+import { queueTennaScoreEvent, undyneActive } from '../tenna/score-events.ts';
 import { advanceHammers } from '../tenna/hammers.ts';
 import { advanceSurfer } from '../tenna/surfers.ts';
 import { advanceShootingMinigame, beginTennaMinigame, settleTennaMinigame } from '../tenna/minigame.ts';
@@ -198,6 +199,11 @@ export function snowPathBounds(encounter: Encounter, y: number) {
 }
 export function moveSoul(encounter: Encounter, keys: Set<string>, dt: number) {
   if (!canControlSoul(encounter) || !Number.isFinite(dt) || dt <= 0) return;
+  if (encounter.snowAttack.direction === 'undyne') {
+    for (const side of ['up', 'right', 'down', 'left'])
+      if (keys.has(side)) encounter.snowAttack.undyne.shield = side;
+    return;
+  }
   if (encounter.snowAttack?.direction === 'goal') {
     moveBlueSoul(
       encounter.snowAttack.goal,
@@ -300,6 +306,15 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'tenna') {
+    if (undyneActive(encounter)) {
+      beginEnemyAttack(
+        encounter,
+        'undyne',
+        'Undyne the Undying — Spear of Justice! Turn your shield toward the spears!',
+      );
+      encounter.turn = 'Undyne';
+      return true;
+    }
     const direction =
       encounter.repeatAttack && ['saxophones', 'tvBolts'].includes(encounter.lastEnemyAttack ?? '')
         ? encounter.lastEnemyAttack
@@ -445,6 +460,7 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
+  if (encounter?.snowAttack?.direction === 'undyne') return 'Spear of Justice';
   if (encounter?.snowAttack?.direction === 'tvBolts') return 'TV bolts · Glitch = 5';
   if (encounter?.snowAttack?.direction === 'saxophones') return 'Dodge the saxophone notes!';
   if (encounter?.kind === 'dark' && encounter.snowAttack?.darkPattern === 2)
@@ -677,11 +693,13 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
     `Minigame complete! ${result.points >= 0 ? '+' : ''}${result.points} points.${damage ? ' ' + damage + '.' : ''}`,
   );
   skipFallenTurns(encounter, hp);
+  queueTennaScoreEvent(encounter);
   return true;
 }
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  if (queueTennaScoreEvent(encounter)) return true;
   if (encounter.phase === 'minigame' && encounter.minigame && partyHP) {
     const m = encounter.minigame,
       before = m.misses,
