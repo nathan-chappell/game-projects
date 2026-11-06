@@ -414,6 +414,10 @@ export function createDialogue(dependencies: Dependencies) {
         if (studio >= 0) dependencies.changeRoom(studio, true);
       }
       if (npcId === 'core-warning-froggit') state.story.coreFroggitWarned = true;
+      if (kind === 'knightStatues') {
+        state.story.knightStatuesExplained = true;
+        dependencies.storyUI();
+      }
       if (kind === 'coreGlitch') state.story.coreGlitchNoticed = true;
       if (kind === 'coreIntro') {
         state.story.coreExplained = true;

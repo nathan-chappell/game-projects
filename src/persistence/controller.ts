@@ -1,3 +1,4 @@
+import { createKnightPath } from '../rooms/post-show/knight-path.ts';
 import { buildKey, freshPartyHP, keyName, maxHP, progressFlags, progressKey, T } from '../game/config.ts';
 import type { Elements } from '../game/dom.ts';
 import { present } from '../game/invariants.ts';
@@ -181,6 +182,7 @@ export function createPersistence(dependencies: Dependencies) {
               partyHP: freshPartyHP(),
               inventory: clone(state.inventory),
               treeHarvests: clone(state.treeHarvests),
+              knightPathX: state.knightPath?.x,
               hallwayX: state.storageHallway?.x,
               trafficCheckpoint: state.traffic?.checkpoint,
               player: { x: state.player.x, y: state.player.y, facing: state.player.facing },
@@ -203,6 +205,7 @@ export function createPersistence(dependencies: Dependencies) {
                 jackCandyReceived: state.story.jackCandyReceived,
                 tennaFinaleExplained: state.story.tennaFinaleExplained,
                 tennaFinaleComplete: state.story.tennaFinaleComplete,
+                knightStatuesExplained: state.story.knightStatuesExplained,
                 queenBriefed: state.story.queenBriefed,
                 queenDemoSeen: state.story.queenDemoSeen,
                 queenSolved: state.story.queenSolved,
@@ -300,6 +303,7 @@ export function createPersistence(dependencies: Dependencies) {
       jackCandyReceived: slot.story.jackCandyReceived ?? false,
       tennaFinaleExplained: slot.story.tennaFinaleExplained ?? false,
       tennaFinaleComplete: slot.story.tennaFinaleComplete ?? false,
+      knightStatuesExplained: slot.story.knightStatuesExplained ?? false,
       queenBriefed: slot.story.queenBriefed ?? false,
       queenDemoSeen: slot.story.queenDemoSeen ?? false,
       queenSolved: slot.story.queenSolved ?? false,
@@ -314,6 +318,10 @@ export function createPersistence(dependencies: Dependencies) {
     state.collisionBlackout = null;
     state.queenPuzzle = null;
     state.queenDeparture = null;
+    state.knightPath =
+      dependencies.current().scene === 'postShowPassage'
+        ? createKnightPath(slot.knightPathX ?? state.player.x, state.player.y)
+        : null;
     state.storageHallway =
       dependencies.current().scene === 'storageHallway'
         ? createHallway(slot.hallwayX ?? hallwaySettings.start, state.player.y)

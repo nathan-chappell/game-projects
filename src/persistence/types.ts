@@ -18,6 +18,7 @@ export interface ProgressSave {
   inventory?: SavedInventory | LegacyInventory;
   treeHarvests?: TreeHarvests;
   glitchWaiting?: Record<'Ralsey' | 'Susie', Point> | null;
+  knightPathX?: number;
   hallwayX?: number;
   trafficCheckpoint?: string;
 }

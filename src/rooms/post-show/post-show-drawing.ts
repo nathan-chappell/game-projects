@@ -5,13 +5,21 @@ export function drawPostShowRoom(
   room: Room,
   time: number,
   reducedMotion: boolean,
+  view = { camera: 0, length: 640 },
 ) {
   const t = reducedMotion ? 0 : time;
-  const open = (x: number, y: number) => room.map[y]?.[x] !== undefined && [0, 6].includes(room.map[y][x]);
+  const open = (x: number, y: number) =>
+    view.length > 640 && x >= 15 && x * 40 < view.length
+      ? y === 8 || y === 9
+      : room.map[y]?.[x] !== undefined && [0, 6].includes(room.map[y][x]);
   ctx.save();
   // Soft, broken shadows hug the path; the surrounding void remains completely black.
   for (let y = 0; y < 12; y++)
-    for (let x = 0; x < 16; x++) {
+    for (
+      let x = Math.max(0, Math.floor(view.camera / 40) - 1);
+      x < Math.ceil((view.camera + 640) / 40) + 1;
+      x++
+    ) {
       if (!open(x, y)) continue;
       const grey = x >= 7;
       ctx.fillStyle = grey ? '#565660' : y < 5 && x <= 2 ? '#593c2b' : '#83543e';

@@ -98,8 +98,10 @@ export function createHud(dependencies: Dependencies) {
     if (dependencies.current().scene === 'postShowPassage') {
       dependencies.$('taskTitle').textContent = 'Beyond the Show';
       dependencies.$('taskDescription').textContent =
-        'Follow the path into the darkness. The brown entrance leads back to backstage.';
-      dependencies.$('storySummary').textContent = 'Beyond the studio, the path seems to waver at its edges.';
+        'Follow the long path past the knight statues. The brown entrance leads back to backstage.';
+      dependencies.$('storySummary').textContent = state.story.knightStatuesExplained
+        ? 'The statues resemble the Roaring Knight. Two knights are fighting farther ahead.'
+        : 'Strange stone figures stand along the wavering path.';
       return;
     }
     if (dependencies.current().scene === 'glitchBackstage') {

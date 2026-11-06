@@ -1,3 +1,4 @@
+import { createKnightPathDrawing } from '../rooms/post-show/knight-path-drawing.ts';
 import { postShowScene } from '../rooms/post-show/post-show.ts';
 import { drawPostShowRoom } from '../rooms/post-show/post-show-drawing.ts';
 import { present } from '../game/invariants.ts';
@@ -262,6 +263,11 @@ export function createRenderer(
     drawGlitchParticles,
   } = createParticles(ctx, state, { rect, pixelText });
   const glitchStudioDrawing = createGlitchStudioDrawing(ctx, { rect, reducedParticleMotion });
+  const drawKnightPath = createKnightPathDrawing(
+    ctx,
+    { drawPlayer, drawFlowey, drawFountainFriend },
+    reducedParticleMotion,
+  );
   const backstageDrawing = createBackstageDrawing(ctx, { rect });
   const storageDrawing = createStorageDrawing(ctx, { rect, reducedParticleMotion });
   const drawHallway = createHallwayDrawing(ctx, {
@@ -583,6 +589,14 @@ export function createRenderer(
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, 640, 480);
     const r = current();
+    if (state.mode === 'play' && r.scene === postShowScene) {
+      drawKnightPath(state, time);
+      $('gameHint').textContent =
+        state.knightPath && state.knightPath.duelAge >= 0
+          ? 'The knights are fighting ahead. Watch from the edge of the path, or walk back.'
+          : 'Follow the path past the statues. Walk back to the brown entrance to return backstage.';
+      return;
+    }
     if (state.mode === 'play' && r.scene === 'storageHallway') {
       state.storageHallway ??= createHallway();
       drawHallway(state, time);

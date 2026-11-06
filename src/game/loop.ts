@@ -1,3 +1,11 @@
+import {
+  advanceKnightPath,
+  createKnightPath,
+  knightPathCamera,
+  knightPartyPosition,
+  knightPathSettings,
+  statueConversation,
+} from '../rooms/post-show/knight-path.ts';
 import { tennaAftermathConversation } from '../rooms/backstage/tenna-aftermath.ts';
 import { canControlSoul } from '../battle/shared/availability.ts';
 import { advanceBattleTime, advanceSnowAttack, moveSoul } from '../battle/shared/rules.ts';
@@ -450,6 +458,40 @@ export function createGameLoop(dependencies: Dependencies) {
       return;
     }
     const pace = state.keys.has('sprint') ? sprintMultiplier : 1;
+    if (dependencies.current().scene === 'postShowPassage') {
+      const path = (state.knightPath ??= createKnightPath(state.player.x, state.player.y));
+      const leave = advanceKnightPath(path, dependencies.current(), state.keys, dt);
+      const camera = knightPathCamera(path);
+      state.player.x = path.x - camera;
+      state.player.y = path.y;
+      state.player.moving = path.moving;
+      if (path.moving) {
+        state.player.step += dt * 10 * pace;
+        if (state.keys.has('right') || state.keys.has('left'))
+          state.player.facing = path.direction > 0 ? 'right' : 'left';
+        else state.player.facing = path.vertical > 0 ? 'down' : 'up';
+      }
+      const follower = knightPartyPosition(path, 43);
+      Object.assign(state.follower, { x: follower.x - camera, y: follower.y, trail: [] });
+      state.companions = ['Ralsey', 'Susie'].map((name, i) => {
+        const p = knightPartyPosition(path, 84 + i * 41);
+        return { name, x: p.x - camera, y: p.y, trail: [] };
+      });
+      if (path.x >= knightPathSettings.statuesAt && !state.story.knightStatuesExplained) {
+        state.keys.clear();
+        state.player.moving = false;
+        dependencies.openDialogue(
+          statueConversation.map((line) => `[${line.speaker}] * ${line.text}`),
+          'knightStatues',
+        );
+        dependencies.canvas.focus({ preventScroll: true });
+      }
+      if (leave && !state.doorCooldown) {
+        const target = dependencies.current().doorLinks?.['1,1'];
+        if (target !== undefined) dependencies.changeRoom(target, true);
+      }
+      return;
+    }
     if (dependencies.current().scene === 'storageHallway') {
       if (!state.storageHallway) state.storageHallway = createHallway();
       const next = advanceHallway(state.storageHallway, state.keys, dt);

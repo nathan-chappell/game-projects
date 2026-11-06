@@ -1,3 +1,4 @@
+import type { KnightPath } from '../rooms/post-show/knight-path.ts';
 import type { Encounter } from '../battle/shared/types.ts';
 import type { Dialogue } from '../dialogue/types.ts';
 import type { Inventory, ItemId, PartyHP, PartyName, TreeHarvests } from '../inventory/types.ts';
@@ -35,6 +36,7 @@ export interface Story {
   jackCandyReceived: boolean;
   tennaFinaleExplained: boolean;
   tennaFinaleComplete: boolean;
+  knightStatuesExplained: boolean;
   queenBriefed: boolean;
   queenDemoSeen: boolean;
   queenSolved: boolean;
@@ -83,6 +85,7 @@ export interface GameState {
   collisionBlackout: { age: number; spoken: boolean } | null;
   queenPuzzle: ReturnType<typeof createQueenPuzzle> | null;
   queenDeparture: number | null;
+  knightPath: KnightPath | null;
   storageHallway: ReturnType<typeof createHallway> | null;
   traffic: ReturnType<typeof createTraffic> | null;
   pendingBossRoom: number | null;

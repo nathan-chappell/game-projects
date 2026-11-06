@@ -1,3 +1,4 @@
+import { createKnightPath } from '../rooms/post-show/knight-path.ts';
 import { postShowScene } from '../rooms/post-show/post-show.ts';
 import { createTraffic } from '../rooms/crossing/traffic.ts';
 import { createHallway, hallwayCamera, hallwaySettings } from '../rooms/storage/storage-travel.ts';
@@ -97,6 +98,7 @@ export function createRoomController(dependencies: Dependencies) {
     state.lastSpikeContact = null;
     state.cameraShakeTime = 0;
     dependencies.positionPlayer(next, preferred);
+    state.knightPath = next.scene === postShowScene ? createKnightPath(state.player.x, state.player.y) : null;
     state.storageHallway =
       next.scene === 'storageHallway'
         ? createHallway(

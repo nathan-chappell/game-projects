@@ -1,3 +1,4 @@
+import { knightPathSettings } from '../rooms/post-show/knight-path.ts';
 import {
   freshInventory,
   H,
@@ -96,6 +97,7 @@ export function validProgress(slot: unknown): slot is ProgressSave {
     'tennaElixirsReceived',
     'tennaFinaleExplained',
     'tennaFinaleComplete',
+    'knightStatuesExplained',
     'jackCandyReceived',
     'jackRevealed',
     'darkBattleSeen',
@@ -120,6 +122,10 @@ export function validProgress(slot: unknown): slot is ProgressSave {
         slot.savePoint.y >= 0 &&
         slot.savePoint.y < H)) &&
     validCandyProgress(slot) &&
+    (slot.knightPathX === undefined ||
+      (finite(slot.knightPathX) &&
+        slot.knightPathX >= 50 &&
+        slot.knightPathX <= knightPathSettings.lookout)) &&
     (slot.hallwayX === undefined ||
       (finite(slot.hallwayX) && slot.hallwayX >= 0 && slot.hallwayX <= hallwaySettings.length)) &&
     (slot.trafficCheckpoint === undefined ||
