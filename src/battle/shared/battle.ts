@@ -1,6 +1,6 @@
-import { drawUndyneAttack, undyneArenaBounds } from '../tenna/undyne.ts';
-import { drawUndyne, undyneDropOffset } from '../tenna/undyne-drawing.ts';
-import { undyneActive } from '../tenna/score-events.ts';
+import { drawUndyneAttack, undyneArenaBounds, undyneDropOffset } from '../tenna/undyne.ts';
+import { drawUndyne } from '../tenna/undyne-drawing.ts';
+import { drawUndyneMenuSpear, undynePresent } from '../tenna/undyne-actions.ts';
 import { drawHammerMinigame } from '../tenna/hammers-drawing.ts';
 import { drawSurferMinigame } from '../tenna/surfers-drawing.ts';
 import { drawShootingMinigame } from '../tenna/minigame-drawing.ts';
@@ -257,7 +257,7 @@ export function createBattleDrawing(
         if (acting && encounter.selectedAction === id) pixelText('>', x - 23, y, color, 19);
       }
       pixelText(
-        encounter.kind === 'tenna' ? 'TV TIME!' : 'SPARE',
+        encounter.kind === 'tenna' && !undynePresent(encounter) ? 'TV TIME!' : 'SPARE',
         227,
         386,
         ['dark', 'tenna'].includes(encounter.kind ?? '')
@@ -298,7 +298,7 @@ export function createBattleDrawing(
           ? encounter.turn === 'Kris'
             ? 'MINIGAME'
             : 'CHECK TENNA'
-          : `TENNA HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,
+          : `${encounter.enemy.name.toUpperCase()} HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,
         391,
         407,
         '#ffffff',
@@ -717,7 +717,15 @@ export function createBattleDrawing(
       const drawGuest = () => {
         const age = present(encounter).undyneEntranceAge ?? 1.2;
         const offset = reducedParticleMotion.matches ? 0 : undyneDropOffset(age);
-        drawUndyne(ctx, 425, 268 - offset, t, 1.08);
+        drawUndyne(
+          ctx,
+          425,
+          268 - offset,
+          t,
+          1.08,
+          !!present(encounter).undyneGlitched,
+          present(encounter).undyneHealAge ?? 2,
+        );
         if (!reducedParticleMotion.matches && age >= 0.7 && age < 1.15) {
           const p = (age - 0.7) / 0.45;
           ctx.save();
@@ -759,14 +767,15 @@ export function createBattleDrawing(
         drawGrazeRing(encounter);
         drawBattleSoul(encounter);
       } else if (present(encounter).enemy.visible) {
-        drawHost(undyneActive(present(encounter)) ? 550 : 495, 269, 1.77);
-        if (undyneActive(present(encounter))) drawGuest();
+        drawHost(undynePresent(present(encounter)) ? 550 : 495, 269, 1.77);
+        if (undynePresent(present(encounter))) drawGuest();
       }
-      pixelText('TENNA', 450, 31, '#ffda6b', 21);
+      pixelText(present(encounter).enemy.name.toUpperCase(), 450, 31, '#ffda6b', 21);
 
       pixelText(`TP ${Math.floor(present(encounter).tp)}%`, 280, 293, '#ffca50', 15);
       drawDarkPartyStatus();
       drawBattleMenu();
+      drawUndyneMenuSpear(ctx, present(encounter));
       $('gameHint').textContent = 'The Finale · Tenna takes the stage.';
       return;
     }

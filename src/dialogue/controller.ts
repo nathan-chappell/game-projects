@@ -9,6 +9,7 @@ import {
   completeDarkShine,
   completeTennaCue,
   completeTennaCut,
+  completeUndyneCandy,
   startKrisTurn,
 } from '../battle/shared/rules.ts';
 import type { Elements } from '../game/dom.ts';
@@ -340,6 +341,10 @@ export function createDialogue(dependencies: Dependencies) {
       }
       if (kind === 'darkShine') {
         completeDarkShine(present(state.bossEncounter));
+        dependencies.syncBossUI();
+      }
+      if (kind === 'undyneCandy' && state.bossEncounter) {
+        completeUndyneCandy(state.bossEncounter);
         dependencies.syncBossUI();
       }
       if (kind === 'tennaGuest' && state.bossEncounter) {

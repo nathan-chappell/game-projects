@@ -106,3 +106,9 @@ export function drawUndyneAttack(ctx: CanvasRenderingContext2D, a: UndyneAttack)
   ctx.stroke();
   ctx.restore();
 }
+
+export function undyneDropOffset(age: number) {
+  if (age < 0.7) return 460 * (1 - (Math.max(0, age) / 0.7) ** 2);
+  if (age < 1) return -Math.sin(((age - 0.7) / 0.3) * Math.PI) * 11;
+  return 0;
+}

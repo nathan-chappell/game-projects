@@ -223,6 +223,10 @@ export interface EncounterBase {
   tennaCueSeen?: boolean;
   tennaHeadGlitch?: boolean;
   undyneJoined?: boolean;
+  undyneGlitched?: boolean;
+  tennaSavedEnemy?: { name: string; hp: number; maxHP: number; visible: boolean };
+  undyneMenuSpear?: { target: 'act' | 'spare'; age: number } | null;
+  undyneHealAge?: number;
   undyneEntranceAge?: number;
   undyneLeft?: boolean;
   guestEvent?: 'enter' | 'leave' | null;

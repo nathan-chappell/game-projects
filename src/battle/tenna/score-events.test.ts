@@ -1,4 +1,4 @@
-import { undyneDropOffset } from './undyne-drawing.ts';
+import { undyneDropOffset } from './undyne.ts';
 import { createShootingMinigame } from './minigame.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';

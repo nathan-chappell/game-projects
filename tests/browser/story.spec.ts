@@ -710,3 +710,93 @@ test('Tenna score keys work during dialogue and attack introductions with number
   ).toEqual({ score: 1400, invincible: false, tp: 40 });
   await expect(page.locator('#dialogue')).toBeVisible();
 });
+
+test('Undyne uses the reference sprite, blocks menu options, awards attack points, and receives G. Candy', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('2');
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await confirmRoomDialogue(page);
+  await frames(page, 80);
+  await expect(page.locator('#battleSpare')).toHaveText('Spare');
+  await page.locator('#battleAttack').click();
+  await expect(page.locator('#battleTargetButton')).toContainText('Undyne · HP 3500 / 3500');
+  await page.locator('#battleMenuBack').click();
+  await page.locator('#battleSpare').click();
+  await frames(page, 24);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.undyneMenuSpear?.target)).toBe(
+    'spare',
+  );
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-spears-spare.png') });
+  await page.locator('#battleAct').click();
+  await frames(page, 24);
+  expect(
+    await page.evaluate(() => ({
+      phase: window.battleFixtureState.bossEncounter!.phase,
+      shot: window.battleFixtureState.bossEncounter!.undyneMenuSpear?.target,
+      score: window.battleFixtureState.bossEncounter!.score,
+    })),
+  ).toEqual({ phase: 'kris', shot: 'act', score: 500 });
+  await expect(page.locator('#battleMinigameControls')).toBeHidden();
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-spears-act.png') });
+  await page.locator('#battleAttack').click();
+  await page.locator('#battleTargetButton').click();
+  expect(
+    await page.evaluate(() => ({
+      hp: window.battleFixtureState.bossEncounter!.enemy.hp,
+      score: window.battleFixtureState.bossEncounter!.score,
+    })),
+  ).toEqual({ hp: 3425, score: 510 });
+  const candy = await page.evaluate(() => window.battleFixtureState.inventory.items.gCandy);
+  await prepareBattle(page, { enemyHP: 1 });
+  await page.locator('#battleAttack').click();
+  await page.locator('#battleTargetButton').click();
+  await frames(page, 2);
+  await expect(page.locator('#speakerName')).toHaveText('Tenna');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('G. Candy');
+  await page.keyboard.press('Enter');
+  await frames(page, 2);
+  expect(
+    await page.evaluate(() => ({
+      hp: window.battleFixtureState.bossEncounter!.enemy.hp,
+      phase: window.battleFixtureState.bossEncounter!.phase,
+      score: window.battleFixtureState.bossEncounter!.score,
+      candy: window.battleFixtureState.inventory.items.gCandy,
+    })),
+  ).toEqual({ hp: 3500, phase: 'susie', score: 520, candy });
+  await page.evaluate(() => {
+    window.battleFixtureState.bossEncounter!.score = 650;
+    window.refreshBattleFixture();
+  });
+  await page.locator('#battleAttack').click();
+  await page.locator('#battleTargetButton').click();
+  await frames(page, 10);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.undyneGlitched)).toBe(true);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-glitch-and-hp.png') });
+  await page.evaluate(() => {
+    window.battleFixtureState.bossEncounter!.score = 740;
+    window.refreshBattleFixture();
+  });
+  await page.locator('#battleAttack').click();
+  await page.locator('#battleTargetButton').click();
+  await frames(page, 2);
+  await confirmRoomDialogue(page);
+  await frames(page, 2);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.enemy)).toEqual({
+    name: 'Tenna',
+    hp: 4000,
+    maxHP: 4000,
+    visible: true,
+  });
+  await expect(page.locator('#battleSpare')).toHaveText('TV TIME!');
+});

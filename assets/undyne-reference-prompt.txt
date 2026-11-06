@@ -1,0 +1,2 @@
+Source: user-provided codex-clipboard-f1be97ca-c722-4736-b73d-a0c54bff0fe9.png.
+Built-in imagegen background-extraction edit: remove the checkerboard to real alpha; preserve the full pixel-art character, pose, facial expression, colors and armor. No extra objects or redesigned features.

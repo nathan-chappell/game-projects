@@ -1,3 +1,4 @@
+import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
 import { queueTennaScoreEvent, undyneActive } from '../tenna/score-events.ts';
 import { advanceHammers } from '../tenna/hammers.ts';
 import { advanceSurfer } from '../tenna/surfers.ts';
@@ -306,6 +307,12 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'tenna') {
+    if (undynePresent(encounter) && (encounter.score ?? 0) >= 750) {
+      encounter.guestResumePhase = 'tennaNextAttack';
+      encounter.guestEvent = 'leave';
+      encounter.phase = 'tennaGuest';
+      return true;
+    }
     if (undyneActive(encounter)) {
       beginEnemyAttack(
         encounter,
@@ -557,6 +564,20 @@ export function damageEnemy(encounter: Encounter, amount: number) {
     }
     return damage;
   }
+  if (encounter.kind === 'tenna' && undynePresent(encounter)) {
+    const damage = Math.min(amount, Math.max(0, encounter.enemy.hp));
+    encounter.enemy.hp -= damage;
+    encounter.hitAge = 0;
+    encounter.hitActor = encounter.turn;
+    encounter.hitDamage = damage;
+    if (damage > 0) encounter.score = (encounter.score ?? 0) + 10;
+    if ((encounter.score ?? 0) >= 660) encounter.undyneGlitched = true;
+    if (encounter.enemy.hp <= 0) {
+      encounter.phase = 'undyneCandy';
+      encounter.screen = 'menu';
+    }
+    return damage;
+  }
   if (encounter.kind === 'tenna') {
     const damage = Math.min(amount, Math.max(0, encounter.enemy.hp));
     encounter.enemy.hp -= damage;
@@ -579,6 +600,15 @@ export function damageEnemy(encounter: Encounter, amount: number) {
   encounter.hitActor = encounter.turn;
   encounter.hitDamage = damage;
   return damage;
+}
+export function completeUndyneCandy(encounter: Encounter) {
+  if (encounter.kind !== 'tenna' || encounter.phase !== 'undyneCandy' || !encounter.turn) return false;
+  encounter.enemy.hp = encounter.enemy.maxHP;
+  encounter.undyneHealAge = 0;
+  encounter.phase = encounter.turn.toLowerCase();
+  finishPartyTurn(encounter, 'Tenna used G. Candy! Undyne recovered to MAX HP.');
+  queueTennaScoreEvent(encounter);
+  return true;
 }
 export function completeTennaCut(encounter: Encounter) {
   if (encounter.kind !== 'tenna' || encounter.phase !== 'tennaCut' || !encounter.turn) return false;
@@ -607,7 +637,10 @@ export function attackEnemy(encounter: Encounter) {
   );
   const message = `${actor} dealt ${damage} damage to ${encounter.enemy.name}.`;
   if (encounter.phase === 'victory') encounter.message = message + ` ${encounter.enemy.name} was defeated.`;
-  else finishPartyTurn(encounter, message);
+  else {
+    finishPartyTurn(encounter, message);
+    queueTennaScoreEvent(encounter);
+  }
   return true;
 }
 export function defend(encounter: Encounter) {
@@ -673,6 +706,7 @@ export function advanceProceedDialogue(encounter: Encounter) {
 export function requestTennaMinigame(encounter: Encounter) {
   if (encounter.kind !== 'tenna' || !canKrisAct(encounter) || !canUseBattleAction(encounter, 'act'))
     return false;
+  if (rejectUndyneAction(encounter, 'act')) return false;
   encounter.phase = 'minigameIntro';
   encounter.screen = 'menu';
   if (encounter.minigameIntroSeen) return beginTennaMinigame(encounter);
@@ -699,6 +733,13 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  if (encounter.undyneMenuSpear) {
+    encounter.undyneMenuSpear.age += dt;
+    if (encounter.undyneMenuSpear.age > 2.2) encounter.undyneMenuSpear = null;
+  }
+  if (encounter.undyneHealAge !== undefined) encounter.undyneHealAge += dt;
+  if (encounter.phase === 'tennaNextAttack')
+    return startNextEnemyAttack(encounter, 'Undyne leaves the stage.');
   if (encounter.undyneEntranceAge !== undefined)
     encounter.undyneEntranceAge = Math.min(1.2, encounter.undyneEntranceAge + dt);
   if (queueTennaScoreEvent(encounter)) return true;
@@ -809,7 +850,10 @@ export function listenInDark(encounter: Encounter) {
   return finishPartyTurn(encounter, 'You listen carefully. Something is watching from the darkness.');
 }
 export function spareInDark(encounter: Encounter) {
-  if (encounter?.kind === 'tenna') return canPartyAct(encounter);
+  if (encounter?.kind === 'tenna') {
+    if (rejectUndyneAction(encounter, 'spare')) return false;
+    return canPartyAct(encounter);
+  }
   if (encounter?.kind !== 'dark' || !canUseBattleAction(encounter, 'spare')) return false;
   return finishPartyTurn(encounter, `${encounter.turn} tried to spare the figure. The eyes keep watching.`);
 }

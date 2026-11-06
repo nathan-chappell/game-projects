@@ -156,6 +156,15 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       return;
     }
+    if (state.bossEncounter?.phase === 'undyneCandy' && !state.dialogue) {
+      dependencies.openDialogue(
+        ['[Tenna] * A little G. Candy for our guest! Back to full health!'],
+        'undyneCandy',
+      );
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'tennaGuest' && !state.dialogue) {
       dependencies.openDialogue(
         state.bossEncounter.guestEvent === 'enter'

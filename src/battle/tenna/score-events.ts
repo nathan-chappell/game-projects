@@ -1,3 +1,4 @@
+import { undynePresent } from './undyne-actions.ts';
 import { canPartyAct } from '../shared/availability.ts';
 import type { Encounter } from '../shared/types.ts';
 export function undyneActive(b: Encounter) {
@@ -6,6 +7,7 @@ export function undyneActive(b: Encounter) {
 export function queueTennaScoreEvent(b: Encounter) {
   if (b.kind !== 'tenna') return false;
   if ((b.score ?? 0) >= 1200) b.tennaHeadGlitch = true;
+  if (undynePresent(b) && (b.score ?? 0) >= 660) b.undyneGlitched = true;
   if (!canPartyAct(b)) return false;
   const event =
     !b.undyneJoined && (b.score ?? 0) >= 500
@@ -24,7 +26,14 @@ export function completeTennaScoreEvent(b: Encounter) {
   if (b.guestEvent === 'enter') {
     b.undyneJoined = true;
     b.undyneEntranceAge = 0;
-  } else if (b.guestEvent === 'leave') b.undyneLeft = true;
+    b.tennaSavedEnemy = { ...b.enemy };
+    b.enemy = { name: 'Undyne', hp: 3500, maxHP: 3500, visible: true };
+    if ((b.score ?? 0) >= 660) b.undyneGlitched = true;
+  } else if (b.guestEvent === 'leave') {
+    b.undyneLeft = true;
+    b.undyneMenuSpear = null;
+    b.enemy = b.tennaSavedEnemy ?? { name: 'Tenna', hp: 4000, maxHP: 4000, visible: true };
+  }
   b.phase = b.guestResumePhase ?? 'kris';
   b.guestResumePhase = undefined;
   b.guestEvent = null;

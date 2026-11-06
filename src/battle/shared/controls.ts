@@ -1,3 +1,4 @@
+import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
 import { addTennaTestingPoints } from '../tenna/score-events.ts';
 import { setHammerAimKey, setHammerThrowKey, throwHammer } from '../tenna/hammers.ts';
 import { jumpSurfer } from '../tenna/surfers.ts';
@@ -91,6 +92,10 @@ export function setupBattleControls(
       encounter.screen = 'attack';
       encounter.message = `Choose ${encounter.enemy.name} to attack.`;
     } else if (action === 'act') {
+      if (rejectUndyneAction(encounter, 'act')) {
+        refresh();
+        return;
+      }
       encounter.screen = 'act';
       encounter.message =
         encounter.kind === 'tenna'
@@ -461,7 +466,8 @@ export function setupBattleControls(
           ? `Hammer Time · Xs: ${encounter.minigame.misses} · Round points: ${encounter.minigame.points}`
           : `Misses: ${encounter.minigame.misses} · Round points: ${minigamePoints(encounter.minigame.misses)}`
       : '';
-    $('battleSpare').textContent = encounter?.kind === 'tenna' ? 'TV TIME!' : 'Spare';
+    $('battleSpare').textContent =
+      encounter?.kind === 'tenna' && !undynePresent(encounter) ? 'TV TIME!' : 'Spare';
     $('battleSpare').disabled = !acting || !canUseBattleAction(encounter, 'spare');
     $('battleActionButtons').hidden =
       active &&
