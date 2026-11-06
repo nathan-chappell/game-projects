@@ -1,9 +1,9 @@
 import type { Arena } from '../shared/types.ts';
 export const undyneSettings = {
   damage: 30,
-  interval: 0.48,
+  interval: 0.32,
   warmup: 1.5,
-  spears: 20,
+  spears: 30,
   speed: 360,
   warning: 0.45,
 };

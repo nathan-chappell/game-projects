@@ -107,7 +107,7 @@ test('all spear directions can be blocked at 30/60/144 FPS, and wrong shields ta
       finished = result.finished;
     }
     assert.equal(hits, 0);
-    assert.equal(a.blocked, 20);
+    assert.equal(a.blocked, 30);
     assert.equal(finished, true);
   }
   for (const [defending, invincible, expected] of [
@@ -187,7 +187,7 @@ test('the arena expands beyond the screen and yellow spears require the opposite
   const expanded = undyneArenaBounds(a);
   assert.ok(expanded.x < 0 && expanded.y < 0);
   assert.ok(expanded.x + expanded.size > 640 && expanded.y + expanded.size > 480);
-  assert.equal(a.spears.filter((s) => s.yellow).length, 5);
+  assert.equal(a.spears.filter((s) => s.yellow).length, 7);
   assert.equal(spearDistance(a, 0), -100);
   for (const shield of ['up', 'down']) {
     const yellow = createUndyneAttack(battleArena);
