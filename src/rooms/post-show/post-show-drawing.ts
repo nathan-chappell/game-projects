@@ -14,7 +14,7 @@ export function drawPostShowRoom(
     for (let x = 0; x < 16; x++) {
       if (!open(x, y)) continue;
       const grey = x >= 7;
-      ctx.fillStyle = grey ? '#dedee2' : y < 5 && x <= 2 ? '#b67b56' : '#ffa979';
+      ctx.fillStyle = grey ? '#666672' : y < 5 && x <= 2 ? '#694733' : '#9a6349';
       ctx.fillRect(x * 40, y * 40, 40, 40);
       for (const [dx, dy] of [
         [0, -1],
@@ -39,7 +39,7 @@ export function drawPostShowRoom(
               4,
             );
           }
-          ctx.fillStyle = grey ? '#64646f' : '#845642';
+          ctx.fillStyle = grey ? '#34343f' : '#50382d';
           const px = x * 40 + (dx === 1 ? 40 - depth : dx === -1 ? 0 : step);
           const py = y * 40 + (dy === 1 ? 40 - depth : dy === -1 ? 0 : step);
           ctx.globalAlpha = 0.55;
@@ -65,7 +65,7 @@ export function drawPostShowRoom(
         ctx.globalAlpha = 1;
       }
     }
-  ctx.fillStyle = '#634530';
+  ctx.fillStyle = '#3f2d22';
   ctx.fillRect(45, 41, 30, 7);
   ctx.fillStyle = '#281a14';
   ctx.fillRect(50, 40, 20, 4);

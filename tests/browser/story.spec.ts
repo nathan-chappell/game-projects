@@ -968,12 +968,15 @@ test('the post-Finale backstage door unlocks a black passage and allows returnin
   await frames(page, 200);
   await page.keyboard.up('ArrowDown');
   await page.keyboard.down('ArrowRight');
-  await frames(page, 260);
+  await frames(page, 140);
   await page.keyboard.up('ArrowRight');
-  expect(await page.evaluate(() => window.battleFixtureState.player.x)).toBeGreaterThan(550);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await frames(page, 5);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('beyond-the-show.png') });
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 120);
+  await page.keyboard.up('ArrowRight');
+  expect(await page.evaluate(() => window.battleFixtureState.player.x)).toBeGreaterThan(550);
   await page.keyboard.down('ArrowLeft');
   await frames(page, 300);
   await page.keyboard.up('ArrowLeft');
