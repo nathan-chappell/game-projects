@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:8082/**. Save a source file and Vite refreshes the game. Keep this terminal open while developing; stop it with Ctrl+C.
+Open **http://localhost:8082/**. Save a source file and Vite refreshes the game. When running in WSL from a Windows-mounted folder, Vite polls for changes so it does not keep serving stale modules. Keep this terminal open while developing; stop it with Ctrl+C.
 
 Hold **F** while moving with the arrow keys or WASD to sprint at 1.75× walking speed. Release F to walk again. The on-screen **Run · F** button can also be held with the direction controls. Sprinting works throughout exploration, including the storage corridor and traffic crossing; the party keeps up. Battle soul movement is unchanged. **L** still skips ordinary dialogue.
 

@@ -5,7 +5,14 @@ import { defineConfig } from 'vite';
 const root = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
-  server: { port: 8082, strictPort: true },
+  server: {
+    port: 8082,
+    strictPort: true,
+    // Windows-mounted folders can miss native file events when Vite runs in WSL.
+    watch: /^\/mnt\/[a-z]\//i.test(root)
+      ? { usePolling: true, interval: 750, ignored: ['**/exports/**', '**/test-results/**'] }
+      : undefined,
+  },
   preview: { port: 8082, strictPort: true },
   plugins: [
     {
