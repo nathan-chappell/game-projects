@@ -1,3 +1,5 @@
+import { createKnightBattleIntro } from '../battle/knights/introduction.ts';
+import { knightSequenceSeconds } from '../rooms/post-show/knight-choreography.ts';
 import {
   advanceKnightPath,
   createKnightPath,
@@ -81,6 +83,15 @@ interface Dependencies {
 /** Keep update order: story gates and modal controls resolve before movement and collisions. */
 export function createGameLoop(dependencies: Dependencies) {
   const state = dependencies.state;
+  function openKnightStatues() {
+    state.keys.clear();
+    state.player.moving = false;
+    dependencies.openDialogue(
+      statueConversation.map((line) => `[${line.speaker}] * ${line.text}`),
+      'knightStatues',
+    );
+    dependencies.canvas.focus({ preventScroll: true });
+  }
   function update(dt: number) {
     if (state.mode === 'play' && !state.death && dependencies.partyHasFallen()) dependencies.beginDeath();
     if (state.death) {
@@ -460,7 +471,17 @@ export function createGameLoop(dependencies: Dependencies) {
     const pace = state.keys.has('sprint') ? sprintMultiplier : 1;
     if (dependencies.current().scene === 'postShowPassage') {
       const path = (state.knightPath ??= createKnightPath(state.player.x, state.player.y));
+      if (path.duelAge < 0 && path.x >= knightPathSettings.statuesAt && !state.story.knightStatuesExplained) {
+        openKnightStatues();
+        return;
+      }
       const leave = advanceKnightPath(path, dependencies.current(), state.keys, dt);
+      if (path.duelAge >= 0) state.keys.clear();
+      if (path.duelAge >= knightSequenceSeconds && !state.knightBattle) {
+        state.knightBattle = createKnightBattleIntro();
+        dependencies.storyUI();
+      }
+      if (state.knightBattle) state.knightBattle.age = Math.min(1, state.knightBattle.age + dt);
       const camera = knightPathCamera(path);
       state.player.x = path.x - camera;
       state.player.y = path.y;
@@ -477,15 +498,7 @@ export function createGameLoop(dependencies: Dependencies) {
         const p = knightPartyPosition(path, 84 + i * 41);
         return { name, x: p.x - camera, y: p.y, trail: [] };
       });
-      if (path.x >= knightPathSettings.statuesAt && !state.story.knightStatuesExplained) {
-        state.keys.clear();
-        state.player.moving = false;
-        dependencies.openDialogue(
-          statueConversation.map((line) => `[${line.speaker}] * ${line.text}`),
-          'knightStatues',
-        );
-        dependencies.canvas.focus({ preventScroll: true });
-      }
+      if (path.x >= knightPathSettings.statuesAt && !state.story.knightStatuesExplained) openKnightStatues();
       if (leave && !state.doorCooldown) {
         const target = dependencies.current().doorLinks?.['1,1'];
         if (target !== undefined) dependencies.changeRoom(target, true);

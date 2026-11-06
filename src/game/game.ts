@@ -1150,6 +1150,7 @@ export function startGame() {
     state.story.tennaFinaleComplete = false;
     state.story.knightStatuesExplained = false;
     state.knightPath = null;
+    state.knightBattle = null;
     state.story.jackCandyReceived = false;
     state.story.jackRevealed = false;
     state.story.collisionSeen = false;

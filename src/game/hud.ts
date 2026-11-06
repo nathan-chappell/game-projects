@@ -95,6 +95,13 @@ export function createHud(dependencies: Dependencies) {
         : 'Spare cameras hang above a dark room filled with old show equipment.';
       return;
     }
+    if (state.knightBattle) {
+      dependencies.$('taskTitle').textContent = 'Three Teams';
+      dependencies.$('taskDescription').textContent =
+        'Kris’s party, Roaring Knight and Kaizo Knight face one another.';
+      dependencies.$('storySummary').textContent = 'The charge and both Swoons were blocked.';
+      return;
+    }
     if (dependencies.current().scene === 'postShowPassage') {
       dependencies.$('taskTitle').textContent = 'Beyond the Show';
       dependencies.$('taskDescription').textContent =

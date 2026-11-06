@@ -1,3 +1,4 @@
+import chargeURL from '../../../assets/roaring-knight-charge.png?inline';
 import roaringURL from '../../../assets/roaring-knight-rig.png?inline';
 import kaizoURL from '../../../assets/kaizo-knight-rig.png?inline';
 import { knightSword, type KnightActorPose } from './knight-choreography.ts';
@@ -9,7 +10,7 @@ interface Rig {
   weapon: Bounds | null;
 }
 let rigs: { roaring: Rig; kaizo: Rig } | undefined;
-function load(url: string): Rig {
+function load(url: string, atlas = true): Rig {
   const rig: Rig = { image: new Image(), body: null, weapon: null };
   rig.image.onload = () => {
     const canvas = document.createElement('canvas');
@@ -38,8 +39,8 @@ function load(url: string): Rig {
         ? { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
         : null;
     };
-    rig.body = bounds(0, split);
-    rig.weapon = bounds(split, canvas.width);
+    rig.body = bounds(0, atlas ? split : canvas.width);
+    rig.weapon = atlas ? bounds(split, canvas.width) : null;
   };
   rig.image.src = url;
   return rig;
@@ -78,5 +79,21 @@ export function drawKnightActor(ctx: CanvasRenderingContext2D, actor: KnightActo
   ctx.drawImage(rig.image, b.x, b.y, b.width, b.height, -Math.round(width / 2), -171, width, height);
   ctx.restore();
   drawKnightWeapon(ctx, actor, kaizo);
+  return true;
+}
+
+let charge: Rig | undefined;
+export function drawKnightCharge(ctx: CanvasRenderingContext2D, actor: KnightActorPose) {
+  charge ??= load(chargeURL, false);
+  const b = charge.body;
+  if (!b) return false;
+  const height = 178,
+    width = Math.round((height * b.width) / b.height);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.translate(Math.round(actor.x), Math.round(350 - actor.jump));
+  ctx.scale(actor.facing, 1);
+  ctx.drawImage(charge.image, b.x, b.y, b.width, b.height, -Math.round(width / 2), -height, width, height);
+  ctx.restore();
   return true;
 }

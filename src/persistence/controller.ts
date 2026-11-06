@@ -318,6 +318,7 @@ export function createPersistence(dependencies: Dependencies) {
     state.collisionBlackout = null;
     state.queenPuzzle = null;
     state.queenDeparture = null;
+    state.knightBattle = null;
     state.knightPath =
       dependencies.current().scene === 'postShowPassage'
         ? createKnightPath(slot.knightPathX ?? state.player.x, state.player.y)

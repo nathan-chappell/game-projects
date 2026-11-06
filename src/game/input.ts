@@ -1,3 +1,4 @@
+import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
 import type { Elements } from './dom.ts';
 import { present } from './invariants.ts';
 import type { GameState } from './types.ts';
@@ -31,6 +32,7 @@ export function createInput(dependencies: Dependencies) {
         return;
       }
       if (
+        (knightEncounterActive(state) && !state.dialogue) ||
         state.death ||
         state.holeFall ||
         state.padJump ||

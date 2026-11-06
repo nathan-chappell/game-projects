@@ -1,3 +1,4 @@
+import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
 import { harvestTree } from '../inventory/tree-items.ts';
 import { finaleConversation } from '../rooms/backstage/tenna-finale.ts';
 import { tennaBackstageConversation } from '../rooms/backstage/tenna-story.ts';
@@ -167,6 +168,7 @@ export function createInteractions(dependencies: Dependencies) {
     return true;
   }
   function inspectObject() {
+    if (knightEncounterActive(state)) return;
     if ((state.tennaEntrance || state.collisionBlackout) && !state.dialogue) return;
     if (state.death || state.holeFall || state.padJump || dependencies.choiceDialogOpen()) return;
     if (state.bossEncounter && !state.dialogue) return;

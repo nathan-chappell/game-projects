@@ -989,7 +989,7 @@ test('the post-Finale backstage door unlocks a black passage and allows returnin
   await expect(page.locator('#dialogue')).toBeHidden();
 });
 
-test('the long knight path introduces its statues and reaches an animated duel without a percentage display', async ({
+test('the third statue leads to the charge, two blocked Swoons and three-team introduction', async ({
   page,
 }, testInfo) => {
   await controlFrames(page);
@@ -1037,24 +1037,38 @@ test('the long knight path introduces its statues and reaches an animated duel w
   await page.keyboard.down('ArrowRight');
   await frames(page, 1200);
   await page.keyboard.up('ArrowRight');
-  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBe(3330);
-  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBeGreaterThanOrEqual(3200);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.evaluate(() => {
-    window.battleFixtureState.knightPath!.duelAge = 1.3;
-  });
-  await frames(page, 1);
-  await page.locator('#game').screenshot({ path: testInfo.outputPath('knights-sword-clash.png') });
-  await page.evaluate(() => {
-    window.battleFixtureState.knightPath!.duelAge = 0.7;
-  });
-  await frames(page, 1);
-  await page.locator('#game').screenshot({ path: testInfo.outputPath('knight-sword-windup.png') });
-  await page.evaluate(() => {
-    window.battleFixtureState.knightPath!.duelAge = 3.65;
-  });
-  await frames(page, 1);
-  await page.locator('#game').screenshot({ path: testInfo.outputPath('kaizo-knight-jump.png') });
+  for (const [age, name] of [
+    [1.8, 'roaring-charge-pose'],
+    [3.1, 'kaizo-blocks-charge'],
+    [5.8, 'roaring-swoon'],
+    [6.3, 'kaizo-blocks-swoon'],
+    [8.7, 'roaring-blocks-swoon'],
+  ] as const) {
+    await page.evaluate((age) => {
+      window.battleFixtureState.knightPath!.duelAge = age;
+    }, age);
+    await frames(page, 1);
+    await page.locator('#game').screenshot({ path: testInfo.outputPath(`${name}.png`) });
+  }
+  const encounterX = await page.evaluate(() => window.battleFixtureState.knightPath!.x);
+  await page.keyboard.down('ArrowLeft');
+  await page.keyboard.press('Shift');
+  await page.keyboard.press('l');
+  await frames(page, 180);
+  await page.keyboard.up('ArrowLeft');
+  await page.keyboard.press('o');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#inventoryDialog')).toBeHidden();
+  await expect(page.locator('#dialogue')).toBeHidden();
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBe(encounterX);
+  expect(
+    await page.evaluate(() => window.battleFixtureState.knightBattle?.teams.map((team) => team.id)),
+  ).toEqual(['party', 'roaring', 'kaizo']);
+  await frames(page, 60);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('three-team-introduction.png') });
+  await expect(page.locator('#taskTitle')).toHaveText('Three Teams');
   await expect(page.locator('#bossControls')).toBeHidden();
   await expect(page.locator('#gameHint')).not.toContainText('%');
   expect(
@@ -1063,12 +1077,34 @@ test('the long knight path introduces its statues and reaches an animated duel w
       items: window.battleFixtureState.inventory,
     })),
   ).toEqual(before);
-  await page.keyboard.down('ArrowLeft');
-  await frames(page, 1500);
-  await page.keyboard.up('ArrowLeft');
+  await frames(page, 900);
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBe(11);
+  expect(await page.evaluate(() => window.battleFixtureState.knightBattle?.phase)).toBe('introduction');
+});
+
+test('older progress beyond the third statue can finish its conversation before the knight scene', async ({
+  page,
+}) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await seedProgress(
+    page,
+    'postShowPassage',
+    { tennaFinaleComplete: true, knightStatuesExplained: false },
+    { x: 140, y: 360 },
+  );
+  await page.goto('/');
+  await frames(page, 1);
+  await page.evaluate(() => {
+    window.battleFixtureState.knightPath!.x = 3250;
+  });
+  await frames(page, 1);
+  await expect(page.locator('#speakerName')).toHaveText('Flowey');
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBe(-1);
+  for (let i = 0; i < 6 && (await page.locator('#dialogue').isVisible()); i++)
+    await confirmRoomDialogue(page);
+  await frames(page, 2);
   await expect(page.locator('#dialogue')).toBeHidden();
-  await page.keyboard.down('ArrowUp');
-  await frames(page, 200);
-  await page.keyboard.up('ArrowUp');
-  await expect(page.locator('#roomName')).toContainText('Backstage');
+  expect(await page.evaluate(() => window.battleFixtureState.story.knightStatuesExplained)).toBe(true);
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBeGreaterThan(0);
 });

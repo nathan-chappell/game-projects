@@ -1,3 +1,4 @@
+import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
 import { createKnightPath } from '../rooms/post-show/knight-path.ts';
 import { postShowScene } from '../rooms/post-show/post-show.ts';
 import { createTraffic } from '../rooms/crossing/traffic.ts';
@@ -98,6 +99,7 @@ export function createRoomController(dependencies: Dependencies) {
     state.lastSpikeContact = null;
     state.cameraShakeTime = 0;
     dependencies.positionPlayer(next, preferred);
+    state.knightBattle = null;
     state.knightPath = next.scene === postShowScene ? createKnightPath(state.player.x, state.player.y) : null;
     state.storageHallway =
       next.scene === 'storageHallway'
@@ -195,6 +197,7 @@ export function createRoomController(dependencies: Dependencies) {
     dependencies.storyUI();
   }
   function setMode(next: 'play' | 'build') {
+    if (knightEncounterActive(state)) return;
     if (state.tennaEntrance) {
       dependencies.toast('Finish Tenna’s entrance before opening Build.');
       return;

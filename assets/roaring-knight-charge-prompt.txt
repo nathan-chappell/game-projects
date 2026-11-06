@@ -1,0 +1,6 @@
+Tool: built-in image_gen, transparent_background=true.
+Input: assets/roaring-knight-charge-reference.png
+Output: assets/roaring-knight-charge.png
+This is a reference-derived charging pose cutout, not a verified original game sprite file.
+
+Use case: background-extraction. Asset type: pixel-art charging battle pose sprite. Extract the EXACT black Roaring Knight silhouette from the supplied white-background screenshot: this precise forward-leaning charge pose, antlers, horizontal shoulders, dangling lower body, and massive diagonal sword pointing up to the right. Preserve every feature, pose, proportions and original pixel edges. Remove only the white background; keep the black figure opaque. Add at most a one-pixel thin white contour at the OUTSIDE edge for readability against a dark game battlefield, without changing the silhouette or internal black fill. No redesign, no armor, no invented features, no shading, no smoothing, no text, no other objects. Fully transparent background, entire pose centered with small transparent margins.

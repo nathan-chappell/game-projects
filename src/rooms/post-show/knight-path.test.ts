@@ -1,4 +1,12 @@
-import { knightImpactTimes, knightSword, swordIntersection } from './knight-choreography.ts';
+import { createKnightBattleIntro } from '../../battle/knights/introduction.ts';
+import {
+  knightImpactTimes,
+  knightSequencePhase,
+  knightSequenceSeconds,
+  knightEncounterActive,
+  knightSword,
+  swordIntersection,
+} from './knight-choreography.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createPostShowRoom } from './post-show.ts';
@@ -15,7 +23,7 @@ import { createGameState } from '../../game/state.ts';
 import { defaults } from '../castle/starter.ts';
 import { upgradeProject } from '../../world/upgrades.ts';
 
-test('the long path follows its elbow, scrolls to the duel lookout, and permits walking all the way back', () => {
+test('the path locks into its finite encounter and allows returning before reaching it', () => {
   const room = createPostShowRoom(0);
   for (const fps of [30, 60, 144]) {
     const p = createKnightPath();
@@ -24,12 +32,17 @@ test('the long path follows its elbow, scrolls to the duel lookout, and permits 
     for (let i = 0; i < fps * 2; i++) advanceKnightPath(p, room, new Set(['down']), 1 / fps);
     assert.ok(p.y >= 320 && p.y < 400);
     for (let i = 0; i < fps * 26; i++) advanceKnightPath(p, room, new Set(['right']), 1 / fps);
-    assert.equal(p.x, knightPathSettings.lookout);
+    assert.ok(p.x >= knightPathSettings.duelAt && p.x < knightPathSettings.duelAt + 5);
+    const encounterX = p.x;
     assert.ok(p.duelAge > 0);
-    assert.ok(knightPathCamera(p) > 3000);
+    assert.ok(knightPathCamera(p) > 2800);
     for (let i = 0; i < fps * 26; i++) advanceKnightPath(p, room, new Set(['left']), 1 / fps);
-    assert.equal(p.x, 50);
-    assert.equal(advanceKnightPath(p, room, new Set(['up']), 3), true);
+    assert.equal(p.x, encounterX);
+    assert.equal(p.duelAge, knightSequenceSeconds);
+    const returning = createKnightPath(2500, 360);
+    advanceKnightPath(returning, room, new Set(['left']), 22);
+    assert.equal(returning.x, 50);
+    assert.equal(advanceKnightPath(returning, room, new Set(['up']), 3), true);
   }
 });
 test('sprinting speeds up the path and invalid time does not change state', () => {
@@ -43,14 +56,23 @@ test('sprinting speeds up the path and invalid time does not change state', () =
   for (const dt of [NaN, Infinity, -1, 0]) advanceKnightPath(walk, room, new Set(['right']), dt);
   assert.deepEqual(walk, before);
 });
-test('the duel alternates attacks, jumps and clashes and repeats without declaring a winner', () => {
-  assert.ok(knightDuelPose(2.4).clash > 0.5);
-  assert.ok(knightDuelPose(3.65).kaizoJump > 70);
-  assert.notEqual(knightDuelPose(0).roaringX, knightDuelPose(2.5).roaringX);
-  assert.equal(knightDuelPose(9).slash, 'both');
-  assert.deepEqual(knightDuelPose(2.5), knightDuelPose(14.5));
+test('the finite sequence charges, blocks both Swoons and stops at the three-team handoff', () => {
+  const steps = [
+    [0, 'faceoff'],
+    [1.8, 'chargePose'],
+    [2.8, 'charge'],
+    [3.1, 'chargeBlocked'],
+    [5.6, 'roaringSwoon'],
+    [6.3, 'kaizoBlocksSwoon'],
+    [8, 'kaizoSwoon'],
+    [8.7, 'roaringBlocksSwoon'],
+    [10.5, 'transition'],
+    [11, 'threeTeams'],
+  ] as const;
+  for (const [time, phase] of steps) assert.equal(knightSequencePhase(time), phase);
+  assert.ok(knightDuelPose(2.8).roaringX > knightDuelPose(1.8).roaringX);
+  assert.deepEqual(knightDuelPose(100), knightDuelPose(11));
   assert.equal(statueConversation[0].speaker, 'Flowey');
-  assert.ok(statueConversation.some((line) => line.speaker === 'Ralsey' && /Roaring Knight/.test(line.text)));
 });
 test('saved path distances and statue dialogue remain optional and validate before loading', () => {
   const project = upgradeProject(defaults()),
@@ -70,20 +92,25 @@ test('saved path distances and statue dialogue remain optional and validate befo
   assert.equal(validProgress({ ...slot, story: { ...state.story, knightStatuesExplained: 'yes' } }), false);
 });
 
-test('every parry is a real intersection of the two animated blades with a brief impact hold', () => {
-  for (const time of knightImpactTimes) {
-    const pose = knightDuelPose(time);
-    const intersection = swordIntersection(knightSword(pose.roaring), knightSword(pose.kaizo));
-    assert.ok(intersection, `blades must meet at ${time}s`);
-    const held = knightDuelPose(time + 0.05);
-    for (const actor of ['roaring', 'kaizo'] as const) {
-      for (const key of ['x', 'jump', 'facing', 'swordAngle', 'lean'] as const)
-        assert.ok(Math.abs(held[actor][key] - pose[actor][key]) < 1e-8, `${actor} ${key} holds at impact`);
-    }
-  }
-  assert.ok(
-    Math.abs(knightDuelPose(0.7).roaring.swordAngle - knightDuelPose(1.3).roaring.swordAngle) > Math.PI,
+test('the charge meets Kaizo’s blade, and Swoon impacts occur at the guarded defender', () => {
+  const charged = knightDuelPose(3.1);
+  assert.equal(charged.chargePose, true);
+  assert.ok(swordIntersection(knightSword(charged.roaring), knightSword(charged.kaizo)));
+  assert.deepEqual(knightImpactTimes, [3.05, 6.15, 8.55]);
+  assert.equal(knightDuelPose(6.3).kaizo.swordAngle, Math.PI);
+  assert.equal(knightDuelPose(8.7).roaring.swordAngle, Math.PI);
+});
+test('the battle introduction has three distinct teams and does not invent HP or turn rules', () => {
+  const state = createGameState(upgradeProject(defaults()));
+  assert.equal(knightEncounterActive(state), false);
+  state.knightBattle = createKnightBattleIntro();
+  assert.equal(knightEncounterActive(state), true);
+  assert.equal(state.knightBattle.teams.length, 3);
+  assert.deepEqual(
+    state.knightBattle.teams.map((team) => team.id),
+    ['party', 'roaring', 'kaizo'],
   );
-  assert.ok(Math.abs(knightDuelPose(2.1).kaizo.swordAngle - knightDuelPose(2.4).kaizo.swordAngle) > Math.PI);
-  assert.ok(knightDuelPose(8.3).roaring.facing < 0, 'the knights turn after crossing sides');
+  assert.deepEqual(state.knightBattle.teams[0].members, ['Kris', 'Flowey', 'Susie', 'Ralsey']);
+  assert.equal('hp' in state.knightBattle, false);
+  assert.equal('turn' in state.knightBattle, false);
 });

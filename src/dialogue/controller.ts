@@ -1,3 +1,4 @@
+import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
 import { completeTennaOutburst, completeTennaShutdown } from '../battle/tenna/ending.ts';
 import { completeTennaScoreEvent } from '../battle/tenna/score-events.ts';
 import { beginTennaMinigame } from '../battle/tenna/minigame.ts';
@@ -103,6 +104,7 @@ export function createDialogue(dependencies: Dependencies) {
     renderDialogue();
   }
   function talk() {
+    if (knightEncounterActive(state) && !state.dialogue) return;
     if ((state.tennaEntrance || state.collisionBlackout) && !state.dialogue) return;
     if (state.death || state.holeFall || state.padJump || dependencies.choiceDialogOpen()) return;
     if (state.bossEncounter && !state.dialogue) return;
@@ -255,6 +257,7 @@ export function createDialogue(dependencies: Dependencies) {
   }
   function isImportantCutscene() {
     return (
+      knightEncounterActive(state) ||
       !!state.dive ||
       !!state.buster ||
       !!state.tennaEntrance ||

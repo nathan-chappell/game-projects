@@ -1,3 +1,4 @@
+import { knightSequenceSeconds } from './knight-choreography.ts';
 import { movementSpeed, sprintMultiplier } from '../../game/config.ts';
 import type { Room } from '../../world/types.ts';
 
@@ -49,6 +50,11 @@ function canStand(room: Room, x: number, y: number) {
 }
 export function advanceKnightPath(path: KnightPath, room: Room, keys: Set<string>, dt: number) {
   if (!Number.isFinite(dt) || dt <= 0) return false;
+  if (path.duelAge >= 0) {
+    path.duelAge = Math.min(knightSequenceSeconds, path.duelAge + dt);
+    path.moving = false;
+    return false;
+  }
   const dx = Number(keys.has('right')) - Number(keys.has('left'));
   const dy = Number(keys.has('down')) - Number(keys.has('up'));
   const speed = (movementSpeed * (keys.has('sprint') ? sprintMultiplier : 1)) / (Math.hypot(dx, dy) || 1);

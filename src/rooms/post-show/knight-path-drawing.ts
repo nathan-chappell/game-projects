@@ -1,10 +1,11 @@
+import { drawKnightActor } from './knight-sprites.ts';
+import type { DrawingHelpers } from '../../rendering/types.ts';
 import statueURL from '../../../assets/chamber-statue-transparent.png?inline';
 import type { GameState } from '../../game/types.ts';
 import type { createSprites } from '../../rendering/sprites.ts';
-import { drawKnightDuel } from './knight-duel-drawing.ts';
+import { drawKnightDuel, drawKnightBattlefield } from './knight-duel-drawing.ts';
 import {
   createKnightPath,
-  knightDuelPose,
   knightPartyPosition,
   knightPathCamera,
   knightPathSettings,
@@ -16,20 +17,43 @@ export function createKnightPathDrawing(
   ctx: CanvasRenderingContext2D,
   sprites: Pick<ReturnType<typeof createSprites>, 'drawPlayer' | 'drawFlowey' | 'drawFountainFriend'>,
   reducedMotion: MediaQueryList,
+  pixelText: DrawingHelpers['pixelText'],
 ) {
   const statue = new Image();
   statue.src = statueURL;
   return function draw(state: GameState, time: number) {
     const path = (state.knightPath ??= createKnightPath(state.player.x, state.player.y));
+    if (path.duelAge >= 0) {
+      if (state.knightBattle) {
+        drawKnightBattlefield(ctx);
+        drawKnightActor(ctx, { x: 320, jump: 25, facing: 1, swordAngle: 0.12, lean: 0 }, false);
+        drawKnightActor(ctx, { x: 535, jump: 25, facing: -1, swordAngle: 0.12, lean: 0 }, true);
+        sprites.drawPlayer(30, 320, time);
+        sprites.drawFlowey(80, 320, time);
+        sprites.drawFountainFriend({ name: 'Susie', x: 130, y: 320 }, time);
+        sprites.drawFountainFriend({ name: 'Ralsey', x: 180, y: 320 }, time);
+        pixelText('THREE TEAMS', 208, 92, '#eee6f2', 22);
+        state.knightBattle.teams.forEach((team, i) => {
+          const x = 12 + i * 210;
+          ctx.fillStyle = '#101018';
+          ctx.fillRect(x, 390, 196, 65);
+          ctx.strokeStyle = i === 0 ? '#a8d7e3' : i === 1 ? '#c3c4cd' : '#e5e9ff';
+          ctx.strokeRect(x, 390, 196, 65);
+          pixelText(`TEAM ${i + 1}`, x + 12, 411, '#a7a2b9', 11);
+          pixelText(team.name, x + 12, 438, '#f3edf5', 12);
+        });
+        if (state.knightBattle.age < 0.6) {
+          ctx.fillStyle = `rgba(0,0,0,${1 - state.knightBattle.age / 0.6})`;
+          ctx.fillRect(0, 0, 640, 480);
+        }
+      } else drawKnightDuel(ctx, path.duelAge, reducedMotion.matches);
+      return;
+    }
     const camera = knightPathCamera(path),
       reduced = reducedMotion.matches;
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, 640, 480);
     ctx.save();
-    if (!reduced && path.duelAge >= 0) {
-      const impact = knightDuelPose(path.duelAge).clash;
-      ctx.translate(Math.round(Math.sin(time * 67) * impact * 2), Math.round(Math.cos(time * 83) * impact));
-    }
     ctx.translate(-camera, 0);
     drawPostShowRoom(ctx, state.project.rooms[state.roomIndex], time, reduced, {
       camera,
@@ -52,7 +76,7 @@ export function createKnightPathDrawing(
       ctx.fillStyle = light;
       ctx.fillRect(x - 100, 180, 200, 180);
     }
-    if (path.duelAge >= 0) drawKnightDuel(ctx, path.duelAge, reduced);
+
     for (const [name, gap] of [
       ['Susie', 125],
       ['Ralsey', 84],

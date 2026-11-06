@@ -1,3 +1,4 @@
+import type { KnightBattleIntro } from '../battle/knights/introduction.ts';
 import type { KnightPath } from '../rooms/post-show/knight-path.ts';
 import type { Encounter } from '../battle/shared/types.ts';
 import type { Dialogue } from '../dialogue/types.ts';
@@ -86,6 +87,7 @@ export interface GameState {
   queenPuzzle: ReturnType<typeof createQueenPuzzle> | null;
   queenDeparture: number | null;
   knightPath: KnightPath | null;
+  knightBattle: KnightBattleIntro | null;
   storageHallway: ReturnType<typeof createHallway> | null;
   traffic: ReturnType<typeof createTraffic> | null;
   pendingBossRoom: number | null;

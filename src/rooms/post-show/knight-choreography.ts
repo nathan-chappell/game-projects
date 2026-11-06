@@ -1,36 +1,60 @@
+import type { GameState } from '../../game/types.ts';
+
 type Key = readonly [number, number, number, number, number, number, number];
-// Time, two positions, two jumps, two blade angles. Repeated poses create brief impact holds.
+// Time, positions, jumps and blade angles. This encounter plays once, then hands off to battle.
 const keys: readonly Key[] = [
-  [0, 3475, 3730, 0, 0, 0.12, 0.12],
-  [0.7, 3475, 3730, 0, 0, 2.2, -1.1],
-  [1.05, 3490, 3710, 0, 0, 2.1, -1.5],
-  [1.3, 3520, 3685, 0, 0, -2, -2],
-  [1.43, 3520, 3685, 0, 0, -2, -2],
-  [1.85, 3480, 3730, 0, 0, -3, -2.8],
-  [2.1, 3480, 3720, 0, 0, -1.2, 2.2],
-  [2.4, 3520, 3685, 0, 0, -2, -2],
-  [2.53, 3520, 3685, 0, 0, -2, -2],
-  [3, 3470, 3710, 0, 0, -2.9, -3.1],
-  [3.65, 3490, 3690, 0, 92, 1.8, 2.3],
-  [4.25, 3520, 3685, 0, 18, -2, -2],
-  [4.39, 3520, 3685, 0, 18, -2, -2],
-  [4.85, 3470, 3740, 0, 0, -3, -3],
-  [5.65, 3470, 3740, -7, -7, 2.4, 2.4],
-  [6.2, 3520, 3685, 0, 0, -2, -2],
-  [6.34, 3520, 3685, 0, 0, -2, -2],
-  [6.65, 3490, 3715, 18, 18, -4.8, -4.8],
-  [7.2, 3520, 3685, 0, 0, -2, -2],
-  [7.34, 3520, 3685, 0, 0, -2, -2],
-  [7.7, 3685, 3515, 15, 30, -3.1, -3.1],
-  [8.3, 3720, 3470, 0, 0, 0.2, 0.2],
-  [9.15, 3720, 3470, 0, 0, 2.3, 2.3],
-  [9.6, 3685, 3520, 0, 0, -2, -2],
-  [9.78, 3685, 3520, 0, 0, -2, -2],
-  [10.4, 3730, 3475, 40, 55, -3.2, -3.2],
-  [11.1, 3475, 3730, 12, 20, -1, -1],
-  [12, 3475, 3730, 0, 0, 0.12, 0.12],
+  [0, 120, 545, 35, 35, 0.12, 0.12],
+  [1.2, 120, 545, 35, 35, -2.4, 0.12],
+  [2.4, 120, 545, 35, 35, -2.4, Math.PI],
+  [3.05, 420, 545, 35, 35, -2.4, Math.PI],
+  [3.27, 420, 545, 35, 35, -2.4, Math.PI],
+  [3.85, 225, 555, 35, 35, -2.9, Math.PI],
+  [4.5, 140, 545, 35, 35, 2.2, 0.12],
+  [5.3, 140, 545, 35, 35, 2.2, Math.PI],
+  [5.8, 140, 545, 35, 35, -2.4, Math.PI],
+  [6.4, 140, 545, 35, 35, -2.4, Math.PI],
+  [7, 140, 545, 35, 35, 0.12, 2.2],
+  [7.8, 140, 545, 35, 35, Math.PI, 2.2],
+  [8.2, 140, 545, 35, 35, Math.PI, -2.4],
+  [8.8, 140, 545, 35, 35, Math.PI, -2.4],
+  [9.4, 140, 545, 35, 35, 0.12, 0.12],
+  [11, 140, 545, 35, 35, 0.12, 0.12],
 ];
-export const knightImpactTimes = [1.3, 2.4, 4.25, 6.2, 7.2, 9.6];
+export const knightSequenceSeconds = 11;
+export const knightImpactTimes = [3.05, 6.15, 8.55];
+export type KnightSequencePhase =
+  | 'faceoff'
+  | 'chargePose'
+  | 'charge'
+  | 'chargeBlocked'
+  | 'recover'
+  | 'roaringWindup'
+  | 'roaringSwoon'
+  | 'kaizoBlocksSwoon'
+  | 'kaizoWindup'
+  | 'kaizoSwoon'
+  | 'roaringBlocksSwoon'
+  | 'transition'
+  | 'threeTeams';
+export function knightSequencePhase(age: number): KnightSequencePhase {
+  if (age >= 11) return 'threeTeams';
+  if (age >= 10) return 'transition';
+  if (age >= 9.4) return 'faceoff';
+  if (age >= 8.55) return 'roaringBlocksSwoon';
+  if (age >= 7.8) return 'kaizoSwoon';
+  if (age >= 7) return 'kaizoWindup';
+  if (age >= 6.15) return 'kaizoBlocksSwoon';
+  if (age >= 5.3) return 'roaringSwoon';
+  if (age >= 4.5) return 'roaringWindup';
+  if (age >= 3.85) return 'recover';
+  if (age >= 3.05) return 'chargeBlocked';
+  if (age >= 2.4) return 'charge';
+  if (age >= 1.2) return 'chargePose';
+  return 'faceoff';
+}
+export function knightEncounterActive(state: Pick<GameState, 'mode' | 'knightPath' | 'knightBattle'>) {
+  return state.mode === 'play' && (!!state.knightBattle || (state.knightPath?.duelAge ?? -1) >= 0);
+}
 export interface KnightActorPose {
   x: number;
   jump: number;
@@ -56,52 +80,39 @@ export function swordIntersection(a: ReturnType<typeof knightSword>, b: ReturnTy
   const cross = rx * sy - ry * sx;
   if (Math.abs(cross) < 1e-8) return null;
   const qx = b.grip.x - a.grip.x,
-    qy = b.grip.y - a.grip.y;
-  const t = (qx * sy - qy * sx) / cross,
+    qy = b.grip.y - a.grip.y,
+    t = (qx * sy - qy * sx) / cross,
     u = (qx * ry - qy * rx) / cross;
   return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? { x: a.grip.x + t * rx, y: a.grip.y + t * ry } : null;
 }
 export function knightDuelPose(age: number) {
-  const beat = ((age % 12) + 12) % 12;
-  const index = keys.findIndex((key, i) => i < keys.length - 1 && beat >= key[0] && beat < keys[i + 1][0]);
-  const a = keys[Math.max(0, index)],
-    b = keys[Math.max(0, index) + 1];
+  const beat = Math.max(0, Math.min(knightSequenceSeconds, age));
+  const i = keys.findIndex((key, i) => i < keys.length - 1 && beat >= key[0] && beat < keys[i + 1][0]);
+  const a = keys[i < 0 ? keys.length - 2 : i],
+    b = keys[i < 0 ? keys.length - 1 : i + 1];
   const t = (beat - a[0]) / (b[0] - a[0]),
     ease = t * t * (3 - 2 * t);
   const value = (column: number) => a[column] + (b[column] - a[column]) * ease;
-  const facing = value(2) >= value(1) ? 1 : -1;
-  const roaring: KnightActorPose = {
-    x: value(1),
-    jump: value(3),
-    facing,
-    swordAngle: value(5),
-    lean: Math.sin(value(5)) * 0.045,
-  };
-  const kaizo: KnightActorPose = {
-    x: value(2),
-    jump: value(4),
-    facing: -facing,
-    swordAngle: value(6),
-    lean: Math.sin(value(6)) * 0.045,
-  };
+  const roaring: KnightActorPose = { x: value(1), jump: value(3), facing: 1, swordAngle: value(5), lean: 0 };
+  const kaizo: KnightActorPose = { x: value(2), jump: value(4), facing: -1, swordAngle: value(6), lean: 0 };
   const impact = knightImpactTimes
     .map((time) => ({ time, age: beat - time }))
-    .filter((event) => event.age >= 0 && event.age < 0.48)
+    .filter((event) => event.age >= 0 && event.age < 0.5)
     .at(-1);
-  const contact = swordIntersection(knightSword(roaring), knightSword(kaizo));
-  const clash = impact ? Math.max(0, 1 - impact.age / 0.48) : 0;
-  const active = Math.abs(b[5] - a[5]) > 1 || Math.abs(b[6] - a[6]) > 1;
+  const phase = knightSequencePhase(beat);
   return {
     beat,
+    phase,
     roaring,
     kaizo,
     roaringX: roaring.x,
     kaizoX: kaizo.x,
     kaizoJump: kaizo.jump,
-    clash,
-    contact,
+    chargePose: ['chargePose', 'charge', 'chargeBlocked'].includes(phase),
+    clash: impact ? 1 - impact.age / 0.5 : 0,
     impactAge: impact?.age ?? -1,
-    slash: active || clash > 0 ? 'both' : '',
-    dashing: Math.abs(b[1] - a[1]) + Math.abs(b[2] - a[2]) > 100,
+    contact: phase === 'chargeBlocked' ? swordIntersection(knightSword(roaring), knightSword(kaizo)) : null,
+    slash: ['roaringSwoon', 'kaizoSwoon'].includes(phase) ? 'both' : '',
+    dashing: phase === 'charge',
   };
 }

@@ -267,6 +267,7 @@ export function createRenderer(
     ctx,
     { drawPlayer, drawFlowey, drawFountainFriend },
     reducedParticleMotion,
+    pixelText,
   );
   const backstageDrawing = createBackstageDrawing(ctx, { rect });
   const storageDrawing = createStorageDrawing(ctx, { rect, reducedParticleMotion });
@@ -591,9 +592,10 @@ export function createRenderer(
     const r = current();
     if (state.mode === 'play' && r.scene === postShowScene) {
       drawKnightPath(state, time);
-      $('gameHint').textContent =
-        state.knightPath && state.knightPath.duelAge >= 0
-          ? 'The knights are fighting ahead. Watch from the edge of the path, or walk back.'
+      $('gameHint').textContent = state.knightBattle
+        ? 'Three teams face one another.'
+        : state.knightPath && state.knightPath.duelAge >= 0
+          ? 'The knights clash on the dark battlefield.'
           : 'Follow the path past the statues. Walk back to the brown entrance to return backstage.';
       return;
     }

@@ -1,136 +1,141 @@
-import { drawKnightActor, drawKnightWeapon } from './knight-sprites.ts';
-import { knightDuelPose, knightSword, type KnightActorPose } from './knight-choreography.ts';
-
-function swordTrail(ctx: CanvasRenderingContext2D, age: number, kaizo: boolean) {
-  const points = Array.from({ length: 9 }, (_, i) => {
-    const pose = knightDuelPose(age - i * 0.022);
-    return knightSword(kaizo ? pose.kaizo : pose.roaring);
-  });
-  const latest = points[0];
+import fieldURL from '../../../assets/knight-battlefield-reference.png?inline';
+import swoonURL from '../../../assets/red-sweep.png?inline';
+import { drawKnightActor, drawKnightCharge, drawKnightWeapon } from './knight-sprites.ts';
+import { knightDuelPose, knightSword } from './knight-choreography.ts';
+let field: HTMLImageElement | undefined, swoon: HTMLImageElement | undefined;
+export function drawKnightBattlefield(ctx: CanvasRenderingContext2D) {
+  field ??= new Image();
+  if (!field.src) field.src = fieldURL;
+  ctx.fillStyle = '#0b030b';
+  ctx.fillRect(0, 0, 640, 480);
+  ctx.imageSmoothingEnabled = false;
+  if (field.complete && field.naturalWidth) {
+    // Only the empty center and overhead scenery are sampled; the reference's fighters are excluded.
+    ctx.drawImage(field, 174, 40, 330, 183, 0, 44, 640, 436);
+    ctx.drawImage(field, 140, 0, 360, 38, 125, 0, 390, 44);
+  }
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, 125, 44);
+  ctx.fillRect(515, 0, 125, 44);
+}
+function swoonAttack(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
+  const pose = knightDuelPose(age);
+  const outgoing = pose.phase === 'roaringSwoon' || pose.phase === 'kaizoBlocksSwoon';
+  const returning = pose.phase === 'kaizoSwoon' || pose.phase === 'roaringBlocksSwoon';
+  if (!outgoing && !returning) return;
+  swoon ??= new Image();
+  if (!swoon.src) swoon.src = swoonURL;
+  if (!swoon.complete || !swoon.naturalWidth) return;
+  const start = outgoing ? 5.3 : 7.8,
+    block = outgoing ? 6.15 : 8.55;
+  const progress = Math.max(0, Math.min(1, (age - start) / (block - start)));
+  const origin = outgoing ? knightSword(pose.roaring).grip.x : knightSword(pose.kaizo).grip.x;
+  const destination = outgoing ? knightSword(pose.kaizo).grip.x : knightSword(pose.roaring).grip.x;
+  const width = Math.abs(destination - origin) * progress;
+  const fade = age > block ? Math.max(0, 1 - (age - block) / 0.35) : 1;
   ctx.save();
-  ctx.globalAlpha = 0.14;
-  ctx.fillStyle = kaizo ? '#d3e998' : '#adbfff';
-  ctx.beginPath();
-  ctx.moveTo(latest.grip.x, latest.grip.y);
-  points.forEach((p) => ctx.lineTo(p.tip.x, p.tip.y));
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = kaizo ? '#edf9c1' : '#e5ecff';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  points.forEach((p, i) => (i ? ctx.lineTo(p.tip.x, p.tip.y) : ctx.moveTo(p.tip.x, p.tip.y)));
-  ctx.stroke();
+  ctx.translate(origin, 235);
+  ctx.scale(outgoing ? 1 : -1, 1);
+  ctx.filter = 'brightness(0) invert(1)';
+  ctx.globalAlpha = fade;
+  ctx.shadowColor = returning ? '#dcefa6' : '#dce6ff';
+  ctx.shadowBlur = reduced ? 0 : 9;
+  ctx.drawImage(swoon, 105, 338, 1816, 137, 0, -15, width, 30);
   ctx.restore();
 }
-function impact(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
+function blockBurst(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
   const pose = knightDuelPose(age);
   if (pose.impactAge < 0) return;
-  const atImpact = knightDuelPose(age - pose.impactAge);
-  const hit = atImpact.contact ?? { x: 3602, y: 280 };
-  const strength = pose.clash,
-    elapsed = pose.impactAge;
+  const event = knightDuelPose(age - pose.impactAge);
+  const hit =
+    event.phase === 'chargeBlocked'
+      ? (event.contact ?? { x: 517, y: 210 })
+      : { x: event.phase === 'kaizoBlocksSwoon' ? 517 : 168, y: 235 };
+  const strength = pose.clash;
   ctx.save();
-  const light = ctx.createRadialGradient(hit.x, hit.y, 0, hit.x, hit.y, 110);
-  light.addColorStop(0, `rgba(208,220,255,${strength * (reduced ? 0.08 : 0.23)})`);
-  light.addColorStop(1, 'rgba(208,220,255,0)');
-  ctx.fillStyle = light;
-  ctx.fillRect(hit.x - 110, hit.y - 110, 220, 220);
-  ctx.globalAlpha = strength * (reduced ? 0.25 : 0.8);
-  ctx.strokeStyle = '#aaa4c5';
-  ctx.lineWidth = 2;
+  ctx.globalAlpha = strength * (reduced ? 0.4 : 0.9);
+  ctx.strokeStyle = '#e5f2ff';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.ellipse(hit.x, 370, 30 + elapsed * 330, 5 + elapsed * 70, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    hit.x,
+    hit.y,
+    14 + pose.impactAge * 100,
+    35 + pose.impactAge * 100,
+    0,
+    -Math.PI / 2,
+    Math.PI / 2,
+  );
   ctx.stroke();
-  const count = reduced ? 5 : 30;
-  for (let i = 0; i < count; i++) {
-    const a = i * 2.399,
-      radius = 7 + elapsed * (90 + (i % 7) * 29);
-    const x = hit.x + Math.cos(a) * radius,
-      y = hit.y + Math.sin(a) * radius + elapsed * elapsed * 90;
-    ctx.strokeStyle = i % 3 ? '#dce8ff' : '#e7d48e';
-    ctx.lineWidth = i % 4 ? 1.5 : 3;
+  ctx.strokeStyle = '#d9cd85';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(hit.x, hit.y, 21 + pose.impactAge * 130, 43 + pose.impactAge * 100, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let i = 0; i < (reduced ? 5 : 26); i++) {
+    const angle = i * 2.399,
+      radius = 6 + pose.impactAge * (80 + (i % 7) * 30);
+    const x = hit.x + Math.cos(angle) * radius,
+      y = hit.y + Math.sin(angle) * radius;
+    ctx.strokeStyle = i % 2 ? '#eef5ff' : '#ebdca3';
+    ctx.lineWidth = i % 3 ? 2 : 3;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x + Math.cos(a) * (7 + strength * 13), y + Math.sin(a) * (7 + strength * 13));
+    ctx.lineTo(x + Math.cos(angle) * 12, y + Math.sin(angle) * 12);
     ctx.stroke();
   }
-  ctx.globalAlpha = strength * (reduced ? 0.4 : 1);
-  ctx.fillStyle = '#fff9de';
-  ctx.beginPath();
-  for (let i = 0; i < 16; i++) {
-    const a = (i * Math.PI) / 8,
-      r = i % 2 ? 4 : 12 + strength * 19;
-    const x = hit.x + Math.cos(a) * r,
-      y = hit.y + Math.sin(a) * r;
-    if (i) ctx.lineTo(x, y);
-    else ctx.moveTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fill();
-  // A short broken lightning fork makes the hardest final parry read clearly.
-  if (!reduced && pose.beat >= 9.6 && pose.beat < 9.95) {
-    ctx.strokeStyle = '#ece9ff';
+  ctx.fillStyle = '#fffbe2';
+  ctx.fillRect(hit.x - 2, hit.y - 21, 4, 42);
+  ctx.fillRect(hit.x - 20, hit.y - 2, 40, 4);
+  ctx.restore();
+}
+export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
+  const pose = knightDuelPose(age);
+  drawKnightBattlefield(ctx);
+  ctx.save();
+  if (!reduced && pose.clash > 0)
+    ctx.translate(
+      Math.round(Math.sin(age * 90) * pose.clash * 2),
+      Math.round(Math.cos(age * 76) * pose.clash),
+    );
+  if (!reduced && pose.dashing) {
+    for (let i = 5; i >= 1; i--) {
+      const previous = knightDuelPose(Math.max(0, age - i * 0.032));
+      ctx.globalAlpha = (6 - i) * 0.055;
+      drawKnightCharge(ctx, previous.roaring);
+    }
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = '#a6a9c1';
     ctx.lineWidth = 2;
-    for (const direction of [-1, 1]) {
+    for (let i = 0; i < 9; i++) {
+      const y = 150 + i * 18;
       ctx.beginPath();
-      ctx.moveTo(hit.x, hit.y);
-      for (let i = 1; i < 6; i++) ctx.lineTo(hit.x + direction * i * 20, hit.y - i * 18 + (i % 2 ? 9 : -8));
+      ctx.moveTo(pose.roaring.x - 140 - (i % 3) * 20, y);
+      ctx.lineTo(pose.roaring.x - 60, y);
       ctx.stroke();
     }
   }
-  ctx.restore();
-}
-function dust(ctx: CanvasRenderingContext2D, actor: KnightActorPose, time: number) {
-  ctx.save();
-  ctx.globalAlpha = 0.24;
-  ctx.fillStyle = '#b7acbd';
-  for (let i = 0; i < 9; i++) {
-    const phase = (time * 3 + i * 0.17) % 1;
-    const x = actor.x - actor.facing * (20 + phase * 100),
-      y = 365 - phase * (10 + (i % 3) * 5);
-    ctx.fillRect(x, y, 3 + (1 - phase) * 12, 2);
-  }
-  ctx.restore();
-}
-export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reducedMotion: boolean) {
-  const pose = knightDuelPose(age);
-  ctx.save();
-  ctx.fillStyle = '#292731';
-  ctx.beginPath();
-  ctx.ellipse(3600, 375, 240, 38, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#0c0b13';
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 8; i++) {
-    const a = i * 0.79;
-    ctx.beginPath();
-    ctx.moveTo(3600, 370);
-    ctx.lineTo(3600 + Math.cos(a) * 50, 370 + Math.sin(a) * 10);
-    ctx.lineTo(3600 + Math.cos(a + 0.1) * 150, 370 + Math.sin(a) * 28);
-    ctx.stroke();
-  }
-  if (!reducedMotion) {
-    if (pose.dashing) {
-      dust(ctx, pose.roaring, age);
-      dust(ctx, pose.kaizo, age);
-    }
-    for (let i = 4; i >= 1; i--) {
-      const previous = knightDuelPose(age - i * 0.035);
-      ctx.globalAlpha = (pose.dashing ? 0.055 : 0.02) * (5 - i);
-      drawKnightActor(ctx, previous.roaring, false);
-      drawKnightActor(ctx, previous.kaizo, true);
-    }
-    if (pose.slash) {
-      swordTrail(ctx, age, false);
-      swordTrail(ctx, age, true);
-    }
+  for (const [offset, filter] of [
+    [22, 'sepia(1) saturate(5) hue-rotate(5deg)'],
+    [11, 'sepia(1) saturate(5) hue-rotate(65deg)'],
+  ] as const) {
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    ctx.filter = filter;
+    drawKnightActor(ctx, { ...pose.kaizo, x: pose.kaizo.x + offset }, true);
+    ctx.restore();
   }
   ctx.globalAlpha = 1;
-  drawKnightActor(ctx, pose.roaring, false);
+  if (pose.chargePose) drawKnightCharge(ctx, pose.roaring);
+  else drawKnightActor(ctx, pose.roaring, false);
   drawKnightActor(ctx, pose.kaizo, true);
-  // Repaint blades last so neither body hides an opponent's actual swinging sword.
-  drawKnightWeapon(ctx, pose.roaring, false);
+  if (!pose.chargePose) drawKnightWeapon(ctx, pose.roaring, false);
   drawKnightWeapon(ctx, pose.kaizo, true);
-  impact(ctx, age, reducedMotion);
+  swoonAttack(ctx, age, reduced);
+  blockBurst(ctx, age, reduced);
   ctx.restore();
+  if (pose.phase === 'transition') {
+    ctx.fillStyle = `rgba(0,0,0,${Math.min(1, age - 10)})`;
+    ctx.fillRect(0, 0, 640, 480);
+  }
 }
