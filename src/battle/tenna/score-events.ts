@@ -29,7 +29,7 @@ export function completeTennaScoreEvent(b: Encounter) {
   return true;
 }
 export function addTennaTestingPoints(b: Encounter, points: number) {
-  if (b.kind !== 'tenna' || (!['enemy', 'minigame'].includes(b.phase) && !canPartyAct(b))) return false;
+  if (b.kind !== 'tenna' || b.phase === 'victory') return false;
   b.score = (b.score ?? 0) + points;
   b.message = `+${points} points for playtesting.`;
   queueTennaScoreEvent(b);

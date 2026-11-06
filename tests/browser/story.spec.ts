@@ -596,7 +596,7 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   await page.locator('#talkButton').click();
   for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('1');
+  await page.keyboard.press('3');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(200);
   await page.keyboard.press('2');
   await frames(page, 2);
@@ -624,7 +624,7 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.soul)).toEqual(soul);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-spear-of-justice.png') });
-  await page.keyboard.press('1');
+  await page.keyboard.press('3');
   await expect(page.locator('#battleSoulControls')).toBeVisible();
   await page.keyboard.press('Shift');
   await frames(page, 2);
@@ -642,8 +642,48 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.tennaHeadGlitch)).toBe(true);
   await expect(page.locator('#battleAct')).toBeEnabled();
   await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-glitching-head.png') });
-  await page.keyboard.press('1');
+  await page.keyboard.press('3');
   await frames(page, 2);
   await expect(page.locator('#battleAct')).toBeEnabled();
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1600);
+});
+
+test('Tenna score keys work during dialogue and attack introductions with number-row and numpad layouts', async ({
+  page,
+}) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  await page.locator('#game').focus();
+  await page.keyboard.press('3');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(200);
+  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
+  // Physical Digit2 must work even when the keyboard layout supplies a symbol.
+  await page.evaluate(() =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: '"', code: 'Digit2', bubbles: true })),
+  );
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(700);
+  await frames(page, 2);
+  await expect(page.locator('#dialogue')).toBeVisible();
+  await page.keyboard.press('Numpad2');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1200);
+  await page.keyboard.press('Numpad3');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1400);
+  await page.evaluate(() =>
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: '2', code: 'Digit2', repeat: true, bubbles: true }),
+    ),
+  );
+  expect(
+    await page.evaluate(() => ({
+      score: window.battleFixtureState.bossEncounter!.score,
+      invincible: window.battleFixtureState.bossEncounter!.invincible,
+      tp: window.battleFixtureState.bossEncounter!.tp,
+    })),
+  ).toEqual({ score: 1400, invincible: false, tp: 40 });
+  await expect(page.locator('#dialogue')).toBeVisible();
 });

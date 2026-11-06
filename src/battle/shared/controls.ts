@@ -248,7 +248,7 @@ export function setupBattleControls(
   document.addEventListener(
     'keydown',
     (event) => {
-      if (blocked() || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+      if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
       if (
         /^(INPUT|SELECT|TEXTAREA)$/.test(event.target instanceof HTMLElement ? event.target.tagName : '') ||
         (event.target instanceof HTMLElement && event.target.isContentEditable)
@@ -256,7 +256,10 @@ export function setupBattleControls(
         return;
       if (
         state.bossEncounter?.kind === 'tenna' &&
-        (['1', '2'].includes(event.key) || ['Numpad1', 'Numpad2'].includes(event.code))
+        state.mode === 'play' &&
+        !state.death &&
+        !document.querySelector('dialog[open]') &&
+        (['3', '2'].includes(event.key) || ['Digit3', 'Digit2', 'Numpad3', 'Numpad2'].includes(event.code))
       ) {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -264,12 +267,13 @@ export function setupBattleControls(
           !event.repeat &&
           addTennaTestingPoints(
             state.bossEncounter,
-            event.key === '1' || event.code === 'Numpad1' ? 200 : 500,
+            ['Digit3', 'Numpad3'].includes(event.code) || event.key === '3' ? 200 : 500,
           )
         )
           refresh();
         return;
       }
+      if (blocked()) return;
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const b = state.bossEncounter,
           m = present(b.minigame);
@@ -489,8 +493,8 @@ export function setupBattleControls(
       encounter?.kind !== 'tenna'
         ? ''
         : encounter.phase === 'minigame'
-          ? `Playtesting · 1: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
-          : `Playtesting · 1: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
+          ? `Playtesting · 3: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
+          : `Playtesting · 3: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
     $('battleTestStatus').hidden = encounter?.kind !== 'tenna';
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';

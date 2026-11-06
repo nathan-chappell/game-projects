@@ -155,3 +155,19 @@ test('exact score boundaries and earned minigame points trigger the same one-tim
   assert.equal(createTennaEncounter().undyneJoined, undefined);
   assert.equal(createTennaEncounter().tennaHeadGlitch, undefined);
 });
+
+test('testing score gains work during Tenna dialogue and attack introductions without replacing their phase', () => {
+  for (const phase of ['tennaOpening', 'tennaCue', 'tennaGuest', 'tennaCut', 'minigameIntro']) {
+    const b = createTennaEncounter();
+    b.phase = phase;
+    assert.equal(addTennaTestingPoints(b, 500), true);
+    assert.equal(b.score, 500);
+    assert.equal(b.phase, phase);
+    assert.equal(b.tp, 0);
+    assert.equal(b.invincible, false);
+  }
+  const finished = createTennaEncounter();
+  finished.phase = 'victory';
+  assert.equal(addTennaTestingPoints(finished, 500), false);
+  assert.equal(finished.score, 0);
+});
