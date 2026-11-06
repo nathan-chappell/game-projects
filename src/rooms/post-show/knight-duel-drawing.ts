@@ -18,157 +18,167 @@ function knight(
 ) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(facing * 1.6, 1.6);
-  const rim = kaizo ? '#b75467' : '#aeb0ca',
-    steel = kaizo ? '#53506d' : '#545266';
-  // Long split cloak, a horned silhouette, plated limbs and a narrow unlit visor.
-  polygon(
-    ctx,
-    [
-      [-12, -62],
-      [-26, -32],
-      [-30, 7],
-      [-12, -2],
-      [-3, 9],
-      [3, -19],
-      [16, 7],
-      [23, -2],
-      [18, -36],
-      [8, -62],
-    ],
-    '#181620',
-  );
-  polygon(
-    ctx,
-    [
-      [-12, -59],
-      [-22, -29],
-      [-28, 1],
-      [-18, -6],
-      [-11, -36],
-      [0, -51],
-    ],
-    '#30303e',
-  );
-  polygon(
-    ctx,
-    [
-      [-13, -63],
-      [-16, -87],
-      [-27, -105],
-      [-16, -102],
-      [-6, -86],
-      [0, -95],
-      [7, -85],
-      [22, -103],
-      [31, -108],
-      [24, -87],
-      [14, -64],
-    ],
-    rim,
-  );
-  polygon(
-    ctx,
-    [
-      [-12, -80],
-      [-8, -88],
-      [12, -84],
-      [16, -69],
-      [5, -59],
-      [-10, -66],
-    ],
-    steel,
-  );
-  polygon(
-    ctx,
-    [
-      [-11, -76],
-      [14, -76],
-      [9, -65],
-      [-7, -67],
-    ],
-    '#090911',
-  );
-  ctx.fillStyle = kaizo ? '#ff6b85' : '#d8dcff';
-  ctx.fillRect(3, -73, 7, 2);
-  polygon(
-    ctx,
-    [
-      [-15, -59],
-      [0, -65],
-      [15, -56],
-      [11, -28],
-      [-9, -26],
-    ],
-    steel,
-  );
-  polygon(
-    ctx,
-    [
-      [-14, -57],
-      [-21, -49],
-      [-16, -35],
-      [-9, -43],
-      [-4, -54],
-    ],
-    rim,
-  );
-  polygon(
-    ctx,
-    [
-      [5, -58],
-      [20, -53],
-      [23, -41],
-      [16, -37],
-      [9, -49],
-    ],
-    rim,
-  );
-  polygon(
-    ctx,
-    [
-      [-8, -30],
-      [-10, -9],
-      [-17, 1],
-      [-3, 1],
-      [2, -27],
-    ],
-    '#696777',
-  );
-  polygon(
-    ctx,
-    [
-      [5, -29],
-      [8, -6],
-      [3, 3],
-      [20, 3],
-      [16, -29],
-    ],
-    '#464455',
-  );
-  ctx.fillStyle = rim;
-  ctx.fillRect(-14, -4, 12, 3);
-  ctx.fillRect(9, -3, 11, 3);
+  ctx.scale(facing * 1.35, 1.35);
+  const body = kaizo ? '#ffffff' : '#030305';
+  const outline = kaizo ? '#d7efff' : '#f1f1f5';
+  const crown = [
+    [-37, -79],
+    [-56, -89],
+    [-38, -91],
+    [-54, -105],
+    [-31, -97],
+    [-43, -116],
+    [-22, -104],
+    [-29, -127],
+    [-13, -111],
+    [-9, -132],
+    [1, -112],
+    [14, -127],
+    [12, -107],
+    [27, -119],
+    [23, -100],
+    [37, -98],
+    [43, -87],
+    [31, -76],
+    [17, -70],
+    [25, -65],
+    [8, -61],
+    [-10, -65],
+    [-22, -73],
+  ];
+  const shoulders = [
+    [-7, -66],
+    [-28, -69],
+    [-44, -64],
+    [-20, -58],
+    [-51, -55],
+    [-23, -48],
+    [-4, -46],
+    [14, -51],
+    [36, -49],
+    [56, -62],
+    [33, -60],
+    [46, -71],
+    [19, -65],
+    [8, -68],
+  ];
+  const torso = [
+    [-8, -49],
+    [10, -48],
+    [8, -36],
+    [14, -22],
+    [3, -16],
+    [-6, -25],
+    [-4, -35],
+    [-16, -37],
+  ];
+  const shape = (points: number[][], fill = body) => {
+    polygon(ctx, points, fill);
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 1.2;
+    ctx.lineJoin = 'miter';
+    ctx.stroke();
+  };
+  // Jagged crown and wide blade-like shoulders follow the reference silhouette.
+  if (kaizo) {
+    for (const [dx, dy, color] of [
+      [-12, -4, '#9b7924'],
+      [-6, -2, '#5ba34f'],
+    ] as const) {
+      ctx.save();
+      ctx.translate(dx, dy);
+      ctx.globalAlpha *= 0.35;
+      polygon(ctx, crown, color);
+      polygon(ctx, shoulders, color);
+      ctx.restore();
+    }
+  }
+  shape(crown);
+  shape(shoulders);
+  shape(torso);
+  // Thin, dangling limbs and pointed joints keep the body much narrower than the head.
+  shape([
+    [-11, -46],
+    [-22, -39],
+    [-26, -22],
+    [-23, -16],
+    [-22, -28],
+    [-18, -29],
+    [-20, -14],
+    [-16, -18],
+    [-14, -35],
+    [-5, -39],
+  ]);
+  shape([
+    [12, -47],
+    [23, -36],
+    [30, -30],
+    [30, -20],
+    [26, -17],
+    [26, -26],
+    [22, -28],
+    [24, -16],
+    [20, -20],
+    [17, -33],
+    [8, -37],
+  ]);
+  shape([
+    [-3, -23],
+    [-10, -11],
+    [-7, -2],
+    [-16, 3],
+    [-10, 5],
+    [-3, 0],
+    [-3, -9],
+    [3, -17],
+  ]);
+  shape([
+    [5, -21],
+    [12, -12],
+    [11, -3],
+    [17, 1],
+    [12, 5],
+    [7, 1],
+    [7, -9],
+    [1, -15],
+  ]);
+  // Small broken white contours sit inside the black face rather than a colored visor.
+  ctx.strokeStyle = kaizo ? '#bbd7e7' : '#d3d3df';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-29, -96);
+  ctx.lineTo(-16, -94);
+  ctx.lineTo(-23, -86);
+  ctx.lineTo(-9, -84);
+  ctx.moveTo(22, -93);
+  ctx.lineTo(29, -87);
+  ctx.lineTo(18, -81);
+  ctx.moveTo(-8, -58);
+  ctx.lineTo(-3, -53);
+  ctx.lineTo(9, -56);
+  ctx.stroke();
   ctx.save();
-  ctx.translate(18, -44);
-  ctx.rotate(attacking ? -1.1 + Math.sin(age * 8) * 0.4 : -0.28);
-  polygon(
-    ctx,
+  ctx.translate(4, -42);
+  ctx.rotate(attacking ? -1.25 + Math.sin(age * 8) * 0.24 : 0.03);
+  shape(
     [
-      [0, 12],
-      [-3, -52],
-      [1, -70],
-      [5, -52],
-      [4, 12],
+      [-2, 42],
+      [-3, -48],
+      [0, -64],
+      [3, -48],
+      [2, 42],
     ],
-    kaizo ? '#c57d9c' : '#c9cde3',
+    kaizo ? '#fffef5' : '#111117',
   );
-  ctx.fillStyle = '#f0e8ef';
-  ctx.fillRect(0, -49, 2, 49);
-  ctx.fillStyle = '#78718d';
-  ctx.fillRect(-9, 4, 19, 4);
-  ctx.fillStyle = '#322b42';
-  ctx.fillRect(0, 8, 4, 12);
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, -56);
+  ctx.lineTo(0, 37);
+  ctx.stroke();
+  ctx.fillStyle = outline;
+  ctx.fillRect(-8, -5, 16, 2);
+  ctx.fillRect(-1, -3, 2, 12);
   ctx.restore();
   ctx.restore();
 }
@@ -235,7 +245,7 @@ export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduc
   if (pose.slash) {
     for (const [x, color, facing] of [
       [pose.roaringX + 40, '#d6dcff', 1],
-      [pose.kaizoX - 40, '#e18ca9', -1],
+      [pose.kaizoX - 40, '#e7eaa6', -1],
     ] as const) {
       ctx.save();
       ctx.translate(x, 270);
@@ -265,7 +275,7 @@ export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduc
     for (let i = 0; i < sparks; i++) {
       const a = i * 2.4 + t * 0.3,
         radius = 15 + (1 - force) * (35 + i * 3);
-      ctx.strokeStyle = i % 2 ? '#dce8ff' : '#dc93b1';
+      ctx.strokeStyle = i % 2 ? '#dce8ff' : '#e4d78b';
       ctx.lineWidth = i % 3 ? 2 : 3;
       ctx.beginPath();
       ctx.moveTo(3600 + Math.cos(a) * radius, 270 + Math.sin(a) * radius);
