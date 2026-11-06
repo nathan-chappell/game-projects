@@ -1,7 +1,13 @@
 import { movementSpeed, sprintMultiplier } from '../../game/config.ts';
 import type { Room } from '../../world/types.ts';
 
-export const knightPathSettings = { length: 3980, lookout: 3330, statuesAt: 900, duelAt: 3200 };
+export const knightStatuePositions = [860, 1260, 1660, 2060, 2460, 2860] as const;
+export const knightPathSettings = {
+  length: 3980,
+  lookout: 3330,
+  statuesAt: knightStatuePositions[2] + 40,
+  duelAt: 3200,
+};
 export const statueConversation = [
   { speaker: 'Flowey', text: 'What are those statues? That same knight, over and over...' },
   {
@@ -70,24 +76,4 @@ export function knightPartyPosition(path: KnightPath, gap: number) {
   return x < 80 ? { x: 80, y: Math.max(180, path.y - (80 - x)) } : { x, y: path.y };
 }
 
-/** A repeating choreography with no declared winner; the party watches from the path. */
-export function knightDuelPose(age: number) {
-  const beat = ((age % 12) + 12) % 12;
-  const dash = (start: number, end: number) =>
-    Math.max(0, 1 - Math.abs(beat - (start + end) / 2) / ((end - start) / 2));
-  return {
-    beat,
-    roaringX: 3510 + dash(1.5, 3.5) * 95 + dash(7, 9) * 115,
-    kaizoX: 3700 - dash(4, 6) * 90 - dash(7, 9) * 80,
-    kaizoJump: Math.sin(Math.max(0, Math.min(1, (beat - 4) / 2)) * Math.PI) * 85,
-    clash: Math.max(dash(2.5, 3.3), dash(5.5, 6.4), dash(8.7, 9.7)),
-    slash:
-      beat >= 2 && beat < 3.5
-        ? 'roaring'
-        : beat >= 5 && beat < 6.5
-          ? 'kaizo'
-          : beat >= 8 && beat < 10
-            ? 'both'
-            : '',
-  };
-}
+export { knightDuelPose } from './knight-choreography.ts';

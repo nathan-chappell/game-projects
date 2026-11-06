@@ -1009,6 +1009,17 @@ test('the long knight path introduces its statues and reaches an animated duel w
   await page.keyboard.down('ArrowRight');
   await frames(page, 430);
   await page.keyboard.up('ArrowRight');
+  await expect(page.locator('#dialogue')).toBeHidden();
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBeLessThan(1260);
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 140);
+  await page.keyboard.up('ArrowRight');
+  await expect(page.locator('#dialogue')).toBeHidden();
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBeGreaterThan(1260);
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBeLessThan(1660);
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 180);
+  await page.keyboard.up('ArrowRight');
   await expect(page.locator('#speakerName')).toHaveText('Flowey');
   await page.keyboard.press('Enter');
   await expect(page.locator('#dialogueText')).toContainText('What are those statues?');
@@ -1030,11 +1041,19 @@ test('the long knight path introduces its statues and reaches an animated duel w
   expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBeGreaterThan(0);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.evaluate(() => {
-    window.battleFixtureState.knightPath!.duelAge = 2.85;
+    window.battleFixtureState.knightPath!.duelAge = 1.3;
   });
   await frames(page, 1);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('knights-sword-clash.png') });
-  await frames(page, 125);
+  await page.evaluate(() => {
+    window.battleFixtureState.knightPath!.duelAge = 0.7;
+  });
+  await frames(page, 1);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('knight-sword-windup.png') });
+  await page.evaluate(() => {
+    window.battleFixtureState.knightPath!.duelAge = 3.65;
+  });
+  await frames(page, 1);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('kaizo-knight-jump.png') });
   await expect(page.locator('#bossControls')).toBeHidden();
   await expect(page.locator('#gameHint')).not.toContainText('%');

@@ -1,3 +1,4 @@
+import { knightImpactTimes, knightSword, swordIntersection } from './knight-choreography.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createPostShowRoom } from './post-show.ts';
@@ -43,8 +44,8 @@ test('sprinting speeds up the path and invalid time does not change state', () =
   assert.deepEqual(walk, before);
 });
 test('the duel alternates attacks, jumps and clashes and repeats without declaring a winner', () => {
-  assert.ok(knightDuelPose(2.9).clash > 0.5);
-  assert.ok(knightDuelPose(5).kaizoJump > 70);
+  assert.ok(knightDuelPose(2.4).clash > 0.5);
+  assert.ok(knightDuelPose(3.65).kaizoJump > 70);
   assert.notEqual(knightDuelPose(0).roaringX, knightDuelPose(2.5).roaringX);
   assert.equal(knightDuelPose(9).slash, 'both');
   assert.deepEqual(knightDuelPose(2.5), knightDuelPose(14.5));
@@ -67,4 +68,22 @@ test('saved path distances and statue dialogue remain optional and validate befo
   for (const x of [-1, Infinity, '100', 4000])
     assert.equal(validProgress({ ...slot, knightPathX: x }), false);
   assert.equal(validProgress({ ...slot, story: { ...state.story, knightStatuesExplained: 'yes' } }), false);
+});
+
+test('every parry is a real intersection of the two animated blades with a brief impact hold', () => {
+  for (const time of knightImpactTimes) {
+    const pose = knightDuelPose(time);
+    const intersection = swordIntersection(knightSword(pose.roaring), knightSword(pose.kaizo));
+    assert.ok(intersection, `blades must meet at ${time}s`);
+    const held = knightDuelPose(time + 0.05);
+    for (const actor of ['roaring', 'kaizo'] as const) {
+      for (const key of ['x', 'jump', 'facing', 'swordAngle', 'lean'] as const)
+        assert.ok(Math.abs(held[actor][key] - pose[actor][key]) < 1e-8, `${actor} ${key} holds at impact`);
+    }
+  }
+  assert.ok(
+    Math.abs(knightDuelPose(0.7).roaring.swordAngle - knightDuelPose(1.3).roaring.swordAngle) > Math.PI,
+  );
+  assert.ok(Math.abs(knightDuelPose(2.1).kaizo.swordAngle - knightDuelPose(2.4).kaizo.swordAngle) > Math.PI);
+  assert.ok(knightDuelPose(8.3).roaring.facing < 0, 'the knights turn after crossing sides');
 });

@@ -1,12 +1,14 @@
+import statueURL from '../../../assets/chamber-statue-transparent.png?inline';
 import type { GameState } from '../../game/types.ts';
 import type { createSprites } from '../../rendering/sprites.ts';
-import { drawKnightDuel, drawRoaringStatue } from './knight-duel-drawing.ts';
+import { drawKnightDuel } from './knight-duel-drawing.ts';
 import {
   createKnightPath,
   knightDuelPose,
   knightPartyPosition,
   knightPathCamera,
   knightPathSettings,
+  knightStatuePositions,
 } from './knight-path.ts';
 import { drawPostShowRoom } from './post-show-drawing.ts';
 
@@ -15,11 +17,8 @@ export function createKnightPathDrawing(
   sprites: Pick<ReturnType<typeof createSprites>, 'drawPlayer' | 'drawFlowey' | 'drawFountainFriend'>,
   reducedMotion: MediaQueryList,
 ) {
-  const statue = document.createElement('canvas');
-  statue.width = 128;
-  statue.height = 180;
-  const stone = statue.getContext('2d');
-  let statueReady = false;
+  const statue = new Image();
+  statue.src = statueURL;
   return function draw(state: GameState, time: number) {
     const path = (state.knightPath ??= createKnightPath(state.player.x, state.player.y));
     const camera = knightPathCamera(path),
@@ -36,7 +35,7 @@ export function createKnightPathDrawing(
       camera,
       length: knightPathSettings.length,
     });
-    for (let x = 860; x <= 2860; x += 400) {
+    for (const x of knightStatuePositions) {
       if (x < camera - 120 || x > camera + 740) continue;
       ctx.fillStyle = '#18171e';
       ctx.fillRect(x - 50, 306, 100, 18);
@@ -44,11 +43,9 @@ export function createKnightPathDrawing(
       ctx.fillRect(x - 42, 300, 84, 7);
       ctx.fillStyle = '#777080';
       ctx.fillRect(x - 36, 298, 72, 2);
-      if (!statueReady && stone) {
-        stone.clearRect(0, 0, 128, 180);
-        statueReady = drawRoaringStatue(stone, 64, 170);
+      if (statue.complete && statue.naturalWidth) {
+        ctx.drawImage(statue, 278, 112, 581, 1074, x - 38, 158, 76, 140);
       }
-      if (statueReady) ctx.drawImage(statue, x - 64, 125);
       const light = ctx.createRadialGradient(x, 280, 5, x, 280, 100);
       light.addColorStop(0, '#a395c118');
       light.addColorStop(1, '#a395c100');
