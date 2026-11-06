@@ -21,8 +21,10 @@ export function queueTennaScoreEvent(b: Encounter) {
 }
 export function completeTennaScoreEvent(b: Encounter) {
   if (b.kind !== 'tenna' || b.phase !== 'tennaGuest') return false;
-  if (b.guestEvent === 'enter') b.undyneJoined = true;
-  else if (b.guestEvent === 'leave') b.undyneLeft = true;
+  if (b.guestEvent === 'enter') {
+    b.undyneJoined = true;
+    b.undyneEntranceAge = 0;
+  } else if (b.guestEvent === 'leave') b.undyneLeft = true;
   b.phase = b.guestResumePhase ?? 'kris';
   b.guestResumePhase = undefined;
   b.guestEvent = null;

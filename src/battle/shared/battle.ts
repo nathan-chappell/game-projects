@@ -1,5 +1,5 @@
-import { drawUndyneAttack } from '../tenna/undyne.ts';
-import { drawUndyne } from '../tenna/undyne-drawing.ts';
+import { drawUndyneAttack, undyneArenaBounds } from '../tenna/undyne.ts';
+import { drawUndyne, undyneDropOffset } from '../tenna/undyne-drawing.ts';
 import { undyneActive } from '../tenna/score-events.ts';
 import { drawHammerMinigame } from '../tenna/hammers-drawing.ts';
 import { drawSurferMinigame } from '../tenna/surfers-drawing.ts';
@@ -240,7 +240,9 @@ export function createBattleDrawing(
       const status =
         encounter.snowAttack?.direction === 'goal'
           ? `Speed ${goalSpeed(encounter.snowAttack.goal)} / ${goalSettings.maxSpeed} · + every 10s`
-          : snowAttackStatus(encounter);
+          : encounter.snowAttack?.direction === 'undyne'
+            ? 'Yellow: block opposite side'
+            : snowAttackStatus(encounter);
       pixelText(status, 38, 449, '#cccccc', 14);
     } else {
       for (const [id, label, x, y] of [
@@ -712,14 +714,37 @@ export function createBattleDrawing(
           ctx.restore();
         }
       };
+      const drawGuest = () => {
+        const age = present(encounter).undyneEntranceAge ?? 1.2;
+        const offset = reducedParticleMotion.matches ? 0 : undyneDropOffset(age);
+        drawUndyne(ctx, 425, 268 - offset, t, 1.08);
+        if (!reducedParticleMotion.matches && age >= 0.7 && age < 1.15) {
+          const p = (age - 0.7) / 0.45;
+          ctx.save();
+          ctx.globalAlpha = 1 - p;
+          for (const side of [-1, 1])
+            for (let i = 0; i < 4; i++)
+              rect(
+                425 + side * (15 + p * 55 + i * 8),
+                272 - Math.sin(p * Math.PI) * (5 + i * 4),
+                5,
+                3,
+                '#b4cee5',
+              );
+          ctx.restore();
+        }
+      };
       if (canControlSoul(encounter)) {
-        drawHost(565, 147, 0.8);
-        rect(205, 48, 230, 230, '#101118');
+        const undyne = encounter.snowAttack.direction === 'undyne';
+        if (!undyne) drawHost(565, 147, 0.8);
+        const box = undyne ? undyneArenaBounds(encounter.snowAttack.undyne!) : { x: 205, y: 48, size: 230 };
+        rect(box.x, box.y, box.size, box.size, '#101118');
         ctx.strokeStyle = '#63eb8b';
         ctx.lineWidth = 4;
-        ctx.strokeRect(205, 48, 230, 230);
+        ctx.strokeRect(box.x, box.y, box.size, box.size);
         if (encounter.snowAttack.direction === 'undyne') {
-          drawUndyne(ctx, 515, 262, t, 0.95);
+          drawHost(550, 269, 1.77);
+          drawGuest();
           drawUndyneAttack(ctx, encounter.snowAttack.undyne);
         } else if (encounter.snowAttack.direction === 'saxophones') {
           const a = encounter.snowAttack.saxophones;
@@ -734,12 +759,8 @@ export function createBattleDrawing(
         drawGrazeRing(encounter);
         drawBattleSoul(encounter);
       } else if (present(encounter).enemy.visible) {
-        drawHost(
-          undyneActive(present(encounter)) ? 565 : 495,
-          269,
-          undyneActive(present(encounter)) ? 1.1 : 1.77,
-        );
-        if (undyneActive(present(encounter))) drawUndyne(ctx, 465, 268, t, 1.2);
+        drawHost(undyneActive(present(encounter)) ? 550 : 495, 269, 1.77);
+        if (undyneActive(present(encounter))) drawGuest();
       }
       pixelText('TENNA', 450, 31, '#ffda6b', 21);
 

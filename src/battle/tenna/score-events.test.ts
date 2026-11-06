@@ -1,3 +1,4 @@
+import { undyneDropOffset } from './undyne-drawing.ts';
 import { createShootingMinigame } from './minigame.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -18,7 +19,13 @@ import {
   queueTennaScoreEvent,
   undyneActive,
 } from './score-events.ts';
-import { advanceUndyneAttack, createUndyneAttack } from './undyne.ts';
+import {
+  advanceUndyneAttack,
+  createUndyneAttack,
+  spearBlockSide,
+  undyneArenaBounds,
+  spearDistance,
+} from './undyne.ts';
 import { battleArena } from '../shared/settings.ts';
 
 test('score keys add points without filling TP or toggling immunity; thresholds queue once and preserve the turn', () => {
@@ -93,7 +100,8 @@ test('all spear directions can be blocked at 30/60/144 FPS, and wrong shields ta
     let hits = 0,
       finished = false;
     for (let frame = 0; frame < 16 * fps && !finished; frame++) {
-      a.shield = a.spears.find((s) => !s.resolved)?.side ?? 'up';
+      const incoming = a.spears.find((s) => !s.resolved);
+      a.shield = incoming ? spearBlockSide(incoming) : 'up';
       const result = advanceUndyneAttack(a, 1 / fps);
       hits += result.hits;
       finished = result.finished;
@@ -115,7 +123,7 @@ test('all spear directions can be blocked at 30/60/144 FPS, and wrong shields ta
     b.projectileDamageMultiplier = defending ? 0.5 : 1;
     b.invincible = invincible;
     if (b.snowAttack?.direction !== 'undyne') throw new Error('Expected Undyne');
-    b.snowAttack.undyne.spears = [{ side: 'down', launch: 0, resolved: false }];
+    b.snowAttack.undyne.spears = [{ side: 'down', launch: 0, yellow: false, resolved: false }];
     advanceSnowAttack(b, hp, 1, () => 0);
     assert.equal(hp.Kris, expected);
     assert.equal(b.phase, 'kris');
@@ -170,4 +178,36 @@ test('testing score gains work during Tenna dialogue and attack introductions wi
   finished.phase = 'victory';
   assert.equal(addTennaTestingPoints(finished, 500), false);
   assert.equal(finished.score, 0);
+});
+
+test('the arena expands beyond the screen and yellow spears require the opposite shield', () => {
+  const a = createUndyneAttack(battleArena, () => 0.4);
+  assert.equal(undyneArenaBounds(a).size, battleArena.size);
+  a.age = 1;
+  const expanded = undyneArenaBounds(a);
+  assert.ok(expanded.x < 0 && expanded.y < 0);
+  assert.ok(expanded.x + expanded.size > 640 && expanded.y + expanded.size > 480);
+  assert.equal(a.spears.filter((s) => s.yellow).length, 5);
+  assert.equal(spearDistance(a, 0), -100);
+  for (const shield of ['up', 'down']) {
+    const yellow = createUndyneAttack(battleArena);
+    yellow.spears = [{ side: 'up', yellow: true, launch: 0, resolved: false }];
+    yellow.shield = shield;
+    const result = advanceUndyneAttack(yellow, 0.75);
+    assert.equal(result.blocked, shield === 'down' ? 1 : 0);
+    assert.equal(result.hits, shield === 'up' ? 1 : 0);
+  }
+});
+
+test('Undyne drops from above the frame, lands, and settles without changing the active turn', () => {
+  const b = createTennaEncounter();
+  addTennaTestingPoints(b, 500);
+  completeTennaScoreEvent(b);
+  assert.equal(b.undyneEntranceAge, 0);
+  assert.ok(undyneDropOffset(0) > 400);
+  assert.ok(undyneDropOffset(0.4) > 0);
+  advanceBattleTime(b, 1.2, freshPartyHP());
+  assert.equal(b.undyneEntranceAge, 1.2);
+  assert.equal(undyneDropOffset(1.2), 0);
+  assert.equal(b.phase, 'kris');
 });

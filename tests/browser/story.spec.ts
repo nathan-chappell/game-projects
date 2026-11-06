@@ -614,16 +614,39 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
       invincible: window.battleFixtureState.bossEncounter!.invincible,
     })),
   ).toEqual({ score: 700, joined: true, tp: 0, invincible: false });
+  await frames(page, 30);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-dropping-in.png') });
+  await frames(page, 48);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-and-full-size-tenna.png') });
   for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
   await expect(page.locator('#battleSnowText')).toContainText('Spear of Justice');
   await page.locator('#game').focus();
   await page.keyboard.press('i');
   const soul = await page.evaluate(() => ({ ...window.battleFixtureState.bossEncounter!.soul }));
   await page.keyboard.down('ArrowRight');
-  await frames(page, 81);
+  await frames(page, 113);
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.soul)).toEqual(soul);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-spear-of-justice.png') });
+  await expect(page.locator('#battleMovementHint')).toContainText('Yellow spears swing around');
+  const bounds = await page.evaluate(() => {
+    const b = window.battleFixtureState.bossEncounter!;
+    return { age: b.snowAttack!.undyne!.age, joined: b.undyneEntranceAge };
+  });
+  expect(bounds.age).toBeGreaterThan(0.95);
+  expect(bounds.joined).toBe(1.2);
+  await frames(page, 90);
+  expect(
+    await page.locator('#game').evaluate((canvas) => {
+      const data = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 640, 300).data;
+      let yellow = 0;
+      for (let i = 0; i < data.length; i += 4)
+        if (data[i] === 255 && data[i + 1] === 224 && data[i + 2] === 69) yellow++;
+      return yellow;
+    }),
+  ).toBeGreaterThan(0);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-yellow-spear.png') });
+
   await page.keyboard.press('3');
   await expect(page.locator('#battleSoulControls')).toBeVisible();
   await page.keyboard.press('Shift');

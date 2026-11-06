@@ -699,6 +699,8 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  if (encounter.undyneEntranceAge !== undefined)
+    encounter.undyneEntranceAge = Math.min(1.2, encounter.undyneEntranceAge + dt);
   if (queueTennaScoreEvent(encounter)) return true;
   if (encounter.phase === 'minigame' && encounter.minigame && partyHP) {
     const m = encounter.minigame,

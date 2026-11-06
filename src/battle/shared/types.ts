@@ -223,6 +223,7 @@ export interface EncounterBase {
   tennaCueSeen?: boolean;
   tennaHeadGlitch?: boolean;
   undyneJoined?: boolean;
+  undyneEntranceAge?: number;
   undyneLeft?: boolean;
   guestEvent?: 'enter' | 'leave' | null;
   guestResumePhase?: string;

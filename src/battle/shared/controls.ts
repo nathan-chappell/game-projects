@@ -479,7 +479,7 @@ export function setupBattleControls(
     $('battleSnowText').textContent = snowAttackStatus(encounter);
     $('battleMovementHint').textContent =
       encounter?.snowAttack?.direction === 'undyne'
-        ? 'Green soul: arrow keys, WASD or direction buttons turn the shield. Block incoming spears!'
+        ? 'Green soul: arrow keys, WASD or direction buttons turn the shield. Block incoming spears! Yellow spears swing around: block the opposite side.'
         : encounter?.snowAttack?.direction === 'goal'
           ? 'Blue soul: left/right to move. Tap Up, W, Space, or ↑ for a short hop; hold for a higher jump. Climb the right step to reach the upper goal.'
           : encounter?.snowAttack?.direction === 'snowgrave'

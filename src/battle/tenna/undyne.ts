@@ -1,10 +1,10 @@
 import type { Arena } from '../shared/types.ts';
 export const undyneSettings = {
   damage: 30,
-  interval: 0.55,
-  warmup: 1.2,
+  interval: 0.48,
+  warmup: 1.5,
   spears: 20,
-  speed: 235,
+  speed: 360,
   warning: 0.45,
 };
 export const spearSides = ['up', 'right', 'down', 'left'] as const;
@@ -22,6 +22,7 @@ export function createUndyneAttack(arena: Arena, random: () => number = Math.ran
       previous = side;
       return {
         side: spearSides[side],
+        yellow: i % 4 === 3,
         launch: undyneSettings.warmup + i * undyneSettings.interval,
         resolved: false,
       };
@@ -30,7 +31,16 @@ export function createUndyneAttack(arena: Arena, random: () => number = Math.ran
 }
 export type UndyneAttack = ReturnType<typeof createUndyneAttack>;
 export function spearDistance(a: UndyneAttack, launch: number) {
-  return a.arena.size / 2 - 8 - Math.max(0, a.age - launch) * undyneSettings.speed;
+  return 260 - Math.max(0, a.age - launch) * undyneSettings.speed;
+}
+export function spearBlockSide(s: UndyneAttack['spears'][number]) {
+  return spearSides[(spearSides.indexOf(s.side) + (s.yellow ? 2 : 0)) % 4];
+}
+export function undyneArenaBounds(a: UndyneAttack) {
+  const progress = Math.min(1, a.age / 0.95),
+    ease = 1 - (1 - progress) ** 3;
+  const size = a.arena.size + (1400 - a.arena.size) * ease;
+  return { x: a.arena.x + a.arena.size / 2 - size / 2, y: a.arena.y + a.arena.size / 2 - size / 2, size };
 }
 export function advanceUndyneAttack(a: UndyneAttack, dt: number) {
   a.age += dt;
@@ -40,7 +50,7 @@ export function advanceUndyneAttack(a: UndyneAttack, dt: number) {
   for (const s of a.spears) {
     if (s.resolved || a.age < s.launch) continue;
     const distance = spearDistance(a, s.launch);
-    if (distance <= 34 && a.shield === s.side) {
+    if (distance <= 34 && a.shield === spearBlockSide(s)) {
       s.resolved = true;
       a.blocked++;
       blocked++;
@@ -59,19 +69,21 @@ export function drawUndyneAttack(ctx: CanvasRenderingContext2D, a: UndyneAttack)
   for (const s of a.spears) {
     if (s.resolved || a.age < s.launch - undyneSettings.warning) continue;
     const index = spearSides.indexOf(s.side),
-      angle = (index * Math.PI) / 2;
+      distance = spearDistance(a, s.launch),
+      turn = s.yellow ? Math.max(0, Math.min(1, (135 - distance) / 65)) : 0,
+      angle = (index * Math.PI) / 2 + Math.PI * turn;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angle);
     if (a.age < s.launch) {
-      ctx.fillStyle = '#ffd954';
+      ctx.fillStyle = s.yellow ? '#ffe34d' : '#7debf2';
       ctx.font = 'bold 18px monospace';
-      ctx.fillText('!', -5, -a.arena.size / 2 + 20);
+      ctx.fillText(s.yellow ? '↶' : '!', -6, -98);
     } else {
-      ctx.translate(0, -spearDistance(a, s.launch));
-      ctx.shadowColor = '#54f3f9';
+      ctx.translate(0, -distance);
+      ctx.shadowColor = s.yellow ? '#ffd42e' : '#54f3f9';
       ctx.shadowBlur = 5;
-      ctx.fillStyle = '#2ad4de';
+      ctx.fillStyle = s.yellow ? '#ffe045' : '#2ad4de';
       ctx.fillRect(-3, -20, 6, 25);
       ctx.beginPath();
       ctx.moveTo(-10, 1);
@@ -79,7 +91,7 @@ export function drawUndyneAttack(ctx: CanvasRenderingContext2D, a: UndyneAttack)
       ctx.lineTo(10, 1);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = '#e5ffff';
+      ctx.fillStyle = s.yellow ? '#fff9ca' : '#e5ffff';
       ctx.fillRect(-1, -17, 2, 24);
     }
     ctx.restore();
