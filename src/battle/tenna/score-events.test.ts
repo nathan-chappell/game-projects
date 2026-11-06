@@ -25,6 +25,8 @@ import {
   spearBlockSide,
   undyneArenaBounds,
   spearDistance,
+  undyneSpearPose,
+  undyneSpawnDistance,
 } from './undyne.ts';
 import { battleArena } from '../shared/settings.ts';
 
@@ -188,7 +190,7 @@ test('the arena expands beyond the screen and yellow spears require the opposite
   assert.ok(expanded.x < 0 && expanded.y < 0);
   assert.ok(expanded.x + expanded.size > 640 && expanded.y + expanded.size > 480);
   assert.equal(a.spears.filter((s) => s.yellow).length, 7);
-  assert.equal(spearDistance(a, 0), -100);
+  assert.equal(spearDistance(a, 0), -120);
   for (const shield of ['up', 'down']) {
     const yellow = createUndyneAttack(battleArena);
     yellow.spears = [{ side: 'up', yellow: true, launch: 0, resolved: false }];
@@ -210,4 +212,22 @@ test('Undyne drops from above the frame, lands, and settles without changing the
   assert.equal(b.undyneEntranceAge, 1.2);
   assert.equal(undyneDropOffset(1.2), 0);
   assert.equal(b.phase, 'kris');
+});
+
+test('spears start on all four screen edges and keep evenly spaced impact times', () => {
+  const a = createUndyneAttack(battleArena);
+  const edges = [
+    { side: 'up', x: 320, y: 0 },
+    { side: 'right', x: 640, y: 240 },
+    { side: 'down', x: 320, y: 480 },
+    { side: 'left', x: 0, y: 240 },
+  ] as const;
+  for (const edge of edges)
+    for (const yellow of [false, true]) {
+      const s = { side: edge.side, launch: 1.5, yellow, resolved: false };
+      const pose = undyneSpearPose(a, s, s.launch);
+      assert.ok(Math.abs(pose.x - edge.x) < 1e-8 && Math.abs(pose.y - edge.y) < 1e-8);
+    }
+  const impacts = a.spears.map((s) => s.launch + (undyneSpawnDistance(s.side) - 34) / 360);
+  for (let i = 1; i < impacts.length; i++) assert.ok(Math.abs(impacts[i] - impacts[i - 1] - 0.32) < 1e-8);
 });

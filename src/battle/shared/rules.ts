@@ -398,6 +398,7 @@ export function beginEnemyAttack(encounter: Encounter, direction: AttackDirectio
     darkPattern,
   );
   encounter.nextAttackGrazeTP = null;
+  if (encounter.snowAttack.direction === 'undyne') encounter.soul = { ...encounter.snowAttack.undyne.center };
   if (direction === 'tvBolts') encounter.soul.y = battleArena.y + battleArena.size - 35;
   if (direction === 'saxophones') encounter.soul.y = battleArena.y + battleArena.size - 35;
   if (direction === 'dark') {

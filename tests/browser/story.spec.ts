@@ -647,7 +647,7 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   });
   expect(bounds.age).toBeGreaterThan(0.95);
   expect(bounds.joined).toBe(1.2);
-  await frames(page, 61);
+  await frames(page, 72);
   expect(
     await page.locator('#game').evaluate((canvas) => {
       const data = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 640, 300).data;
