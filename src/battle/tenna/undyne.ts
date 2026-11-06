@@ -4,7 +4,7 @@ export const undyneSettings = {
   interval: 0.32,
   warmup: 1.5,
   spears: 30,
-  speed: 360,
+  speed: 320,
   warning: 0.45,
 };
 export const spearSides = ['up', 'right', 'down', 'left'] as const;
