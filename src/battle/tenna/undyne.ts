@@ -62,12 +62,40 @@ export function advanceUndyneAttack(a: UndyneAttack, dt: number) {
   }
   return { hits, blocked, finished: a.spears.every((s) => s.resolved) };
 }
+function spearTrailPoint(a: UndyneAttack, s: UndyneAttack['spears'][number], age: number) {
+  const distance = 260 - Math.max(0, age - s.launch) * undyneSettings.speed;
+  const turn = s.yellow ? Math.max(0, Math.min(1, (135 - distance) / 65)) : 0;
+  const angle = (spearSides.indexOf(s.side) * Math.PI) / 2 + Math.PI * turn;
+  return {
+    x: a.arena.x + a.arena.size / 2 + Math.sin(angle) * distance,
+    y: a.arena.y + a.arena.size / 2 - Math.cos(angle) * distance,
+  };
+}
 export function drawUndyneAttack(ctx: CanvasRenderingContext2D, a: UndyneAttack) {
   const cx = a.arena.x + a.arena.size / 2,
     cy = a.arena.y + a.arena.size / 2;
   ctx.save();
   for (const s of a.spears) {
     if (s.resolved || a.age < s.launch - undyneSettings.warning) continue;
+    if (a.age >= s.launch) {
+      ctx.save();
+      ctx.strokeStyle = s.yellow ? '#ffe045' : '#2ad4de';
+      ctx.lineCap = 'round';
+      // Sample the actual trajectory, so yellow trails bend with the reversal.
+      for (let sample = 9; sample >= 1; sample--) {
+        const fromAge = a.age - sample * 0.018;
+        if (fromAge < s.launch) continue;
+        const from = spearTrailPoint(a, s, fromAge),
+          to = spearTrailPoint(a, s, fromAge + 0.018);
+        ctx.globalAlpha = (1 - sample / 10) * 0.42;
+        ctx.lineWidth = 2 + (1 - sample / 10) * 5;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     const index = spearSides.indexOf(s.side),
       distance = spearDistance(a, s.launch),
       turn = s.yellow ? Math.max(0, Math.min(1, (135 - distance) / 65)) : 0,

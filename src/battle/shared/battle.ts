@@ -686,6 +686,22 @@ export function createBattleDrawing(
         'Shoot enemies, avoid Flowey · Click / tap, or arrows to aim and Z / Space to shoot.';
       return;
     }
+    if (
+      encounter?.kind === 'tenna' &&
+      canControlSoul(encounter) &&
+      encounter.snowAttack.direction === 'undyne'
+    ) {
+      rect(0, 0, 640, 480, '#101118');
+      const box = undyneArenaBounds(encounter.snowAttack.undyne);
+      ctx.strokeStyle = '#63eb8b';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(box.x, box.y, box.size, box.size);
+      drawUndyneAttack(ctx, encounter.snowAttack.undyne);
+      drawBattleSoul(encounter);
+      $('gameHint').textContent =
+        'Spear of Justice · Arrows / WASD turn the shield · Yellow spears swing around';
+      return;
+    }
     if (present(encounter).kind === 'tenna') {
       rect(0, 0, 640, 480, '#100d24');
       studio.battlefield(room, present(encounter).score ?? 0);
@@ -743,18 +759,12 @@ export function createBattleDrawing(
         }
       };
       if (canControlSoul(encounter)) {
-        const undyne = encounter.snowAttack.direction === 'undyne';
-        if (!undyne) drawHost(565, 147, 0.8);
-        const box = undyne ? undyneArenaBounds(encounter.snowAttack.undyne!) : { x: 205, y: 48, size: 230 };
-        rect(box.x, box.y, box.size, box.size, '#101118');
+        drawHost(565, 147, 0.8);
+        rect(205, 48, 230, 230, '#101118');
         ctx.strokeStyle = '#63eb8b';
         ctx.lineWidth = 4;
-        ctx.strokeRect(box.x, box.y, box.size, box.size);
-        if (encounter.snowAttack.direction === 'undyne') {
-          drawHost(550, 269, 1.77);
-          drawGuest();
-          drawUndyneAttack(ctx, encounter.snowAttack.undyne);
-        } else if (encounter.snowAttack.direction === 'saxophones') {
+        ctx.strokeRect(205, 48, 230, 230);
+        if (encounter.snowAttack.direction === 'saxophones') {
           const a = encounter.snowAttack.saxophones;
           for (let helper = 0; helper < 2; helper++) {
             ctx.save();

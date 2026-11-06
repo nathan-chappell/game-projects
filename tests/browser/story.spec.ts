@@ -628,6 +628,18 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.soul)).toEqual(soul);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-spear-of-justice.png') });
+  expect(
+    await page.locator('#game').evaluate((canvas) => {
+      const ctx = (canvas as HTMLCanvasElement).getContext('2d')!;
+      return [
+        [100, 100],
+        [550, 100],
+        [100, 400],
+        [550, 400],
+      ].map(([x, y]) => Array.from(ctx.getImageData(x, y, 1, 1).data));
+    }),
+  ).toEqual(Array.from({ length: 4 }, () => [16, 17, 24, 255]));
+
   await expect(page.locator('#battleMovementHint')).toContainText('Yellow spears swing around');
   const bounds = await page.evaluate(() => {
     const b = window.battleFixtureState.bossEncounter!;
