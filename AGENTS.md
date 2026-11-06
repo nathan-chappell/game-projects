@@ -11,6 +11,13 @@
 - Use comments to explain intent or a non-obvious decision, rather than restating the code.
 - Keep documentation useful and current. Put changing feature details in the README, not this file.
 
+## Character artwork
+
+- Match the original game artwork when adding a character. Use original Deltarune sprites for Deltarune characters, original Undertale sprites for Undertale characters, and the user's supplied references for custom characters or variants.
+- Prefer faithful sprite assets and supplied screenshots. Preserve their silhouette, pose, proportions, palette, and pixel detail; use nearest-neighbor scaling.
+- Do not substitute improvised polygon or vector character redesigns. If an exact sprite is unavailable, explain that limitation and obtain a suitable reference instead of claiming an approximation is an exact match.
+- Keep motion trails, lighting, and attack effects separate from the character artwork.
+
 ## Check the work
 
 - Run checks appropriate to the change. Add or update focused tests for meaningful behavior changes.

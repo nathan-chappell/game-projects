@@ -19,7 +19,7 @@ export function createKnightPathDrawing(
   statue.width = 128;
   statue.height = 180;
   const stone = statue.getContext('2d');
-  if (stone) drawRoaringStatue(stone, 64, 170);
+  let statueReady = false;
   return function draw(state: GameState, time: number) {
     const path = (state.knightPath ??= createKnightPath(state.player.x, state.player.y));
     const camera = knightPathCamera(path),
@@ -44,7 +44,11 @@ export function createKnightPathDrawing(
       ctx.fillRect(x - 42, 300, 84, 7);
       ctx.fillStyle = '#777080';
       ctx.fillRect(x - 36, 298, 72, 2);
-      ctx.drawImage(statue, x - 64, 125);
+      if (!statueReady && stone) {
+        stone.clearRect(0, 0, 128, 180);
+        statueReady = drawRoaringStatue(stone, 64, 170);
+      }
+      if (statueReady) ctx.drawImage(statue, x - 64, 125);
       const light = ctx.createRadialGradient(x, 280, 5, x, 280, 100);
       light.addColorStop(0, '#a395c118');
       light.addColorStop(1, '#a395c100');
