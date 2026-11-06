@@ -1,3 +1,4 @@
+import { postShowDoorLocked, postShowScene } from '../rooms/post-show/post-show.ts';
 import { T } from '../game/config.ts';
 import type { ObjectGroup } from '../game/services.ts';
 import type { GameState } from '../game/types.ts';
@@ -28,6 +29,15 @@ export function createTerrainDrawing(dependencies: Dependencies) {
   const ctx = dependencies.ctx;
 
   function drawTile(id: number, x: number, y: number, theme: string) {
+    if (dependencies.current().scene === postShowScene && [0, 1, 6].includes(id)) {
+      dependencies.rect(x, y, T, T, '#000000');
+      return;
+    }
+    if (
+      state.mode === 'play' &&
+      postShowDoorLocked(dependencies.current(), x / T, y / T, state.project, state.story.tennaFinaleComplete)
+    )
+      id = 0;
     if (id === 10) {
       dependencies.rect(x, y, T, T, dependencies.roomBackground());
       return;

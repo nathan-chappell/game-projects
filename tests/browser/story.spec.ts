@@ -939,3 +939,49 @@ test('completed Tenna saves restore backstage without restarting his Finale', as
   await expect(page.locator('#bossControls')).toBeHidden();
   await expect(page.locator('#speakerName')).not.toHaveText('Tenna');
 });
+
+test('the post-Finale backstage door unlocks a black passage and allows returning', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await seedProgress(page, 'glitchBackstage', { tennaFinaleComplete: false }, { x: 460, y: 260 });
+  await page.goto('/');
+  await frames(page, 60);
+  await page.locator('#game').focus();
+  await page.keyboard.down('ArrowUp');
+  await frames(page, 40);
+  await page.keyboard.up('ArrowUp');
+  await expect(page.locator('#roomName')).toContainText('Backstage');
+  expect(await page.evaluate(() => window.battleFixtureState.player.y)).toBeGreaterThanOrEqual(247);
+  await page.evaluate(() => {
+    window.battleFixtureState.story.tennaFinaleComplete = true;
+  });
+  await frames(page, 1);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('backstage-new-door.png') });
+  await page.keyboard.down('ArrowUp');
+  await frames(page, 25);
+  await page.keyboard.up('ArrowUp');
+  await expect(page.locator('#roomName')).toHaveText('Beyond the Show');
+  await frames(page, 60);
+  await page.keyboard.down('ArrowDown');
+  await frames(page, 200);
+  await page.keyboard.up('ArrowDown');
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 260);
+  await page.keyboard.up('ArrowRight');
+  expect(await page.evaluate(() => window.battleFixtureState.player.x)).toBeGreaterThan(550);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await frames(page, 5);
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('beyond-the-show.png') });
+  await page.keyboard.down('ArrowLeft');
+  await frames(page, 300);
+  await page.keyboard.up('ArrowLeft');
+  await page.keyboard.down('ArrowUp');
+  await frames(page, 240);
+  await page.keyboard.up('ArrowUp');
+  await expect(page.locator('#roomName')).toContainText('Backstage');
+  await frames(page, 120);
+  await expect(page.locator('#bossControls')).toBeHidden();
+  await expect(page.locator('#dialogue')).toBeHidden();
+});

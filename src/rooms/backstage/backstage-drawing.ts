@@ -60,7 +60,7 @@ export function createBackstageDrawing(
     ctx.beginPath();
     for (let y = 5; y < 11; y++)
       for (let x = 0; x < 16; x++)
-        if ([0, 2, 3, 5].includes(room.map[y][x])) ctx.rect(x * 40, y * 40, 40, 40);
+        if ([0, 2, 3, 5, 6].includes(room.map[y][x])) ctx.rect(x * 40, y * 40, 40, 40);
     ctx.clip();
     ctx.strokeStyle = '#37200f';
     ctx.lineWidth = 2;

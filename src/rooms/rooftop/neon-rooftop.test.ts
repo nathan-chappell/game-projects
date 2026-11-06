@@ -1,3 +1,4 @@
+import { removePostShowFixture } from '../../../tests/fixtures/post-show.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { clone } from '../../world/clone.ts';
@@ -26,7 +27,7 @@ test('the next room connects to the safe side of the crossing and has a clear gr
 });
 
 test('a full previous Build gains the rooftop without overwriting custom rooms or the save star', () => {
-  const p = upgradeProject(defaults());
+  const p = removePostShowFixture(upgradeProject(defaults()));
   p.rooms = p.rooms.filter(
     (r) => !['queenPasscode', 'neonRooftop', 'collisionChamber'].includes(r.scene ?? ''),
   );
@@ -43,7 +44,7 @@ test('a full previous Build gains the rooftop without overwriting custom rooms o
   assert.equal(p.rooms.length, 24);
   const custom = clone(p.rooms.slice(22));
   upgradeProject(p);
-  assert.equal(p.rooms.length, 27);
+  assert.equal(p.rooms.length, 28);
   assert.equal(p.rooms[24].scene, 'neonRooftop');
   assert.deepEqual(p.rooms.slice(22, 24), custom);
   assert.equal(crossing!.tileColors['10,3'], '#123456');

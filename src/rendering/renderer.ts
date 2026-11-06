@@ -1,3 +1,5 @@
+import { postShowScene } from '../rooms/post-show/post-show.ts';
+import { drawPostShowRoom } from '../rooms/post-show/post-show-drawing.ts';
 import { present } from '../game/invariants.ts';
 import type { GameServices } from '../game/services.ts';
 import { createTravelDrawing } from '../game/travel-drawing.ts';
@@ -607,9 +609,21 @@ export function createRenderer(
         if (![1, 10].includes(r.map[y][x])) drawTile(r.map[y][x], x * T, y * T, r.theme);
     if (state.mode === 'build' && r.scene === 'glitchBoss') drawNoelleBoss(528, 122, 140);
     if (r.scene === 'glitchStudio') glitchStudioDrawing.room(time, r);
+    if (r.scene === postShowScene) drawPostShowRoom(ctx, r, time, reducedParticleMotion.matches);
     if (r.scene === 'glitchBackstage') {
       backstageDrawing.room(r);
       for (const [cell, target] of Object.entries(r.doorLinks || {})) {
+        if (
+          state.project.rooms[target]?.scene === postShowScene &&
+          (state.story.tennaFinaleComplete || state.mode === 'build')
+        ) {
+          const [x, y] = cell.split(',').map(Number);
+          rect(x * T - 5, y * T - 44, 50, 84, '#39291f');
+          rect(x * T - 1, y * T - 40, 42, 80, '#b67b56');
+          rect(x * T + 5, y * T - 34, 30, 74, '#030303');
+          rect(x * T + 5, y * T + 34, 30, 6, '#e6b28b');
+          pixelText('^', x * T + 13, y * T + 23, '#e5ded8', 17);
+        }
         if (state.project.rooms[target]?.scene !== 'glitchStudio') continue;
         const [x, y] = cell.split(',').map(Number);
         rect(x * T + 5, y * T + 3, 30, 37, '#030403');

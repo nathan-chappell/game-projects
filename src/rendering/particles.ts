@@ -107,6 +107,7 @@ export function createParticles(
         'glitchBoss',
         'queenPasscode',
         'collisionChamber',
+        'postShowPassage',
       ].includes(current().scene ?? '')
     )
       return;

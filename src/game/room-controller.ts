@@ -1,3 +1,4 @@
+import { postShowScene } from '../rooms/post-show/post-show.ts';
 import { createTraffic } from '../rooms/crossing/traffic.ts';
 import { createHallway, hallwayCamera, hallwaySettings } from '../rooms/storage/storage-travel.ts';
 import type { Point, Room } from '../world/types.ts';
@@ -47,6 +48,19 @@ export function createRoomController(dependencies: Dependencies) {
     if (next.scene === 'glitchBackstage' && state.mode === 'play' && !state.story.tennaInvited) {
       dependencies.toast('Wait for Tenna’s backstage invitation.');
       return false;
+    }
+    if (next.scene === postShowScene && state.mode === 'play' && !state.story.tennaFinaleComplete) {
+      dependencies.toast('Finish Tenna’s Finale first.');
+      return false;
+    }
+    if (!preferred && next.scene === 'glitchBackstage' && previousScene === postShowScene) {
+      const door = Object.entries(next.doorLinks ?? {}).find(
+        ([, target]) => state.project.rooms[target]?.scene === postShowScene,
+      );
+      if (door) {
+        const [x, y] = door[0].split(',').map(Number);
+        preferred = { x, y: y + 1 };
+      }
     }
     if (next.scene === 'tennaStorage' && state.mode === 'play' && !state.story.tennaStorageInvited) {
       dependencies.toast('Listen to Tenna’s storage invitation first.');

@@ -1,3 +1,4 @@
+import { addPostShowPassage } from '../rooms/post-show/post-show.ts';
 import { addBackstageRoom } from '../rooms/backstage/world.ts';
 import { addCoreEntrance, addDeeperCore, addFurnaceChamber, addLowerCore } from '../rooms/core/world.ts';
 import { addStorageCrossing } from '../rooms/crossing/world.ts';
@@ -46,6 +47,7 @@ export function upgradeProject(project: Project) {
     addNeonRooftop,
     addQueenRoom,
     addCollisionChamber,
+    addPostShowPassage,
   ];
   for (const update of updates) project = update(project);
   return project;

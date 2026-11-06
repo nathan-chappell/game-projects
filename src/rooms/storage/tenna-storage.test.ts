@@ -1,3 +1,4 @@
+import { removePostShowFixture } from '../../../tests/fixtures/post-show.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { freshInventory } from '../../game/config.ts';
@@ -90,7 +91,7 @@ test('old backstage entries migrate to the marked opening without resetting othe
 });
 
 test('an older full backstage Build gains storage without replacing either custom room', () => {
-  const p = upgradeProject(defaults());
+  const p = removePostShowFixture(upgradeProject(defaults()));
   p.rooms = p.rooms.filter(
     (r) =>
       ![
@@ -114,7 +115,7 @@ test('an older full backstage Build gains storage without replacing either custo
   assert.equal(p.rooms.length, 21);
   const before = clone(p.rooms);
   upgradeProject(p);
-  assert.equal(p.rooms.length, 27);
+  assert.equal(p.rooms.length, 28);
   assert.equal(p.rooms[21].scene, 'tennaStorage');
   assert.deepEqual(p.rooms[19], before[19]);
   assert.deepEqual(p.rooms[20], before[20]);

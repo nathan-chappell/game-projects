@@ -1,3 +1,4 @@
+import { postShowDoorLocked } from '../rooms/post-show/post-show.ts';
 import type { Point, Room } from '../world/types.ts';
 import { followSpeed, H, maxHP, partyNames, sprintMultiplier, T, tiles, W } from './config.ts';
 import type { Follower, GameState } from './types.ts';
@@ -20,6 +21,8 @@ interface Dependencies {
 export function createMovement(dependencies: Dependencies) {
   const state = dependencies.state;
   function cellOpen(r: Room, x: number, y: number, avoidFlowey = true) {
+    if (state.mode === 'play' && postShowDoorLocked(r, x, y, state.project, state.story.tennaFinaleComplete))
+      return false;
     if (roomSpikes(r).some((point) => point.x === x && point.y === y)) return false;
     if (roomTrees(r).some((tree) => tree.x === x && tree.y === y)) return false;
     return (
@@ -225,7 +228,12 @@ export function createMovement(dependencies: Dependencies) {
     if (left < 0 || top < 0 || right >= 640 || bottom >= 480) return true;
     for (let ty = Math.floor(top / T); ty <= Math.floor(bottom / T); ty++)
       for (let tx = Math.floor(left / T); tx <= Math.floor(right / T); tx++)
-        if (tiles[r.map[ty][tx]].solid) return true;
+        if (
+          tiles[r.map[ty][tx]].solid ||
+          (state.mode === 'play' &&
+            postShowDoorLocked(r, tx, ty, state.project, state.story.tennaFinaleComplete))
+        )
+          return true;
     if (
       roomTrees(r).some((tree) => {
         const cx = tree.x * T + 20,

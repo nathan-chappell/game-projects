@@ -95,15 +95,25 @@ export function createHud(dependencies: Dependencies) {
         : 'Spare cameras hang above a dark room filled with old show equipment.';
       return;
     }
+    if (dependencies.current().scene === 'postShowPassage') {
+      dependencies.$('taskTitle').textContent = 'Beyond the Show';
+      dependencies.$('taskDescription').textContent =
+        'Follow the path into the darkness. The brown entrance leads back to backstage.';
+      dependencies.$('storySummary').textContent = 'Beyond the studio, the path seems to waver at its edges.';
+      return;
+    }
     if (dependencies.current().scene === 'glitchBackstage') {
       dependencies.$('taskTitle').textContent = 'Backstage';
-      dependencies.$('taskDescription').textContent = state.story.jackCandyReceived
-        ? 'Tenna is waiting here for the Finale. Talk to him to enter the fight.'
-        : state.story.tennaStorageInvited
-          ? 'Follow Tenna into his storage through the doorway on the right.'
-          : 'Flowey has more to explain about the glitches.';
-      dependencies.$('storySummary').textContent =
-        'Behind the star-covered wings, the host is ready to hear about the fusing worlds.';
+      dependencies.$('taskDescription').textContent = state.story.tennaFinaleComplete
+        ? 'A new doorway has appeared at the back. Step inside to explore beyond the show.'
+        : state.story.jackCandyReceived
+          ? 'Tenna is waiting here for the Finale. Talk to him to enter the fight.'
+          : state.story.tennaStorageInvited
+            ? 'Follow Tenna into his storage through the doorway on the right.'
+            : 'Flowey has more to explain about the glitches.';
+      dependencies.$('storySummary').textContent = state.story.tennaFinaleComplete
+        ? 'The show is over. A dark passage has opened behind the stage.'
+        : 'Behind the star-covered wings, the host is ready to hear about the fusing worlds.';
       return;
     }
     if (dependencies.current().scene === 'glitchStudio') {

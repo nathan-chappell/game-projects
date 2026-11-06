@@ -1,3 +1,4 @@
+import { removePostShowFixture } from '../../../tests/fixtures/post-show.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { present } from '../../game/invariants.ts';
@@ -48,7 +49,7 @@ test('Flowey explains the merging worlds before Queen requests help with the pas
 });
 
 test('a full previous Build gains Queen’s room while retaining custom rooms and rooftop edits', () => {
-  const p = upgradeProject(defaults());
+  const p = removePostShowFixture(upgradeProject(defaults()));
   p.rooms = p.rooms.filter((r) => !['queenPasscode', 'collisionChamber'].includes(r.scene ?? ''));
   const roof = p.rooms.find((r) => r.scene === 'neonRooftop');
   delete roof!.queenExitVersion;
@@ -63,7 +64,7 @@ test('a full previous Build gains Queen’s room while retaining custom rooms an
   assert.equal(p.rooms.length, 25);
   const before = clone(p.rooms.slice(23));
   upgradeProject(p);
-  assert.equal(p.rooms.length, 27);
+  assert.equal(p.rooms.length, 28);
   assert.deepEqual(p.rooms.slice(23, 25), before);
   assert.equal(p.rooms[25].scene, 'queenPasscode');
   assert.equal(roof!.doorLinks!['15,9'], 25);

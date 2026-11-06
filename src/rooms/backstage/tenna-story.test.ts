@@ -1,3 +1,4 @@
+import { removePostShowFixture } from '../../../tests/fixtures/post-show.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { clone } from '../../world/clone.ts';
@@ -63,7 +64,7 @@ test('backstage is connected in both directions, contains Tenna alone as an NPC,
 });
 
 test('a full older Build gains backstage without overwriting custom rooms', () => {
-  const p = upgradeProject(defaults());
+  const p = removePostShowFixture(upgradeProject(defaults()));
   p.rooms = p.rooms.filter(
     (r) =>
       ![
@@ -88,7 +89,7 @@ test('a full older Build gains backstage without overwriting custom rooms', () =
   assert.equal(p.rooms.length, 20);
   const before = clone(p.rooms);
   upgradeProject(p);
-  assert.equal(p.rooms.length, 27);
+  assert.equal(p.rooms.length, 28);
   assert.equal(p.rooms[20].scene, 'glitchBackstage');
   assert.deepEqual(p.rooms[18], before[18]);
   assert.deepEqual(p.rooms[19], before[19]);

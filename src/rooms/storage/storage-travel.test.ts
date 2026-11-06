@@ -1,3 +1,4 @@
+import { removePostShowFixture } from '../../../tests/fixtures/post-show.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { clone } from '../../world/clone.ts';
@@ -106,7 +107,7 @@ test('the crossing has survivable routes to both stop-sign banks at multiple fra
 });
 
 test('the storage hallway and crossing have return doors and preserve a full older Build', () => {
-  const p = upgradeProject(defaults()),
+  const p = removePostShowFixture(upgradeProject(defaults())),
     store = p.rooms.findIndex((r) => r.scene === 'tennaStorage'),
     hall = p.rooms.findIndex((r) => r.scene === 'storageHallway'),
     cross = p.rooms.findIndex((r) => r.scene === 'trafficCrossing');
@@ -132,7 +133,7 @@ test('the storage hallway and crossing have return doors and preserve a full old
   }
   const custom = clone(p.rooms.slice(-2));
   upgradeProject(p);
-  assert.equal(p.rooms.length, 27);
+  assert.equal(p.rooms.length, 28);
   assert.deepEqual(p.rooms.slice(20, 22), custom);
   assert.equal(p.rooms[store].doorLinks!['15,8'], 22);
   assert.equal(validBuild({ format: 'little-lantern-build', version: 1, savedAt: 123, project: p }), true);

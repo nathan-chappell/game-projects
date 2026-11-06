@@ -15,6 +15,7 @@ test('the starter world keeps its existing rooms while appending the studio and 
   const project = upgradeProject(defaults());
   assert.ok(validProject(project));
   const legacy = clone(project),
+    passage = legacy.rooms.pop(),
     chamber = legacy.rooms.pop(),
     queen = legacy.rooms.pop(),
     roof = legacy.rooms.pop(),
@@ -23,6 +24,7 @@ test('the starter world keeps its existing rooms while appending the studio and 
     storage = legacy.rooms.pop(),
     backstage = legacy.rooms.pop(),
     studio = legacy.rooms.pop();
+  assert.equal(passage!.scene, 'postShowPassage');
   assert.equal(chamber!.scene, 'collisionChamber');
   assert.equal(queen!.scene, 'queenPasscode');
   assert.equal(roof!.scene, 'neonRooftop');
@@ -62,7 +64,7 @@ test('a two-room older project still upgrades to the complete world', () => {
   assert.ok(validProject(old));
   const upgraded = upgradeProject(old);
   assert.equal(upgraded.rooms[0].name, 'My old bedroom');
-  assert.equal(upgraded.rooms.length, originalWorld.rooms.length + 8);
+  assert.equal(upgraded.rooms.length, originalWorld.rooms.length + 9);
   assert.ok(validProject(upgraded));
 });
 

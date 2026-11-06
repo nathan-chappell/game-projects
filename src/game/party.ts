@@ -81,6 +81,7 @@ export function createParty(dependencies: Dependencies) {
           'neonRooftop',
           'queenPasscode',
           'collisionChamber',
+          'postShowPassage',
         ].includes(room.scene ?? ''))
     );
   }

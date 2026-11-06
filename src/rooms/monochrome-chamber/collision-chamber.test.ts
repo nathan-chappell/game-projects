@@ -1,3 +1,4 @@
+import { removePostShowFixture } from '../../../tests/fixtures/post-show.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { clone } from '../../world/clone.ts';
@@ -24,7 +25,7 @@ test('the new backstage arrow connects the chamber and leaves both existing rout
   assert.match(collisionConversation[2].text, /No more smashing fountains/);
 });
 test('a full previous Build retains custom rooms and gains the chamber once', () => {
-  const p = upgradeProject(defaults());
+  const p = removePostShowFixture(upgradeProject(defaults()));
   p.rooms.pop();
   const back = p.rooms.find((r) => r.scene === 'glitchBackstage');
   delete back!.collisionExitVersion;
@@ -38,7 +39,7 @@ test('a full previous Build retains custom rooms and gains the chamber once', ()
   assert.equal(p.rooms.length, 26);
   const before = clone(p.rooms.slice(24));
   upgradeProject(p);
-  assert.equal(p.rooms.length, 27);
+  assert.equal(p.rooms.length, 28);
   assert.deepEqual(p.rooms.slice(24, 26), before);
   assert.equal(back!.doorLinks!['0,8'], 26);
   assert.equal(validBuild({ format: 'little-lantern-build', version: 1, savedAt: 123, project: p }), true);

@@ -74,7 +74,7 @@ export function validProject(value: unknown): value is Project {
     !finite(value.updatedAt) ||
     !Array.isArray(value.rooms) ||
     value.rooms.length < 2 ||
-    value.rooms.length > 27
+    value.rooms.length > 28
   )
     return false;
   const roomCount = value.rooms.length;
