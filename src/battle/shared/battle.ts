@@ -89,7 +89,7 @@ export function createBattleDrawing(
   const drawProceedGlitch = createProceedGlitchDrawing(ctx, reducedParticleMotion);
   const drawPelletsCast = createPelletsDrawing(ctx, reducedParticleMotion);
   const battleArenaForDark = { x: 205, y: 48, size: 230 };
-  const drawTenna = createTennaSprite(ctx).draw;
+  const { draw: drawTenna, drawStatic: drawTennaStatic } = createTennaSprite(ctx);
   const studio = createGlitchStudioDrawing(ctx, { rect, reducedParticleMotion });
   const current = () => state.project.rooms[state.roomIndex];
   function drawBattleKris(x: number, y: number, scale = 1, hitAge: number | null = null) {
@@ -716,18 +716,7 @@ export function createBattleDrawing(
       const drawHost = (x: number, y: number, scale: number) => {
         drawTenna(x, y, scale);
         if (present(encounter).tennaHeadGlitch || (present(encounter).score ?? 0) >= 1200) {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.scale(scale, scale);
-          ctx.beginPath();
-          ctx.rect(-23, -126, 45, 39);
-          ctx.clip();
-          for (let strip = 0; strip < 7; strip++) {
-            const offset = Math.sin(t * 47 + strip * 9) * 9;
-            rect(-22 + offset, -124 + strip * 6, 35, 2 + (strip % 2), strip % 2 ? '#ff57ca' : '#65fff0');
-            rect(-18 - offset, -122 + strip * 6, 9, 2, '#fff');
-          }
-          ctx.restore();
+          drawTennaStatic(x, y, scale, t);
         }
       };
       const drawGuest = () => {

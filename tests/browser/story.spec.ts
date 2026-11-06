@@ -677,6 +677,32 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.tennaHeadGlitch)).toBe(true);
   await expect(page.locator('#battleAct')).toBeEnabled();
   await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-glitching-head.png') });
+  const staticPixels = await page.locator('#game').evaluate((canvas) => {
+    const data = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(490, 78, 22, 16).data;
+    let grey = 0;
+    const shades = new Set<number>();
+    for (let i = 0; i < data.length; i += 4)
+      if (data[i] === data[i + 1] && data[i + 1] === data[i + 2]) {
+        grey++;
+        shades.add(data[i]);
+      }
+    return { grey, shades: shades.size };
+  });
+  expect(staticPixels.grey).toBeGreaterThan(22 * 16 * 0.95);
+  expect(staticPixels.shades).toBeGreaterThan(30);
+  const staticHash = () =>
+    page.locator('#game').evaluate((canvas) => {
+      const data = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(490, 78, 22, 16).data;
+      return data.reduce((hash, value) => (hash * 33 + value) >>> 0, 5381);
+    });
+  const still = await staticHash();
+  await frames(page, 12);
+  expect(await staticHash()).toBe(still);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await frames(page, 12);
+  expect(await staticHash()).not.toBe(still);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await frames(page, 1);
   await page.keyboard.press('3');
   await frames(page, 2);
   await expect(page.locator('#battleAct')).toBeEnabled();
