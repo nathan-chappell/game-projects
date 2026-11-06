@@ -35,6 +35,7 @@ test('older adventure slots retain optional defaults and reject malformed input'
   const slot = legacySlot();
   assert.equal(validProgress({ ...slot, story: { ...slot.story, teamJoined: true, joined: false } }), false);
   assert.equal(validProgress({ ...slot, story: { ...slot.story, queenSolved: 'yes' } }), false);
+  assert.equal(validProgress({ ...slot, story: { ...slot.story, tennaFinaleComplete: 'yes' } }), false);
 });
 
 test('legacy candy totals normalize without double-counting teammates or sharing data', () => {
@@ -53,8 +54,11 @@ test('runtime state starts with independent values and serialized snapshots reta
   state.story.noelleEscaped = true;
   state.story.jackCandyReceived = true;
   state.story.queenSolved = true;
+  state.story.tennaFinaleComplete = true;
   const slot = { ...legacySlot(), story: clone(state.story) };
   assert.equal(validProgress(slot), true);
   assert.equal(slot.story.noelleEscaped, true);
+  assert.equal(slot.story.tennaFinaleComplete, true);
+  assert.equal(createGameState(defaults()).story.tennaFinaleComplete, false);
   assert.equal(createGameState(defaults()).story.noelleEscaped, false);
 });

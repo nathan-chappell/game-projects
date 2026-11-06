@@ -1,3 +1,4 @@
+import { tennaEndingPhases } from '../battle/tenna/ending.ts';
 import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
 import { canPartyAct, canUseBattleAction } from '../battle/shared/availability.ts';
@@ -1089,6 +1090,9 @@ export function startGame() {
     'tennaMinigame',
     'tennaHelpers',
     'tennaGuest',
+    'tennaFinaleOutburst',
+    'tennaFinaleShutdown',
+    'tennaAftermath',
     'undyneCandy',
     'tennaCut',
   ]);
@@ -1142,6 +1146,7 @@ export function startGame() {
     state.story.tennaStorageInvited = false;
     state.story.tennaElixirsReceived = false;
     state.story.tennaFinaleExplained = false;
+    state.story.tennaFinaleComplete = false;
     state.story.jackCandyReceived = false;
     state.story.jackRevealed = false;
     state.story.collisionSeen = false;
@@ -1210,6 +1215,7 @@ export function startGame() {
     canvas.focus({ preventScroll: true });
   };
   $('leaveBossButton').onclick = () => {
+    if (tennaEndingPhases.includes(state.bossEncounter?.phase ?? '')) return;
     if (['dark', 'tenna'].includes(state.bossEncounter?.kind ?? '')) {
       resetBossEncounter();
       state.collisionBlackout = null;

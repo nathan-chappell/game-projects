@@ -95,6 +95,7 @@ export function validProgress(slot: unknown): slot is ProgressSave {
     'tennaStorageInvited',
     'tennaElixirsReceived',
     'tennaFinaleExplained',
+    'tennaFinaleComplete',
     'jackCandyReceived',
     'jackRevealed',
     'darkBattleSeen',

@@ -238,6 +238,9 @@ export function createRoomController(dependencies: Dependencies) {
     const npcs = (dependencies.current().npcs || [])
       .filter((n) => !(state.mode === 'play' && n.id === 'jackenstein' && !state.story.jackRevealed))
       .filter(
+        (n) => !(state.mode === 'play' && n.id === 'tenna-backstage' && state.story.tennaFinaleComplete),
+      )
+      .filter(
         (n) =>
           !(
             state.mode === 'play' &&

@@ -53,17 +53,14 @@ test('score keys add points without filling TP or toggling immunity; thresholds 
   assert.equal(queueTennaScoreEvent(b), false);
   assert.equal(addTennaTestingPoints(createEncounter(), 500), false);
 });
-test('score jumps process both milestones once and the head glitch stays after score losses', () => {
+test('score jumps to 1500 begin the ending once and keep the head glitch active', () => {
   const b = createTennaEncounter();
   addTennaTestingPoints(b, 1500);
   assert.equal(b.tennaHeadGlitch, true);
-  assert.equal(b.guestEvent, 'enter');
-  completeTennaScoreEvent(b);
-  queueTennaScoreEvent(b);
-  assert.equal(b.guestEvent, 'leave');
-  completeTennaScoreEvent(b);
-  assert.equal(queueTennaScoreEvent(b), false);
+  assert.equal(b.phase, 'tennaFinaleOutburst');
   assert.equal(b.enemy.hp, 4000);
+  assert.equal(queueTennaScoreEvent(b), false);
+  assert.equal(addTennaTestingPoints(b, 200), false);
   b.score = 1190;
   queueTennaScoreEvent(b);
   assert.equal(b.tennaHeadGlitch, true);

@@ -1,3 +1,4 @@
+import { completeTennaOutburst, completeTennaShutdown } from '../battle/tenna/ending.ts';
 import { completeTennaScoreEvent } from '../battle/tenna/score-events.ts';
 import { beginTennaMinigame } from '../battle/tenna/minigame.ts';
 import physicalChallengeURL from '../../assets/physical-challenge.png?inline';
@@ -341,6 +342,14 @@ export function createDialogue(dependencies: Dependencies) {
       }
       if (kind === 'darkShine') {
         completeDarkShine(present(state.bossEncounter));
+        dependencies.syncBossUI();
+      }
+      if (kind === 'tennaFinaleOutburst' && state.bossEncounter) {
+        completeTennaOutburst(state.bossEncounter);
+        dependencies.syncBossUI();
+      }
+      if (kind === 'tennaFinaleShutdown' && state.bossEncounter) {
+        completeTennaShutdown(state.bossEncounter);
         dependencies.syncBossUI();
       }
       if (kind === 'undyneCandy' && state.bossEncounter) {

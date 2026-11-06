@@ -74,6 +74,45 @@ export function createTennaSprite(ctx: CanvasRenderingContext2D) {
     ctx.drawImage(staticCanvas, 480, 160, 330, 280);
     ctx.restore();
   }
+  function drawCollapse(
+    x: number,
+    y: number,
+    scale: number,
+    time: number,
+    progress: number,
+    reducedMotion = false,
+  ) {
+    if (!ready()) return;
+    const height = 126 * scale,
+      ratio = height / body.height,
+      strips = 20;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = Math.max(0, 1 - progress);
+    for (let strip = 0; strip < strips; strip++) {
+      const sourceY = body.y + (strip * body.height) / strips,
+        sourceHeight = body.height / strips;
+      const offset = reducedMotion ? 0 : Math.sin(time * 71 + strip * 17) * (5 + progress * 65) * progress;
+      const left = x - (body.anchorX - body.x) * ratio + offset,
+        top = y - height + (strip * height) / strips;
+      ctx.drawImage(
+        image,
+        body.x,
+        sourceY,
+        body.width,
+        sourceHeight,
+        left,
+        top,
+        body.width * ratio,
+        height / strips + 1,
+      );
+      if (strip % 3 === 0 && !reducedMotion) {
+        ctx.fillStyle = strip % 2 ? '#6df6ec' : '#ff72cc';
+        ctx.fillRect(left + body.width * ratio * 0.2, top, body.width * ratio * 0.45, 2);
+      }
+    }
+    ctx.restore();
+  }
   function portrait() {
     ctx.clearRect(0, 0, 64, 64);
     if (!ready()) {
@@ -85,5 +124,5 @@ export function createTennaSprite(ctx: CanvasRenderingContext2D) {
     ctx.drawImage(image, 360, 16, 568, 530, 0, 2, 64, 60);
     ctx.restore();
   }
-  return { draw, portrait, drawStatic };
+  return { draw, portrait, drawStatic, drawCollapse };
 }

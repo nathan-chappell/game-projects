@@ -1,3 +1,4 @@
+import { tennaEndingPhases } from '../tenna/ending.ts';
 import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
 import { addTennaTestingPoints } from '../tenna/score-events.ts';
 import { setHammerAimKey, setHammerThrowKey, throwHammer } from '../tenna/hammers.ts';
@@ -435,7 +436,7 @@ export function setupBattleControls(
     $('talkButton').disabled = $('inspectButton').disabled = active && !intro;
     $('inventoryButton').disabled =
       active &&
-      (['minigame', 'minigameIntro'].includes(encounter.phase) ||
+      (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(encounter.phase) ||
         isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));
@@ -579,7 +580,7 @@ export function setupBattleControls(
             : `Proceed: ${encounter?.proceedCount || 0} / ${battleSettings.proceedsToDisappear}`;
     $('leaveBossButton').disabled =
       active &&
-      (['minigame', 'minigameIntro'].includes(encounter.phase) ||
+      (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(encounter.phase) ||
         isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         encounter.phase === 'rescue' ||

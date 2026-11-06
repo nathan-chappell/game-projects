@@ -1,3 +1,4 @@
+import { tennaCollapseSeconds } from '../tenna/ending.ts';
 import { drawUndyneAttack, undyneArenaBounds, undyneDropOffset } from '../tenna/undyne.ts';
 import { drawUndyne } from '../tenna/undyne-drawing.ts';
 import { drawUndyneMenuSpear, undynePresent } from '../tenna/undyne-actions.ts';
@@ -89,7 +90,11 @@ export function createBattleDrawing(
   const drawProceedGlitch = createProceedGlitchDrawing(ctx, reducedParticleMotion);
   const drawPelletsCast = createPelletsDrawing(ctx, reducedParticleMotion);
   const battleArenaForDark = { x: 205, y: 48, size: 230 };
-  const { draw: drawTenna, drawStatic: drawTennaStatic } = createTennaSprite(ctx);
+  const {
+    draw: drawTenna,
+    drawStatic: drawTennaStatic,
+    drawCollapse: drawTennaCollapse,
+  } = createTennaSprite(ctx);
   const studio = createGlitchStudioDrawing(ctx, { rect, reducedParticleMotion });
   const current = () => state.project.rooms[state.roomIndex];
   function drawBattleKris(x: number, y: number, scale = 1, hitAge: number | null = null) {
@@ -714,6 +719,17 @@ export function createBattleDrawing(
         helpers.drawFountainFriend({ name: 'Ralsey', x: 110, y: 270, hideName: true }, t),
       );
       const drawHost = (x: number, y: number, scale: number) => {
+        if (present(encounter).phase === 'tennaFinaleGlitch') {
+          drawTennaCollapse(
+            x,
+            y,
+            scale,
+            t,
+            (present(encounter).tennaEndingAge ?? 0) / tennaCollapseSeconds,
+            reducedParticleMotion.matches,
+          );
+          return;
+        }
         drawTenna(x, y, scale);
         if (present(encounter).tennaHeadGlitch || (present(encounter).score ?? 0) >= 1200) {
           drawTennaStatic(x, y, scale, t);

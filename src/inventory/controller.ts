@@ -1,3 +1,4 @@
+import { tennaEndingPhases } from '../battle/tenna/ending.ts';
 import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
 import { canUseBattleAction } from '../battle/shared/availability.ts';
@@ -117,7 +118,8 @@ export function createInventory(dependencies: Dependencies) {
             : 'Use item';
   }
   function toggleInventory() {
-    if (['minigame', 'minigameIntro'].includes(state.bossEncounter?.phase ?? '')) return;
+    if (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(state.bossEncounter?.phase ?? ''))
+      return;
     if (state.bossEncounter?.finalAttackComplete && state.bossEncounter.phase !== 'victory') return;
     if (isProceedScene(state.bossEncounter) || isPelletCast(state.bossEncounter)) return;
     if (state.death || state.holeFall || state.padJump || dependencies.choiceDialogOpen()) return;

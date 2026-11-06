@@ -34,6 +34,7 @@ export interface Story {
   jackRevealed: boolean;
   jackCandyReceived: boolean;
   tennaFinaleExplained: boolean;
+  tennaFinaleComplete: boolean;
   queenBriefed: boolean;
   queenDemoSeen: boolean;
   queenSolved: boolean;

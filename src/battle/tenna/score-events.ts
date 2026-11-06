@@ -1,3 +1,4 @@
+import { beginTennaEnding, tennaEndingPhases } from './ending.ts';
 import { undynePresent } from './undyne-actions.ts';
 import { canPartyAct } from '../shared/availability.ts';
 import type { Encounter } from '../shared/types.ts';
@@ -9,6 +10,7 @@ export function queueTennaScoreEvent(b: Encounter) {
   if ((b.score ?? 0) >= 1200) b.tennaHeadGlitch = true;
   if (undynePresent(b) && (b.score ?? 0) >= 660) b.undyneGlitched = true;
   if (!canPartyAct(b)) return false;
+  if ((b.score ?? 0) >= 1500) return beginTennaEnding(b);
   const event =
     !b.undyneJoined && (b.score ?? 0) >= 500
       ? 'enter'
@@ -40,7 +42,7 @@ export function completeTennaScoreEvent(b: Encounter) {
   return true;
 }
 export function addTennaTestingPoints(b: Encounter, points: number) {
-  if (b.kind !== 'tenna' || b.phase === 'victory') return false;
+  if (b.kind !== 'tenna' || b.phase === 'victory' || tennaEndingPhases.includes(b.phase)) return false;
   b.score = (b.score ?? 0) + points;
   b.message = `+${points} points for playtesting.`;
   queueTennaScoreEvent(b);

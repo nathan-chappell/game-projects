@@ -110,7 +110,7 @@ test('a lone survivor is hit once per X, HP never becomes negative, and invincib
   assert.deepEqual(team, freshPartyHP());
   assert.equal(inv.score, 50);
 });
-test('points accumulate beyond 1500 without ending the fight; Xs reset for each minigame', () => {
+test('earned points reaching 1500 queue the Finale ending after the minigame settles', () => {
   const b = start(),
     hp = freshPartyHP();
   b.undyneJoined = b.undyneLeft = true;
@@ -118,15 +118,10 @@ test('points accumulate beyond 1500 without ending the fight; Xs reset for each 
   b.minigame!.misses = 1;
   finishTennaMinigame(b, hp, () => 0);
   assert.equal(b.score, 1580);
-  assert.equal(b.phase, 'flowey');
+  assert.equal(b.phase, 'tennaFinaleOutburst');
   assert.equal(b.enemy.hp, 4000);
   assert.equal(b.minigame, null);
-  b.turn = 'Kris';
-  b.phase = 'kris';
-  assert.equal(requestTennaMinigame(b), true);
-  beginTennaMinigame(b, () => 0);
-  assert.equal(b.minigame!.misses, 0);
-  assert.equal(b.score, 1580);
+  assert.equal(requestTennaMinigame(b), false);
 });
 test('keyboard aiming moves around all nine windows', () => {
   const m = createShootingMinigame();

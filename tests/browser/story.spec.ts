@@ -705,8 +705,10 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   await frames(page, 1);
   await page.keyboard.press('3');
   await frames(page, 2);
-  await expect(page.locator('#battleAct')).toBeEnabled();
-  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1600);
+  await expect(page.locator('#battleAct')).toBeDisabled();
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe(
+    'tennaFinaleOutburst',
+  );
 });
 
 test('Tenna score keys work during dialogue and attack introductions with number-row and numpad layouts', async ({
@@ -837,4 +839,103 @@ test('Undyne uses the reference sprite, blocks menu options, awards attack point
     visible: true,
   });
   await expect(page.locator('#battleSpare')).toHaveText('TV TIME!');
+});
+
+test('1500 earned points end Tenna’s show and return the party backstage for Undyne dialogue', async ({
+  page,
+}, testInfo) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
+  await page.goto('/');
+  await frames(page, 1);
+  await page.locator('#talkButton').click();
+  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
+  const before = await page.evaluate(() => ({
+    hp: { ...window.battleFixtureState.partyHP },
+    inventory: structuredClone(window.battleFixtureState.inventory),
+  }));
+  await page.evaluate(() => {
+    const b = window.battleFixtureState.bossEncounter!;
+    b.score = 1400;
+    b.undyneJoined = b.undyneLeft = true;
+    b.minigameIntroSeen = true;
+    window.refreshBattleFixture();
+  });
+  await page.locator('#battleAct').click();
+  await page.locator('#battleProceedButton').click();
+  await expect(page.locator('#battleMinigameControls')).toBeVisible();
+  await page.locator('#game').focus();
+  await page.keyboard.press('Shift');
+  await frames(page, 2);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1500);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('No-No!! THis Is not the Part of the SHOW!! NO!');
+  await page.keyboard.press('l');
+  await expect(page.locator('#dialogue')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await frames(page, 55);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('tennaFinaleGlitch');
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-glitching-away.png') });
+  await expect(page.locator('#battleAct')).toBeDisabled();
+  await expect(page.locator('#leaveBossButton')).toBeDisabled();
+  await page.keyboard.press('o');
+  await expect(page.locator('#inventoryDialog')).toBeHidden();
+  await page.keyboard.press('Shift');
+  await page.keyboard.press('3');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1500);
+  await frames(page, 90);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.enemy.visible)).toBe(false);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('Mike! Shut the show down!!');
+  await page.locator('#game').screenshot({ path: testInfo.outputPath('tenna-vanished.png') });
+  await page.keyboard.press('Enter');
+  await frames(page, 2);
+  await expect(page.locator('#bossControls')).toBeHidden();
+  await expect(page.locator('#roomName')).toContainText('Backstage');
+  await expect(page.locator('#speakerName')).toHaveText('Ralsey');
+  expect(await page.evaluate(() => window.battleFixtureState.story.tennaFinaleComplete)).toBe(true);
+  await confirmRoomDialogue(page);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#dialogueText')).toContainText('mysterious knight');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#speakerName')).toHaveText('Flowey');
+  await expect(page.locator('#dialogueText')).toContainText('That was Undyne');
+  for (let line = 0; line < 8 && (await page.locator('#dialogue').isVisible()); line++)
+    await confirmRoomDialogue(page);
+  await expect(page.locator('#dialogue')).toBeHidden();
+  expect(
+    await page.evaluate(() => ({
+      hp: window.battleFixtureState.partyHP,
+      inventory: window.battleFixtureState.inventory,
+    })),
+  ).toEqual(before);
+  const x = await page.evaluate(() => window.battleFixtureState.player.x);
+  await page.keyboard.down('ArrowRight');
+  await frames(page, 10);
+  await page.keyboard.up('ArrowRight');
+  expect(await page.evaluate(() => window.battleFixtureState.player.x)).toBeGreaterThan(x);
+  await frames(page, 120);
+  await expect(page.locator('#bossControls')).toBeHidden();
+});
+
+test('completed Tenna saves restore backstage without restarting his Finale', async ({ page }) => {
+  await controlFrames(page);
+  await seedProgress(
+    page,
+    'glitchBackstage',
+    { tennaFinaleComplete: true, tennaFinaleExplained: false },
+    { x: 340, y: 340, facing: 'up' },
+  );
+  await page.goto('/');
+  await frames(page, 120);
+  await expect(page.locator('#bossControls')).toBeHidden();
+  await expect(page.locator('#dialogue')).toBeHidden();
+  await page.locator('#game').focus();
+  await page.keyboard.press('Enter');
+  await frames(page, 30);
+  await expect(page.locator('#bossControls')).toBeHidden();
+  await expect(page.locator('#speakerName')).not.toHaveText('Tenna');
 });

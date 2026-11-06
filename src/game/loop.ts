@@ -1,3 +1,4 @@
+import { tennaAftermathConversation } from '../rooms/backstage/tenna-aftermath.ts';
 import { canControlSoul } from '../battle/shared/availability.ts';
 import { advanceBattleTime, advanceSnowAttack, moveSoul } from '../battle/shared/rules.ts';
 import { finaleConversation } from '../rooms/backstage/tenna-finale.ts';
@@ -156,6 +157,40 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       return;
     }
+    if (state.bossEncounter?.phase === 'tennaFinaleOutburst' && !state.dialogue) {
+      dependencies.openDialogue(
+        ['[Tenna] * No-No!! THis Is not the Part of the SHOW!! NO!'],
+        'tennaFinaleOutburst',
+      );
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
+    if (state.bossEncounter?.phase === 'tennaFinaleShutdown' && !state.dialogue) {
+      dependencies.openDialogue(['[Tenna] * Mike! Shut the show down!!'], 'tennaFinaleShutdown');
+      dependencies.syncBossUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
+    if (state.bossEncounter?.phase === 'tennaFinaleReturn') {
+      const backstage = state.project.rooms.findIndex((room) => room.scene === 'glitchBackstage');
+      state.story.tennaFinaleComplete = true;
+      dependencies.changeRoom(backstage, false, { x: 6, y: 8 });
+      state.keys.clear();
+      dependencies.resetFollower();
+      Object.assign(state.follower, { x: 220, y: 340, trail: [] });
+      state.companions = [
+        { name: 'Ralsey', x: 330, y: 340, trail: [] },
+        { name: 'Susie', x: 395, y: 340, trail: [] },
+      ];
+      dependencies.openDialogue(
+        tennaAftermathConversation.map((line) => `[${line.speaker}] * ${line.text}`),
+        'tennaAftermath',
+      );
+      dependencies.storyUI();
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'undyneCandy' && !state.dialogue) {
       dependencies.openDialogue(
         ['[Tenna] * A little G. Candy for our guest! Back to full health!'],
@@ -302,7 +337,8 @@ export function createGameLoop(dependencies: Dependencies) {
     if (
       dependencies.current().scene === 'glitchBackstage' &&
       state.story.jackCandyReceived &&
-      !state.story.tennaFinaleExplained
+      !state.story.tennaFinaleExplained &&
+      !state.story.tennaFinaleComplete
     ) {
       dependencies.openDialogue(
         finaleConversation.map((l) => `[${l.speaker}] * ${l.text}`),

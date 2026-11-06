@@ -222,6 +222,8 @@ export interface EncounterBase {
   score?: number;
   tennaCueSeen?: boolean;
   tennaHeadGlitch?: boolean;
+  tennaEndingStarted?: boolean;
+  tennaEndingAge?: number;
   undyneJoined?: boolean;
   undyneGlitched?: boolean;
   tennaSavedEnemy?: { name: string; hp: number; maxHP: number; visible: boolean };

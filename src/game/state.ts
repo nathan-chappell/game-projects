@@ -53,6 +53,7 @@ export function createGameState(project: Project): GameState {
       jackRevealed: false,
       jackCandyReceived: false,
       tennaFinaleExplained: false,
+      tennaFinaleComplete: false,
       queenBriefed: false,
       queenDemoSeen: false,
       queenSolved: false,

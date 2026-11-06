@@ -57,7 +57,11 @@ export function createInteractions(dependencies: Dependencies) {
         ),
         state.story.queenBriefed ? 'queenChat' : 'queenIntro',
       );
-    else if (npc.id === 'tenna-backstage' && state.story.jackCandyReceived)
+    else if (
+      npc.id === 'tenna-backstage' &&
+      state.story.jackCandyReceived &&
+      !state.story.tennaFinaleComplete
+    )
       dependencies.openDialogue(
         finaleConversation.map((line) => `[${line.speaker}] * ${line.text}`),
         'tennaFinale',

@@ -1,3 +1,4 @@
+import { advanceTennaEnding, beginTennaEnding } from '../tenna/ending.ts';
 import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
 import { queueTennaScoreEvent, undyneActive } from '../tenna/score-events.ts';
 import { advanceHammers } from '../tenna/hammers.ts';
@@ -307,6 +308,7 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'tenna') {
+    if ((encounter.score ?? 0) >= 1500) return beginTennaEnding(encounter);
     if (undynePresent(encounter) && (encounter.score ?? 0) >= 750) {
       encounter.guestResumePhase = 'tennaNextAttack';
       encounter.guestEvent = 'leave';
@@ -734,6 +736,7 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  if (encounter.phase === 'tennaFinaleGlitch') return advanceTennaEnding(encounter, dt);
   if (encounter.undyneMenuSpear) {
     encounter.undyneMenuSpear.age += dt;
     if (encounter.undyneMenuSpear.age > 2.2) encounter.undyneMenuSpear = null;
