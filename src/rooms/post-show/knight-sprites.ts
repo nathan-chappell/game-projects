@@ -79,6 +79,11 @@ export function drawKnightActor(ctx: CanvasRenderingContext2D, actor: KnightActo
   ctx.translate(Math.round(actor.x), Math.round(350 - actor.jump));
   ctx.scale(kaizo ? -actor.facing : actor.facing, 1);
   ctx.rotate(actor.lean);
+  // The unarmed atlas omitted the lower body. Reuse the charge pose's actual
+  // leg pixels behind the torso, under the same body transform as the arms.
+  if (!kaizo && charge?.image.complete && charge.image.naturalWidth) {
+    ctx.drawImage(charge.image, 330, 690, 470, 625, -21, -64, 66, 88);
+  }
   ctx.drawImage(rig.image, b.x, b.y, b.width, b.height, -Math.round(width / 2), -171, width, height);
   ctx.restore();
   drawKnightWeapon(ctx, actor, kaizo);
