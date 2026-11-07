@@ -4,19 +4,29 @@ type Key = readonly [number, number, number, number, number, number, number];
 // Time, positions, jumps and blade angles. This encounter plays once, then hands off to battle.
 const keys: readonly Key[] = [
   [0, 120, 545, 35, 35, 0.12, 0.12],
+  [0.85, 120, 545, 37, 36, 0.12, 0.12],
   [1.2, 120, 545, 35, 35, -2.4, 0.12],
-  [2.4, 120, 545, 35, 35, -2.4, Math.PI],
+  [2.4, 110, 545, 31, 35, -2.4, Math.PI],
+  [2.8, 106, 545, 30, 35, -2.4, Math.PI],
+  [3.025, 420, 545, 35, 35, -2.4, Math.PI],
   [3.05, 420, 545, 35, 35, -2.4, Math.PI],
-  [3.27, 420, 545, 35, 35, -2.4, Math.PI],
-  [3.85, 225, 555, 35, 35, -2.9, Math.PI],
-  [4.5, 140, 545, 35, 35, 2.2, 0.12],
-  [5.3, 140, 545, 35, 35, 2.2, Math.PI],
-  [5.8, 140, 545, 35, 35, -2.4, Math.PI],
-  [6.4, 140, 545, 35, 35, -2.4, Math.PI],
-  [7, 140, 545, 35, 35, 0.12, 2.2],
-  [7.8, 140, 545, 35, 35, Math.PI, 2.2],
-  [8.2, 140, 545, 35, 35, Math.PI, -2.4],
-  [8.8, 140, 545, 35, 35, Math.PI, -2.4],
+  [3.15, 420, 545, 35, 35, -2.4, Math.PI],
+  [3.36, 390, 558, 42, 40, -2.6, Math.PI],
+  [3.85, 225, 550, 35, 37, -2.9, Math.PI],
+  [4.5, 140, 545, 35, 35, 1.9, 0.12],
+  [5.5, 132, 545, 31, 35, 2.45, Math.PI],
+  [5.78, 130, 545, 29, 35, 2.55, Math.PI],
+  [5.94, 146, 545, 39, 35, -2.4, Math.PI],
+  [6.15, 146, 545, 39, 35, -2.4, Math.PI],
+  [6.25, 146, 545, 39, 35, -2.4, Math.PI],
+  [6.49, 140, 560, 35, 43, -2.6, Math.PI],
+  [7, 140, 545, 35, 35, 0.12, 1.9],
+  [8, 140, 554, 35, 31, Math.PI, 2.45],
+  [8.18, 140, 556, 35, 29, Math.PI, 2.55],
+  [8.34, 140, 540, 35, 39, Math.PI, -2.4],
+  [8.55, 140, 540, 35, 39, Math.PI, -2.4],
+  [8.65, 140, 540, 35, 39, Math.PI, -2.4],
+  [8.9, 125, 545, 43, 35, Math.PI, -2.6],
   [9.4, 140, 545, 35, 35, 0.12, 0.12],
   [11, 140, 545, 35, 35, 0.12, 0.12],
 ];
@@ -41,10 +51,10 @@ export function knightSequencePhase(age: number): KnightSequencePhase {
   if (age >= 10) return 'transition';
   if (age >= 9.4) return 'faceoff';
   if (age >= 8.55) return 'roaringBlocksSwoon';
-  if (age >= 7.8) return 'kaizoSwoon';
+  if (age >= 8.18) return 'kaizoSwoon';
   if (age >= 7) return 'kaizoWindup';
   if (age >= 6.15) return 'kaizoBlocksSwoon';
-  if (age >= 5.3) return 'roaringSwoon';
+  if (age >= 5.78) return 'roaringSwoon';
   if (age >= 4.5) return 'roaringWindup';
   if (age >= 3.85) return 'recover';
   if (age >= 3.05) return 'chargeBlocked';
@@ -63,7 +73,10 @@ export interface KnightActorPose {
   lean: number;
 }
 export function knightSword(actor: KnightActorPose) {
-  const grip = { x: actor.x + actor.facing * 28, y: 315 - actor.jump };
+  const grip = {
+    x: actor.x + actor.facing * 28 * Math.cos(actor.lean) + 35 * Math.sin(actor.lean),
+    y: 350 - actor.jump + actor.facing * 28 * Math.sin(actor.lean) - 35 * Math.cos(actor.lean),
+  };
   return {
     grip,
     tip: {
@@ -95,11 +108,25 @@ export function knightDuelPose(age: number) {
   const value = (column: number) => a[column] + (b[column] - a[column]) * ease;
   const roaring: KnightActorPose = { x: value(1), jump: value(3), facing: 1, swordAngle: value(5), lean: 0 };
   const kaizo: KnightActorPose = { x: value(2), jump: value(4), facing: -1, swordAngle: value(6), lean: 0 };
+  const phase = knightSequencePhase(beat);
+  const bump = (start: number, end: number) => {
+    const progress = Math.max(0, Math.min(1, (beat - start) / (end - start)));
+    return Math.sin(progress * Math.PI);
+  };
+  roaring.lean =
+    phase === 'chargePose'
+      ? -0.04 * bump(1.2, 2.8)
+      : phase === 'roaringWindup'
+        ? -0.12 * bump(4.5, 5.78)
+        : -0.11 * bump(5.78, 6.15) + 0.13 * bump(8.65, 9.4);
+  kaizo.lean =
+    phase === 'kaizoWindup'
+      ? -0.12 * bump(7, 8.18)
+      : 0.15 * bump(3.15, 3.85) + 0.13 * bump(6.25, 7) - 0.11 * bump(8.18, 8.55);
   const impact = knightImpactTimes
     .map((time) => ({ time, age: beat - time }))
     .filter((event) => event.age >= 0 && event.age < 0.5)
     .at(-1);
-  const phase = knightSequencePhase(beat);
   return {
     beat,
     phase,

@@ -62,15 +62,15 @@ test('the finite sequence charges, blocks both Swoons and stops at the three-tea
     [1.8, 'chargePose'],
     [2.8, 'charge'],
     [3.1, 'chargeBlocked'],
-    [5.6, 'roaringSwoon'],
+    [6, 'roaringSwoon'],
     [6.3, 'kaizoBlocksSwoon'],
-    [8, 'kaizoSwoon'],
+    [8.4, 'kaizoSwoon'],
     [8.7, 'roaringBlocksSwoon'],
     [10.5, 'transition'],
     [11, 'threeTeams'],
   ] as const;
   for (const [time, phase] of steps) assert.equal(knightSequencePhase(time), phase);
-  assert.ok(knightDuelPose(2.8).roaringX > knightDuelPose(1.8).roaringX);
+  assert.ok(knightDuelPose(3).roaringX > knightDuelPose(1.8).roaringX);
   assert.deepEqual(knightDuelPose(100), knightDuelPose(11));
   assert.equal(statueConversation[0].speaker, 'Flowey');
 });

@@ -1,6 +1,7 @@
+import { knightCameraShot } from './knight-cinematography.ts';
 import fieldURL from '../../../assets/knight-battlefield-reference.png?inline';
 import swoonURL from '../../../assets/red-sweep.png?inline';
-import { drawKnightActor, drawKnightCharge, drawKnightWeapon } from './knight-sprites.ts';
+import { drawKnightActor, drawKnightCharge, drawKnightWeapon, drawKnightPortrait } from './knight-sprites.ts';
 import { knightDuelPose, knightSword } from './knight-choreography.ts';
 let field: HTMLImageElement | undefined, swoon: HTMLImageElement | undefined;
 export function drawKnightBattlefield(ctx: CanvasRenderingContext2D) {
@@ -26,13 +27,13 @@ function swoonAttack(ctx: CanvasRenderingContext2D, age: number, reduced: boolea
   swoon ??= new Image();
   if (!swoon.src) swoon.src = swoonURL;
   if (!swoon.complete || !swoon.naturalWidth) return;
-  const start = outgoing ? 5.3 : 7.8,
+  const start = outgoing ? 5.78 : 8.18,
     block = outgoing ? 6.15 : 8.55;
   const progress = Math.max(0, Math.min(1, (age - start) / (block - start)));
   const origin = outgoing ? knightSword(pose.roaring).grip.x : knightSword(pose.kaizo).grip.x;
   const destination = outgoing ? knightSword(pose.kaizo).grip.x : knightSword(pose.roaring).grip.x;
   const width = Math.abs(destination - origin) * progress;
-  const fade = age > block ? Math.max(0, 1 - (age - block) / 0.35) : 1;
+  const fade = age > block ? Math.max(0, 1 - (age - block) / 0.2) : 1;
   ctx.save();
   ctx.translate(origin, 235);
   ctx.scale(outgoing ? 1 : -1, 1);
@@ -84,13 +85,55 @@ function blockBurst(ctx: CanvasRenderingContext2D, age: number, reduced: boolean
     ctx.lineTo(x + Math.cos(angle) * 12, y + Math.sin(angle) * 12);
     ctx.stroke();
   }
+  if (!reduced && pose.impactAge < 0.12) {
+    ctx.fillStyle = '#eaf1ff';
+    ctx.beginPath();
+    ctx.moveTo(hit.x, hit.y - 39);
+    ctx.lineTo(hit.x + 27, hit.y);
+    ctx.lineTo(hit.x, hit.y + 39);
+    ctx.lineTo(hit.x - 27, hit.y);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.fillStyle = '#fffbe2';
   ctx.fillRect(hit.x - 2, hit.y - 21, 4, 42);
   ctx.fillRect(hit.x - 20, hit.y - 2, 40, 4);
   ctx.restore();
 }
-export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
+function bladeTrails(ctx: CanvasRenderingContext2D, age: number) {
   const pose = knightDuelPose(age);
+  if (!pose.slash) return;
+  for (const actor of ['roaring', 'kaizo'] as const) {
+    const points = Array.from({ length: 7 }, (_, i) =>
+      knightSword(knightDuelPose(Math.max(0, age - i * 0.018))[actor]),
+    );
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = actor === 'roaring' ? '#cbdcff' : '#e7e9ac';
+    ctx.beginPath();
+    ctx.moveTo(points[0].grip.x, points[0].grip.y);
+    points.forEach((p) => ctx.lineTo(p.tip.x, p.tip.y));
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 0.6;
+    ctx.strokeStyle = actor === 'roaring' ? '#e6edff' : '#fcffd7';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    points.forEach((p, i) => (i ? ctx.lineTo(p.tip.x, p.tip.y) : ctx.moveTo(p.tip.x, p.tip.y)));
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
+  const pose = knightDuelPose(age),
+    shot = knightCameraShot(age, reduced);
+  if (shot.portrait && drawKnightPortrait(ctx, shot.portrait === 'kaizo', shot.portraitProgress)) return;
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, 640, 480);
+  ctx.save();
+  ctx.translate(320, 240);
+  ctx.scale(shot.zoom, shot.zoom);
+  ctx.translate(-shot.x, -shot.y);
   drawKnightBattlefield(ctx);
   ctx.save();
   if (!reduced && pose.clash > 0)
@@ -125,15 +168,23 @@ export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduc
     drawKnightActor(ctx, { ...pose.kaizo, x: pose.kaizo.x + offset }, true);
     ctx.restore();
   }
+  if (!reduced) bladeTrails(ctx, age);
   ctx.globalAlpha = 1;
-  if (pose.chargePose) drawKnightCharge(ctx, pose.roaring);
-  else drawKnightActor(ctx, pose.roaring, false);
+  if (pose.chargePose) {
+    if (!drawKnightCharge(ctx, pose.roaring)) drawKnightActor(ctx, pose.roaring, false);
+  } else drawKnightActor(ctx, pose.roaring, false);
   drawKnightActor(ctx, pose.kaizo, true);
   if (!pose.chargePose) drawKnightWeapon(ctx, pose.roaring, false);
   drawKnightWeapon(ctx, pose.kaizo, true);
   swoonAttack(ctx, age, reduced);
   blockBurst(ctx, age, reduced);
   ctx.restore();
+  ctx.restore();
+  if (shot.letterbox > 0) {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 640, shot.letterbox);
+    ctx.fillRect(0, 480 - shot.letterbox, 640, shot.letterbox);
+  }
   if (pose.phase === 'transition') {
     ctx.fillStyle = `rgba(0,0,0,${Math.min(1, age - 10)})`;
     ctx.fillRect(0, 0, 640, 480);

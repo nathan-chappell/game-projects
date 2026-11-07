@@ -1042,7 +1042,9 @@ test('the third statue leads to the charge, two blocked Swoons and three-team in
   for (const [age, name] of [
     [1.8, 'roaring-charge-pose'],
     [3.1, 'kaizo-blocks-charge'],
-    [5.8, 'roaring-swoon'],
+    [6.02, 'roaring-swoon'],
+    [4.9, 'roaring-closeup'],
+    [7.35, 'kaizo-closeup'],
     [6.3, 'kaizo-blocks-swoon'],
     [8.7, 'roaring-blocks-swoon'],
   ] as const) {
