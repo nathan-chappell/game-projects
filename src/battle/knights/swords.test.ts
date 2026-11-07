@@ -28,8 +28,8 @@ test('owned projectiles deal opposing-knight damage once, independently of selec
   b.knightTarget = 'kaizo';
   b.enemy = b.knightEnemies!.kaizo;
   for (const [owner, target, amount] of [
-    ['roaring', 'kaizo', 30],
-    ['kaizo', 'roaring', 60],
+    ['roaring', 'kaizo', 5],
+    ['kaizo', 'roaring', 5],
   ] as const) {
     const shot: KnightProjectile = { owner, hitOpponent: false };
     const before = b.knightEnemies![target].hp;
@@ -37,8 +37,8 @@ test('owned projectiles deal opposing-knight damage once, independently of selec
     assert.equal(hitOpposingKnight(b, shot), 0);
     assert.equal(b.knightEnemies![target].hp, before - amount);
     assert.equal(b.turn, 'Kris');
-    b.knightEnemies![target].hp = 7;
-    assert.equal(hitOpposingKnight(b, { owner, hitOpponent: false }), 7);
+    b.knightEnemies![target].hp = 3;
+    assert.equal(hitOpposingKnight(b, { owner, hitOpponent: false }), 3);
     assert.equal(b.knightEnemies![target].hp, 0);
   }
 });
@@ -72,8 +72,8 @@ test('opponents take all twelve volleys at 30/60/144 FPS and control returns to 
       advanceBattleTime(b, 1 / fps, hp);
       advanceSnowAttack(b, hp, 1 / fps, () => 0);
     }
-    assert.equal(b.knightEnemies!.roaring.hp, 20000 - 12 * 5 * 60);
-    assert.equal(b.knightEnemies!.kaizo.hp, 30000 - 12 * 5 * 30);
+    assert.equal(b.knightEnemies!.roaring.hp, 20000 - 12 * 5 * 5);
+    assert.equal(b.knightEnemies!.kaizo.hp, 30000 - 12 * 5 * 5);
     assert.equal(b.phase, 'kris');
     assert.equal(b.snowAttack, null);
     assert.equal(b.soul, null);
@@ -150,7 +150,7 @@ test('defeated knights stop launching and projectiles still in flight can finish
     hp = party();
   b.invincible = true;
   b.knightEnemies!.roaring.hp = 0;
-  b.knightEnemies!.kaizo.hp = 30;
+  b.knightEnemies!.kaizo.hp = 5;
   startNextEnemyAttack(b, '');
   const a = b.snowAttack!.knightSwords!;
   a.swords.push({ id: 0, owner: 'roaring', x: 490, y: 160, launch: -1, active: true, hitOpponent: false });

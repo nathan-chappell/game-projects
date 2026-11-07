@@ -6,8 +6,8 @@ export interface KnightProjectile {
   hitOpponent: boolean;
 }
 export const knightProjectileRules = {
-  roaring: { partyDamage: 40, opponentDamage: 30 },
-  kaizo: { partyDamage: 50, opponentDamage: 60 },
+  roaring: { partyDamage: 40, opponentDamage: 5 },
+  kaizo: { partyDamage: 50, opponentDamage: 5 },
 } as const;
 
 /** All knight patterns use this when an owned projectile reaches the other knight. */
