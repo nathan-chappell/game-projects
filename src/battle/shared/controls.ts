@@ -107,7 +107,7 @@ export function setupBattleControls(
                 ? 'Minigame: Susie throws hammers at incoming TVs. Tenna +5; Flowey or collision adds X. No TP cost.'
                 : 'Minigame: shoot enemies and do not shoot Flowey. No TP cost.'
             : 'Check Tenna.'
-          : encounter.kind === 'dark'
+          : ['dark', 'knights'].includes(encounter.kind ?? '')
             ? `${darkActInfo(encounter).description} ${darkActLocked(encounter) ? 'Locked until Shine is used three times.' : ''}`
             : canFloweyAct(encounter)
               ? `Friendlyness Pellets needs 90% TP. Deals ${encounter.fastKill ? battleSettings.fastKillDamage : battleSettings.pelletsDamage} damage and heals Flowey 35 HP.`
@@ -138,7 +138,7 @@ export function setupBattleControls(
       if (encounter.kind === 'tenna') {
         if (encounter.turn === 'Kris') requestTennaMinigame(encounter);
         else encounter.message = 'Tenna is ready for his big Finale.';
-      } else if (encounter.kind === 'dark') {
+      } else if (['dark', 'knights'].includes(encounter.kind ?? '')) {
         if (!useDarkAct(encounter, state.partyHP))
           encounter.message = darkActLocked(encounter)
             ? 'Locked. Kris must use Shine three times.'
@@ -168,6 +168,16 @@ export function setupBattleControls(
     if (state.bossEncounter?.screen === 'act') confirm();
   };
   $('battleMenuBack').onclick = back;
+  $('battleKnightTarget').onchange = () => {
+    const encounter = state.bossEncounter;
+    if (!encounter || !canPartyAct(encounter) || encounter.kind !== 'knights' || !encounter.knightEnemies)
+      return;
+    const target = $('battleKnightTarget').value === 'kaizo' ? 'kaizo' : 'roaring';
+    if (encounter.knightEnemies[target].hp <= 0) return;
+    encounter.knightTarget = target;
+    encounter.enemy = encounter.knightEnemies[target];
+    refresh();
+  };
   $('battleStoryNext').onclick = confirm;
   $('battleMinigameShoot').onclick = () => {
     const m = state.bossEncounter?.minigame;
@@ -406,7 +416,7 @@ export function setupBattleControls(
       else if (encounter.screen === 'menu') {
         const step = ['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : 1;
         const available: BattleAction[] = (
-          ['dark', 'tenna'].includes(encounter.kind ?? '')
+          ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')
             ? [...battleActions, 'spare' as const]
             : battleActions
         ).filter((action) => canUseBattleAction(encounter, action));
@@ -445,6 +455,13 @@ export function setupBattleControls(
       if (!(button instanceof HTMLButtonElement)) throw new Error(`Expected battle button ${id}`);
       button.disabled = !acting || !canUseBattleAction(encounter, action);
       $(id).setAttribute('aria-pressed', String(acting && encounter.selectedAction === action));
+    }
+    $('battleKnightTargetLabel').hidden =
+      encounter?.kind !== 'knights' || !acting || !['attack', 'act'].includes(encounter.screen);
+    $('battleKnightTarget').value = encounter?.knightTarget ?? 'roaring';
+    for (const option of $('battleKnightTarget').options) {
+      const target = option.value === 'kaizo' ? 'kaizo' : 'roaring';
+      option.disabled = (encounter?.knightEnemies?.[target].hp ?? 1) <= 0;
     }
     const minigame = encounter?.phase === 'minigame';
     $('battleMinigameControls').hidden = !minigame;
@@ -507,19 +524,18 @@ export function setupBattleControls(
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';
     $('battleMenuBack').hidden = !acting || encounter.screen === 'menu';
     const floweyTurn = canFloweyAct(encounter),
-      actCost =
-        encounter?.kind === 'dark'
-          ? darkActInfo(encounter).cost
-          : floweyTurn
-            ? battleSettings.pelletsCost
-            : battleSettings.proceedCost;
+      actCost = ['dark', 'knights'].includes(encounter?.kind ?? '')
+        ? darkActInfo(encounter).cost
+        : floweyTurn
+          ? battleSettings.pelletsCost
+          : battleSettings.proceedCost;
     $('battleActionButtons').setAttribute('aria-label', `${encounter?.turn || 'Party'}’s actions`);
     $('battleProceedButton').textContent =
       encounter?.kind === 'tenna'
         ? encounter.turn === 'Kris'
           ? 'Minigame'
           : 'Check Tenna'
-        : encounter?.kind === 'dark'
+        : ['dark', 'knights'].includes(encounter?.kind ?? '')
           ? `${darkActInfo(encounter).name} · ${actCost}% TP`
           : floweyTurn
             ? 'Friendlyness Pellets · 90% TP'
@@ -528,7 +544,7 @@ export function setupBattleControls(
       !acting ||
       !canUseBattleAction(encounter, 'act') ||
       (encounter.kind !== 'tenna' && encounter.tp < actCost) ||
-      (encounter.kind === 'dark' &&
+      (['dark', 'knights'].includes(encounter.kind ?? '') &&
         (darkActLocked(encounter) ||
           (encounter.turn === 'Ralsey' && Object.values(state.partyHP).every((hp) => hp >= 100))));
     $('battleTargetButton').textContent = encounter
@@ -545,20 +561,24 @@ export function setupBattleControls(
             ? 'Hammer Time'
             : 'Shooting minigame'
         : encounter.phase === 'victory'
-          ? encounter.kind === 'tenna'
-            ? 'Tenna defeated.'
-            : encounter.kind === 'dark'
-              ? '??? defeated.'
-              : encounter.noelleEscaped
-                ? 'Noelle escaped.'
-                : '??? disappeared.'
+          ? encounter.kind === 'knights'
+            ? 'The knights are down.'
+            : encounter.kind === 'tenna'
+              ? 'Tenna defeated.'
+              : ['dark', 'knights'].includes(encounter.kind ?? '')
+                ? '??? defeated.'
+                : encounter.noelleEscaped
+                  ? 'Noelle escaped.'
+                  : '??? disappeared.'
           : encounter.phase === 'rescue'
             ? 'Ralsey intervenes'
             : isPelletCast(encounter)
               ? 'Flowey uses Friendlyness Pellets'
               : isProceedScene(encounter)
                 ? 'Proceed...'
-                : `${encounter.turn}’s turn`;
+                : encounter.turn === 'Knights'
+                  ? 'Knights’ turn'
+                  : `${encounter.turn}’s turn`;
     $('battleFeedback').textContent = encounter?.message || '';
     $('battleTPBar').value = encounter?.tp || 0;
     $('battleTPText').textContent = `TP: ${Math.floor(encounter?.tp || 0)}%`;
@@ -571,20 +591,23 @@ export function setupBattleControls(
               ? 'Next: Hammer Time · Tenna TVs +5 · Flowey / collisions add X.'
               : 'Shoot enemies, avoid Flowey. 100 points minus 10 per X. No TP cost.'
           : 'Tenna is ready for the Finale.'
-        : encounter?.kind === 'dark'
+        : encounter && ['dark', 'knights'].includes(encounter.kind ?? '')
           ? encounter.turn === 'Kris'
-            ? `Shine: ${encounter.shineCount || 0} / 5${encounter.darkUnlocked ? ' · Attacks and ACTs unlocked' : ''}`
+            ? encounter.kind === 'knights'
+              ? darkActInfo(encounter).description
+              : `Shine: ${encounter.shineCount || 0} / 5${encounter.darkUnlocked ? ' · Attacks and ACTs unlocked' : ''}`
             : `${darkActInfo(encounter).description}${darkActLocked(encounter) ? ' · LOCKED until Shine 3/3' : ''}`
           : floweyTurn
             ? `Deals ${encounter?.fastKill ? battleSettings.fastKillDamage : battleSettings.pelletsDamage} damage · Heals Flowey 35 HP`
             : `Proceed: ${encounter?.proceedCount || 0} / ${battleSettings.proceedsToDisappear}`;
     $('leaveBossButton').disabled =
-      active &&
-      (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(encounter.phase) ||
-        isPelletCast(encounter) ||
-        isProceedScene(encounter) ||
-        encounter.phase === 'rescue' ||
-        (encounter.finalAttackComplete && encounter.phase !== 'victory'));
+      encounter?.kind === 'knights' ||
+      (active &&
+        (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(encounter.phase) ||
+          isPelletCast(encounter) ||
+          isProceedScene(encounter) ||
+          encounter.phase === 'rescue' ||
+          (encounter.finalAttackComplete && encounter.phase !== 'victory')));
   }
   return { sync };
 }

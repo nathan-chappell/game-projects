@@ -1068,8 +1068,6 @@ test('the third statue leads to the charge, two blocked Swoons and three-team in
   await page.keyboard.press('l');
   await frames(page, 180);
   await page.keyboard.up('ArrowLeft');
-  await page.keyboard.press('o');
-  await page.keyboard.press('Enter');
   await expect(page.locator('#inventoryDialog')).toBeHidden();
   await expect(page.locator('#dialogue')).toBeHidden();
   expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBe(encounterX);
@@ -1079,8 +1077,8 @@ test('the third statue leads to the charge, two blocked Swoons and three-team in
   await frames(page, 60);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('three-team-introduction.png') });
   await expect(page.locator('#taskTitle')).toHaveText('Three Teams');
-  await expect(page.locator('#bossControls')).toBeHidden();
-  await expect(page.locator('#gameHint')).not.toContainText('%');
+  await expect(page.locator('#bossControls')).toBeVisible();
+  await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
   expect(
     await page.evaluate(() => ({
       hp: window.battleFixtureState.partyHP,

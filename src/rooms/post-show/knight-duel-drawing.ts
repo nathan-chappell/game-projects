@@ -16,7 +16,7 @@ function knightDuelPose(age: number, reduced = false) {
   };
 }
 let field: HTMLImageElement | undefined, swoon: HTMLImageElement | undefined;
-export function drawKnightBattlefield(ctx: CanvasRenderingContext2D) {
+export function drawKnightBattlefield(ctx: CanvasRenderingContext2D, time = 0) {
   field ??= new Image();
   if (!field.src) field.src = fieldURL;
   ctx.fillStyle = '#0b030b';
@@ -25,11 +25,31 @@ export function drawKnightBattlefield(ctx: CanvasRenderingContext2D) {
   if (field.complete && field.naturalWidth) {
     // Only the empty center and overhead scenery are sampled; the reference's fighters are excluded.
     ctx.drawImage(field, 174, 40, 330, 183, 0, 44, 640, 436);
-    ctx.drawImage(field, 140, 0, 360, 38, 125, 0, 390, 44);
+    ctx.drawImage(field, 140, 0, 360, 38, 180, 0, 280, 36);
   }
   ctx.fillStyle = '#000000';
-  ctx.fillRect(0, 0, 125, 44);
-  ctx.fillRect(515, 0, 125, 44);
+  ctx.fillRect(0, 0, 180, 36);
+  ctx.fillRect(460, 0, 180, 36);
+  // A narrower fountain reaches farther down the backdrop; its mist spreads behind the arena.
+  ctx.save();
+  const haze = ctx.createRadialGradient(320, 90, 12, 320, 90, 220);
+  haze.addColorStop(0, '#56516d30');
+  haze.addColorStop(1, '#302b4b00');
+  ctx.fillStyle = haze;
+  ctx.fillRect(70, 0, 500, 280);
+  for (let i = 0; i < 7; i++) {
+    ctx.beginPath();
+    for (let y = 0; y <= 245; y += 7) {
+      const spread = 16 + (245 - y) * 0.12;
+      const x = 320 + ((i - 3) * spread) / 3 + Math.sin(y * 0.025 + time * 0.7 + i) * 5;
+      if (y === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = i % 2 ? '#49445c45' : '#191622aa';
+    ctx.lineWidth = i % 2 ? 3 : 10;
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 function swoonAttack(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
   const pose = knightDuelPose(age, reduced);

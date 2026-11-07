@@ -1,3 +1,6 @@
+import { drawKnightBattlefield } from '../../rooms/post-show/knight-duel-drawing.ts';
+import { drawKnightActor } from '../../rooms/post-show/knight-sprites.ts';
+import { drawKnightHover, floatingKnight } from '../../rooms/post-show/knight-hover.ts';
 import { tennaCollapseSeconds } from '../tenna/ending.ts';
 import { drawUndyneAttack, undyneArenaBounds, undyneDropOffset } from '../tenna/undyne.ts';
 import { drawUndyne } from '../tenna/undyne-drawing.ts';
@@ -265,7 +268,7 @@ export function createBattleDrawing(
         encounter.kind === 'tenna' && !undynePresent(encounter) ? 'TV TIME!' : 'SPARE',
         227,
         386,
-        ['dark', 'tenna'].includes(encounter.kind ?? '')
+        ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')
           ? acting && encounter.selectedAction === 'spare'
             ? '#fff32a'
             : acting
@@ -276,7 +279,7 @@ export function createBattleDrawing(
       );
       if (acting && encounter.selectedAction === 'spare') pixelText('>', 204, 386, '#fff32a', 19);
       // Ice bars make the locked action visible even in the canvas menu.
-      if (!['dark', 'tenna'].includes(encounter.kind ?? '')) {
+      if (!['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')) {
         rect(218, 373, 119, 3, '#bcefff');
         rect(224, 382, 106, 2, '#67a5c9');
       }
@@ -287,12 +290,16 @@ export function createBattleDrawing(
     }
     const title =
       encounter.phase === 'victory'
-        ? encounter.kind === 'dark'
-          ? '??? defeated.'
-          : encounter.noelleEscaped
-            ? 'Noelle escaped.'
-            : '??? disappeared.'
-        : `${encounter.turn || 'Proceed'}${encounter.turn ? '’s turn' : '...'}`;
+        ? encounter.kind === 'knights'
+          ? 'The knights are down.'
+          : encounter.kind === 'dark'
+            ? '??? defeated.'
+            : encounter.noelleEscaped
+              ? 'Noelle escaped.'
+              : '??? disappeared.'
+        : encounter.turn === 'Knights'
+          ? 'Knights’ turn'
+          : `${encounter.turn || 'Proceed'}${encounter.turn ? '’s turn' : '...'}`;
     pixelText(title, 391, 377, '#ffffff', 16);
     if (isRalseyChoice(encounter)) {
       pixelText('RALSEY', 391, 406, '#99dfb5', 18);
@@ -310,6 +317,23 @@ export function createBattleDrawing(
         14,
       );
       pixelText('THE FINALE', 391, 435, '#ffca50', 14);
+    } else if (encounter.kind === 'knights') {
+      const act = darkActInfo(encounter);
+      pixelText(
+        encounter.screen === 'act' ? act.name.toUpperCase() : encounter.enemy.name,
+        391,
+        403,
+        '#ffffff',
+        13,
+      );
+      pixelText(
+        encounter.screen === 'act' ? `${act.cost}% TP` : `HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`,
+        391,
+        426,
+        '#fff32a',
+        13,
+      );
+      pixelText(encounter.holdBreath ? 'TEAM DAMAGE -25%' : 'THREE TEAMS', 391, 450, '#a8d7e3', 12);
     } else if (encounter.kind === 'dark') {
       if (encounter.screen === 'act') {
         const act = darkActInfo(encounter),
@@ -654,6 +678,67 @@ export function createBattleDrawing(
       t = reducedParticleMotion.matches ? 0 : time;
     const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
+    if (encounter?.kind === 'knights') {
+      drawKnightBattlefield(ctx, t);
+      for (const [target, x, kaizo] of [
+        ['roaring', 365, false],
+        ['kaizo', 540, true],
+      ] as const) {
+        const actor = floatingKnight(
+          { x, jump: 112, facing: kaizo ? -1 : 1, swordAngle: 0.12, lean: 0 },
+          time,
+          kaizo,
+          reducedParticleMotion.matches,
+        );
+        drawKnightHover(ctx, actor, time, kaizo, reducedParticleMotion.matches);
+        drawKnightActor(ctx, actor, kaizo);
+        const enemy = encounter.knightEnemies?.[target];
+        pixelText(kaizo ? 'KAIZO KNIGHT' : 'ROARING KNIGHT', x - 63, 42, '#eee6f2', 11);
+        pixelText(`${enemy?.hp} / ${enemy?.maxHP}`, x - 63, 58, '#c7c0d8', 10);
+        if (encounter.knightTarget === target) pixelText('▼', x - 4, 80, '#fff32a', 14);
+      }
+      drawBattleKris(50, 200, 0.65, encounter.hitActor === 'Kris' ? encounter.hitAge : null);
+      drawBattleFlowey(100, 235, t, 0.75);
+      for (const [name, x, y] of [
+        ['Susie', 155, 200],
+        ['Ralsey', 205, 245],
+      ] as const)
+        drawPartyMember(name, x, y, 0.75, encounter.partyStatus[name], () => {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(0.75, 0.75);
+          helpers.drawFountainFriend({ name, x: 0, y: 0, hideName: true }, t);
+          ctx.restore();
+        });
+      if (isPelletCast(encounter)) {
+        ctx.save();
+        const targetX = encounter.knightTarget === 'kaizo' ? 540 : 365;
+        ctx.translate(100, 235);
+        ctx.scale((targetX - 100) / (528 - 178), (180 - 235) / (192 - 224));
+        ctx.translate(-178, -224);
+        drawPelletsCast(encounter);
+        ctx.restore();
+      }
+      if (encounter.hitAge !== null) {
+        const targetX = encounter.knightTarget === 'kaizo' ? 540 : 365;
+        ctx.save();
+        ctx.translate(targetX - 528, -12);
+        if (encounter.hitActor === 'Kris') drawSwordSlash(encounter.hitAge);
+        else drawFloweyPellets(encounter.hitAge);
+        ctx.restore();
+        pixelText(`-${encounter.hitDamage}`, targetX - 25, 110, '#ffffff', 18);
+      }
+      if (encounter.darkHeal) {
+        const positions = { Kris: [50, 200], Flowey: [100, 235], Susie: [155, 200], Ralsey: [205, 245] };
+        const p = positions[encounter.darkHeal.target as PartyName];
+        if (p) pixelText(`+${encounter.darkHeal.restored}`, p[0] - 12, p[1] - 40, '#80e7aa', 14);
+      }
+      pixelText(`TP ${Math.floor(encounter.tp)}%`, 280, 293, '#ffca50', 15);
+      drawDarkPartyStatus();
+      drawBattleMenu();
+      $('gameHint').textContent = encounter.message;
+      return;
+    }
     if (encounter?.phase === 'minigame' && encounter.minigame?.kind === 'hammers') {
       drawHammerMinigame(ctx, encounter.minigame, encounter.score ?? 0, (x, y) => {
         ctx.save();

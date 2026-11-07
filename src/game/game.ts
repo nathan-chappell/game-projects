@@ -1220,6 +1220,7 @@ export function startGame() {
     canvas.focus({ preventScroll: true });
   };
   $('leaveBossButton').onclick = () => {
+    if (state.bossEncounter?.kind === 'knights') return;
     if (tennaEndingPhases.includes(state.bossEncounter?.phase ?? '')) return;
     if (['dark', 'tenna'].includes(state.bossEncounter?.kind ?? '')) {
       resetBossEncounter();

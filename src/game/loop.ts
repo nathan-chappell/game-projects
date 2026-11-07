@@ -1,4 +1,4 @@
-import { createKnightBattleIntro } from '../battle/knights/introduction.ts';
+import { createKnightBattleIntro, createKnightEncounter } from '../battle/knights/introduction.ts';
 import { knightSequenceSeconds } from '../rooms/post-show/knight-choreography.ts';
 import {
   advanceKnightPath,
@@ -301,7 +301,7 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       if (
         state.bossEncounter.phase === 'victory' &&
-        !['dark', 'tenna'].includes(state.bossEncounter.kind ?? '')
+        !['dark', 'tenna', 'knights'].includes(state.bossEncounter.kind ?? '')
       ) {
         state.story.noelleGone = true;
         state.story.noelleEscaped = state.bossEncounter.noelleEscaped;
@@ -481,6 +481,8 @@ export function createGameLoop(dependencies: Dependencies) {
       if (path.duelAge >= 0) state.keys.clear();
       if (path.duelAge >= knightSequenceSeconds && !state.knightBattle) {
         state.knightBattle = createKnightBattleIntro();
+        state.bossEncounter = createKnightEncounter();
+        dependencies.syncBossUI();
         dependencies.storyUI();
       }
       if (state.knightBattle) state.knightBattle.age = Math.min(1, state.knightBattle.age + dt);

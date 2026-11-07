@@ -98,8 +98,8 @@ export function createHud(dependencies: Dependencies) {
     if (state.knightBattle) {
       dependencies.$('taskTitle').textContent = 'Three Teams';
       dependencies.$('taskDescription').textContent =
-        'Kris’s party, Roaring Knight and Kaizo Knight face one another.';
-      dependencies.$('storySummary').textContent = 'The charge and both Swoons were blocked.';
+        'Choose actions for Kris, Flowey, Susie and Ralsey. Select either knight as your target.';
+      dependencies.$('storySummary').textContent = 'Hold Breath costs no TP and reduces the team’s incoming damage by 25% for one enemy turn.';
       return;
     }
     if (dependencies.current().scene === 'postShowPassage') {

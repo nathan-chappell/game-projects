@@ -119,7 +119,7 @@ export function createInventory(dependencies: Dependencies) {
             : 'Use item';
   }
   function toggleInventory() {
-    if (knightEncounterActive(state)) return;
+    if (knightEncounterActive(state) && state.bossEncounter?.kind !== 'knights') return;
     if (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(state.bossEncounter?.phase ?? ''))
       return;
     if (state.bossEncounter?.finalAttackComplete && state.bossEncounter.phase !== 'victory') return;

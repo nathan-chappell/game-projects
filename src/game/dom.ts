@@ -36,6 +36,8 @@ export interface GameElements {
   battleSpare: HTMLButtonElement;
   battleTargetPanel: HTMLElement;
   battleTargetButton: HTMLButtonElement;
+  battleKnightTargetLabel: HTMLLabelElement;
+  battleKnightTarget: HTMLSelectElement;
   battleActPanel: HTMLElement;
   battleProceedButton: HTMLButtonElement;
   battleProceedCount: HTMLElement;

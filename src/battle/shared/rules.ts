@@ -116,7 +116,7 @@ export function fillTPForTesting(encounter: Encounter | null) {
   return true;
 }
 export function requestSpecialAttack(encounter: Encounter | null) {
-  if (['dark', 'tenna'].includes(encounter?.kind ?? '')) return false;
+  if (['dark', 'tenna', 'knights'].includes(encounter?.kind ?? '')) return false;
   if (!encounter || (!canPartyAct(encounter) && !canControlSoul(encounter))) return false;
   if (encounter.snowAttack?.direction === 'snowgrave' || encounter.finalAttackComplete) return false;
   encounter.repeatAttack = false;
@@ -270,6 +270,7 @@ export function startKrisTurn(encounter: Encounter, partyHP?: PartyHP) {
   encounter.snowAttack = null;
   encounter.defending = false;
   encounter.projectileDamageMultiplier = 1;
+  encounter.holdBreath = false;
   encounter.message = finishedSnowgrave
     ? 'Snowgrave ends. Kris and Flowey recover 50 HP. Noelle is at 1 HP. Only ATTACK remains.'
     : 'Kris’s turn. Choose an action.';
@@ -286,8 +287,13 @@ export function finishKrisTurn(encounter: Encounter, message: string) {
 }
 export function finishPartyTurn(encounter: Encounter, message: string) {
   if (encounter?.finalAttackComplete) return false;
-  if (['dark', 'tenna'].includes(encounter?.kind ?? '')) {
+  if (['dark', 'tenna', 'knights'].includes(encounter?.kind ?? '')) {
     if (!canPartyAct(encounter)) return false;
+    if (encounter.kind === 'knights' && encounter.enemy.hp <= 0 && encounter.knightEnemies) {
+      const target = encounter.knightEnemies.roaring.hp > 0 ? 'roaring' : 'kaizo';
+      encounter.knightTarget = target;
+      encounter.enemy = encounter.knightEnemies[target];
+    }
     const party = battlePartyNames(encounter),
       next = party.findIndex((name) => name === encounter.turn) + 1;
     if (next >= party.length) return startNextEnemyAttack(encounter, message);
@@ -307,6 +313,13 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
   return startNextEnemyAttack(encounter, message);
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
+  if (encounter.kind === 'knights') {
+    encounter.phase = 'enemy';
+    encounter.turn = 'Knights';
+    encounter.screen = 'menu';
+    encounter.message = `${message} The knights prepare their next move.`;
+    return true;
+  }
   if (encounter.kind === 'tenna') {
     if ((encounter.score ?? 0) >= 1500) return beginTennaEnding(encounter);
     if (undynePresent(encounter) && (encounter.score ?? 0) >= 750) {
@@ -445,7 +458,7 @@ export function beginEnemyAttack(encounter: Encounter, direction: AttackDirectio
 }
 export function skipFallenTurns(encounter: Encounter, partyHP: PartyHP) {
   if (battlePartyNames(encounter).every((name) => partyHP[name] <= 0)) return false;
-  if (['dark', 'tenna'].includes(encounter?.kind ?? '')) {
+  if (['dark', 'tenna', 'knights'].includes(encounter?.kind ?? '')) {
     let changed = false;
     for (let i = 0; i < 4 && canPartyAct(encounter) && partyHP[partyTurnMember(encounter)] <= 0; i++) {
       const name = encounter.turn;
@@ -553,6 +566,18 @@ export function advanceSnowAttack(
 }
 export function damageEnemy(encounter: Encounter, amount: number) {
   if (encounter.fastKill) amount = battleSettings.fastKillDamage;
+  if (encounter.kind === 'knights') {
+    const damage = Math.min(amount, Math.max(0, encounter.enemy.hp));
+    encounter.enemy.hp -= damage;
+    encounter.hitAge = 0;
+    encounter.hitActor = encounter.turn;
+    encounter.hitDamage = damage;
+    if (Object.values(encounter.knightEnemies ?? {}).every((enemy) => enemy.hp <= 0)) {
+      encounter.phase = 'victory';
+      encounter.turn = null;
+    }
+    return damage;
+  }
   if (encounter.kind === 'dark') {
     const damage = Math.min(amount, Math.max(0, encounter.enemy.hp - 1));
     encounter.enemy.hp -= damage;
@@ -630,9 +655,9 @@ export function attackEnemy(encounter: Encounter) {
   const actor = encounter.turn;
   const damage = damageEnemy(
     encounter,
-    ['dark', 'tenna'].includes(encounter.kind ?? '') && actor === 'Susie'
+    ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '') && actor === 'Susie'
       ? 150
-      : ['dark', 'tenna'].includes(encounter.kind ?? '') && actor === 'Ralsey'
+      : ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '') && actor === 'Ralsey'
         ? 60
         : canFloweyAct(encounter)
           ? battleSettings.floweyAttackDamage
@@ -650,11 +675,12 @@ export function defend(encounter: Encounter) {
   if (!encounter || !canUseBattleAction(encounter, 'defend')) return false;
   const actor = encounter.turn;
   encounter.defending = true;
-  encounter.projectileDamageMultiplier = battleSettings.defendDamageMultiplier;
+  encounter.projectileDamageMultiplier =
+    battleSettings.defendDamageMultiplier * (encounter.holdBreath ? 0.75 : 1);
   const gained = gainBattleTP(encounter, battleSettings.defendTP, 'defend');
   finishPartyTurn(
     encounter,
-    `${actor} defended.${gained ? ` +${gained}% TP.` : ''} ${['dark', 'tenna'].includes(encounter.kind ?? '') ? 'Incoming projectiles' : 'Noelle’s next projectiles'} will be weaker.`,
+    `${actor} defended.${gained ? ` +${gained}% TP.` : ''} ${['dark', 'tenna', 'knights'].includes(encounter.kind ?? '') ? 'Incoming projectiles' : 'Noelle’s next projectiles'} will be weaker.`,
   );
   return true;
 }
@@ -664,11 +690,11 @@ export function friendlynessPellets(encounter: Encounter | null, partyHP: PartyH
     (encounter?.kind === 'dark' && !encounter.darkUnlocked) ||
     !canFloweyAct(encounter) ||
     !canUseBattleAction(encounter, 'act') ||
-    encounter.tp < (encounter.kind === 'dark' ? 65 : battleSettings.pelletsCost) ||
+    encounter.tp < (['dark', 'knights'].includes(encounter.kind ?? '') ? 65 : battleSettings.pelletsCost) ||
     !Number.isFinite(partyHP?.Flowey)
   )
     return false;
-  encounter.tp -= encounter.kind === 'dark' ? 65 : battleSettings.pelletsCost;
+  encounter.tp -= ['dark', 'knights'].includes(encounter.kind ?? '') ? 65 : battleSettings.pelletsCost;
   const restored = Math.min(battleSettings.pelletsHealing, maxHP - partyHP.Flowey);
   partyHP.Flowey += restored;
   encounter.pelletsCast = { age: 0, impacted: false, restored };
@@ -680,7 +706,7 @@ export function friendlynessPellets(encounter: Encounter | null, partyHP: PartyH
 }
 export function proceed(encounter: Encounter) {
   if (
-    ['dark', 'tenna'].includes(encounter?.kind ?? '') ||
+    ['dark', 'tenna', 'knights'].includes(encounter?.kind ?? '') ||
     !canKrisAct(encounter) ||
     !canUseBattleAction(encounter, 'act') ||
     encounter.tp < battleSettings.proceedCost
@@ -736,6 +762,7 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  if (encounter.kind === 'knights' && partyHP && skipFallenTurns(encounter, partyHP)) return true;
   if (encounter.phase === 'tennaFinaleGlitch') return advanceTennaEnding(encounter, dt);
   if (encounter.undyneMenuSpear) {
     encounter.undyneMenuSpear.age += dt;
@@ -782,12 +809,16 @@ export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: Pa
       present(cast).impacted = true;
       const damage = damageEnemy(encounter, battleSettings.pelletsDamage);
       if (encounter.phase === 'jackLever') return true;
-      encounter.message = `Flowey used Friendlyness Pellets! ??? took ${damage} damage. Flowey recovered ${present(cast).restored} HP.`;
+      if (encounter.phase === 'victory') {
+        encounter.pelletsCast = null;
+        return true;
+      }
+      encounter.message = `Flowey used Friendlyness Pellets! ${encounter.enemy.name} took ${damage} damage. Flowey recovered ${present(cast).restored} HP.`;
       changed = true;
     }
     if (present(cast).age >= pelletsDuration - 1e-9) {
       encounter.pelletsCast = null;
-      if (encounter.kind === 'dark') {
+      if (['dark', 'knights'].includes(encounter.kind ?? '')) {
         encounter.phase = 'flowey';
         encounter.turn = 'Flowey';
         return finishPartyTurn(encounter, encounter.message);
@@ -838,7 +869,7 @@ export function useBattleItem(
     const message =
       encounter.kind === 'dark'
         ? `${actor} used ${item.name}! +${tpGained}% TP. Grazing stays at 1% TP.`
-        : `${actor} used ${item.name}! +${tpGained}% TP. Grazing gives 4% TP during Noelle’s next attack.`;
+        : `${actor} used ${item.name}! +${tpGained}% TP. Grazing gives 4% TP during the next enemy attack.`;
     finishPartyTurn(encounter, message);
     return { tpGained, itemName: item.name, message };
   }
@@ -854,6 +885,13 @@ export function listenInDark(encounter: Encounter) {
   return finishPartyTurn(encounter, 'You listen carefully. Something is watching from the darkness.');
 }
 export function spareInDark(encounter: Encounter) {
+  if (encounter.kind === 'knights') {
+    if (!canUseBattleAction(encounter, 'spare')) return false;
+    return finishPartyTurn(
+      encounter,
+      `${encounter.turn} tried to spare ${encounter.enemy.name}. The knights keep their guard up.`,
+    );
+  }
   if (encounter?.kind === 'tenna') {
     if (rejectUndyneAction(encounter, 'spare')) return false;
     return canPartyAct(encounter);
@@ -862,12 +900,24 @@ export function spareInDark(encounter: Encounter) {
   return finishPartyTurn(encounter, `${encounter.turn} tried to spare the figure. The eyes keep watching.`);
 }
 export function useDarkAct(encounter: Encounter, partyHP: PartyHP, random: () => number = Math.random) {
-  if (encounter?.kind !== 'dark' || !canUseBattleAction(encounter, 'act') || darkActLocked(encounter))
+  if (
+    !['dark', 'knights'].includes(encounter?.kind ?? '') ||
+    !canUseBattleAction(encounter, 'act') ||
+    darkActLocked(encounter)
+  )
     return false;
   const act = darkActInfo(encounter);
   if (encounter.tp < act.cost) return false;
   const actor = encounter.turn;
   if (actor === 'Flowey') return friendlynessPellets(encounter, partyHP);
+  if (actor === 'Kris' && encounter.kind === 'knights') {
+    if (!encounter.holdBreath) encounter.projectileDamageMultiplier *= 0.75;
+    encounter.holdBreath = true;
+    return finishPartyTurn(
+      encounter,
+      'Kris used Hold Breath! The team takes 25% less damage for the next enemy turn.',
+    );
+  }
   if (actor === 'Kris') {
     encounter.tp -= act.cost;
     encounter.shineCount = Math.min(5, (encounter.shineCount || 0) + 1);
@@ -883,7 +933,7 @@ export function useDarkAct(encounter: Encounter, partyHP: PartyHP, random: () =>
     encounter.tp -= act.cost;
     const amount = 170 + Math.min(60, Math.floor(random() * 61)),
       damage = damageEnemy(encounter, amount);
-    const message = `Susie used Rude Buster! ??? took ${damage} damage.`;
+    const message = `Susie used Rude Buster! ${encounter.enemy.name} took ${damage} damage.`;
     if (encounter.phase === 'victory') encounter.message = message + ` ${encounter.enemy.name} was defeated.`;
     else finishPartyTurn(encounter, message);
     return true;

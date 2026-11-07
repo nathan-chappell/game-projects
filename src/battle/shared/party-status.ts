@@ -12,7 +12,7 @@ export const freshPartyStatus = () => ({
 // collapse, and any healing source can bring the standing sprite back.
 export function syncPartyStatus(encounter: Encounter | null, partyHP?: PartyHP) {
   if (!encounter?.partyStatus || !partyHP) return;
-  for (const name of ['dark', 'tenna'].includes(encounter.kind ?? '')
+  for (const name of ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')
     ? (['Kris', 'Flowey', 'Susie', 'Ralsey'] as const)
     : (['Kris', 'Flowey'] as const)) {
     if (!Number.isFinite(partyHP[name])) continue;

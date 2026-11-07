@@ -234,5 +234,9 @@ export interface EncounterBase {
   guestEvent?: 'enter' | 'leave' | null;
   guestResumePhase?: string;
   darkShinePending?: boolean;
+  knightEnemies?: Record<'roaring' | 'kaizo', EncounterBase['enemy']>;
+  knightTarget?: 'roaring' | 'kaizo';
+  holdBreath?: boolean;
 }
-export type Encounter = EncounterBase & ({ kind?: 'noelle' } | { kind: 'dark' } | { kind: 'tenna' });
+export type Encounter = EncounterBase &
+  ({ kind?: 'noelle' } | { kind: 'dark' } | { kind: 'tenna' } | { kind: 'knights' });

@@ -11,6 +11,12 @@ export const darkActDefinitions: Record<string, { name: string; cost: number; de
   Ralsey: { name: 'Heal Player', cost: 50, description: 'Heal a random teammate below max HP by 50–70 HP.' },
 };
 export const darkActInfo = (b: Encounter | null) =>
-  darkActDefinitions[b?.turn ?? 'Kris'] || darkActDefinitions.Kris;
+  b?.kind === 'knights' && b.turn === 'Kris'
+    ? {
+        name: 'Hold Breath',
+        cost: 0,
+        description: 'The whole team takes 25% less damage for the next enemy turn.',
+      }
+    : darkActDefinitions[b?.turn ?? 'Kris'] || darkActDefinitions.Kris;
 export const darkActLocked = (b: Encounter | null) =>
   b?.kind === 'dark' && b.turn !== 'Kris' && !b.darkUnlocked;
