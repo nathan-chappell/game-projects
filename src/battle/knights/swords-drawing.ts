@@ -1,3 +1,4 @@
+import { drawKnightSword } from './sword-drawing.ts';
 import { knightSwordWarning, type KnightSwordAttack } from './swords.ts';
 
 export function drawKnightSwords(ctx: CanvasRenderingContext2D, attack: KnightSwordAttack, reduced: boolean) {
@@ -18,42 +19,7 @@ export function drawKnightSwords(ctx: CanvasRenderingContext2D, attack: KnightSw
   }
   for (const sword of attack.swords) {
     if (sword.hitOpponent) continue;
-    const black = sword.owner === 'roaring',
-      direction = black ? 1 : -1;
-    ctx.save();
-    ctx.translate(Math.round(sword.x), Math.round(sword.y));
-    ctx.scale(direction, 1);
-    if (!reduced) {
-      ctx.strokeStyle = black ? '#bcb4d44d' : '#ffffff66';
-      ctx.lineWidth = 2;
-      for (const y of [-5, 5]) {
-        ctx.beginPath();
-        ctx.moveTo(-42, y);
-        ctx.lineTo(-70, y);
-        ctx.stroke();
-      }
-    }
-    ctx.fillStyle = black ? '#08060b' : '#ffffff';
-    ctx.strokeStyle = black ? '#c2bad4' : '#272335';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(35, 0);
-    ctx.lineTo(20, -5);
-    ctx.lineTo(-14, -5);
-    ctx.lineTo(-14, -16);
-    ctx.lineTo(-21, -16);
-    ctx.lineTo(-21, -3);
-    ctx.lineTo(-39, -3);
-    ctx.lineTo(-39, 3);
-    ctx.lineTo(-21, 3);
-    ctx.lineTo(-21, 16);
-    ctx.lineTo(-14, 16);
-    ctx.lineTo(-14, 5);
-    ctx.lineTo(20, 5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
+    drawKnightSword(ctx, { ...sword, angle: sword.owner === 'roaring' ? 0 : Math.PI }, reduced);
   }
   ctx.restore();
 }

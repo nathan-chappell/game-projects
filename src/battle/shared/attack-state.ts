@@ -1,3 +1,4 @@
+import { createCrossingSwords } from '../knights/crossing-swords.ts';
 import { createKnightSwords } from '../knights/swords.ts';
 import { createUndyneAttack } from '../tenna/undyne.ts';
 import { createTvBolts } from '../tenna/tv-bolts.ts';
@@ -40,6 +41,8 @@ export function createAttackState(
     grazeCooldown: 0,
   };
   switch (direction) {
+    case 'knightCrossing':
+      return { ...base, direction, knightCrossing: createCrossingSwords(arena) };
     case 'knightSwords':
       return { ...base, direction, knightSwords: createKnightSwords(arena) };
     case 'orbit':

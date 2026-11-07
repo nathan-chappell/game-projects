@@ -1,3 +1,4 @@
+import { advanceCrossingSwords, crossingSwordTouches } from '../knights/crossing-swords.ts';
 import { advanceKnightSwords, knightSwordSettings } from '../knights/swords.ts';
 import { hitOpposingKnight, knightProjectileRules } from '../knights/projectiles.ts';
 import { advanceUndyneAttack, undyneSettings } from '../tenna/undyne.ts';
@@ -73,26 +74,31 @@ export function createAttackRunner(dependencies: Dependencies) {
   function stepSnowAttack(encounter: Encounter, partyHP: PartyHP, dt: number, random: () => number) {
     const snow = present(encounter.snowAttack),
       soul = present(encounter.soul);
-    if (snow.direction === 'knightSwords') {
+    if (snow.direction === 'knightSwords' || snow.direction === 'knightCrossing') {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
-      const result = advanceKnightSwords(
-        snow.knightSwords,
-        dt,
-        (owner) => (encounter.knightEnemies?.[owner].hp ?? 0) > 0,
-      );
+      const alive = (owner: 'roaring' | 'kaizo') => (encounter.knightEnemies?.[owner].hp ?? 0) > 0;
+      const result =
+        snow.direction === 'knightCrossing'
+          ? advanceCrossingSwords(snow.knightCrossing, dt, alive)
+          : advanceKnightSwords(snow.knightSwords, dt, alive);
       let changed = false;
       if (snow.hitCooldown <= 0) {
-        const hit = snow.knightSwords.swords.find(
-          (sword) =>
-            !sword.hitOpponent &&
-            swordTouchesSoul(
-              sword,
-              sword.owner === 'roaring' ? 1 : -1,
-              soul,
-              battleSettings.soulWidth,
-              battleSettings.soulHeight,
-            ),
-        );
+        const hit =
+          snow.direction === 'knightCrossing'
+            ? snow.knightCrossing.swords.find((sword) =>
+                crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+              )
+            : snow.knightSwords.swords.find(
+                (sword) =>
+                  !sword.hitOpponent &&
+                  swordTouchesSoul(
+                    sword,
+                    sword.owner === 'roaring' ? 1 : -1,
+                    soul,
+                    battleSettings.soulWidth,
+                    battleSettings.soulHeight,
+                  ),
+              );
         if (hit) {
           changed = dependencies.damageLivingTeammate(
             encounter,

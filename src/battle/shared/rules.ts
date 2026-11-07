@@ -146,9 +146,16 @@ export function soulArena(encounter: Encounter): {
 export function isSoulInSnow(encounter: Encounter | null) {
   if (!canControlSoul(encounter) || !encounter.snowAttack) return false;
   if (
-    ['dark', 'saxophones', 'tvBolts', 'crossing', 'goal', 'snowgrave', 'knightSwords'].includes(
-      encounter.snowAttack.direction,
-    )
+    [
+      'dark',
+      'saxophones',
+      'tvBolts',
+      'crossing',
+      'goal',
+      'snowgrave',
+      'knightSwords',
+      'knightCrossing',
+    ].includes(encounter.snowAttack.direction)
   )
     return false;
   if (encounter.snowAttack.direction === 'path') {
@@ -320,7 +327,14 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'knights') {
-    beginEnemyAttack(encounter, 'knightSwords', 'Dodge the black and white swords!');
+    const direction = encounter.enemyAttackCount % 2 === 0 ? 'knightSwords' : 'knightCrossing';
+    beginEnemyAttack(
+      encounter,
+      direction,
+      direction === 'knightCrossing'
+        ? 'Watch the red lines! Six crossing sword waves get faster!'
+        : 'Dodge the black and white swords!',
+    );
     encounter.turn = 'Knights';
     encounter.enemyAttackCount++;
     return true;
@@ -488,6 +502,8 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
+  if (encounter?.snowAttack?.direction === 'knightCrossing')
+    return `Crossing swords · Wave ${Math.max(1, Math.min(6, encounter.snowAttack.knightCrossing.waves))} / 6`;
   if (encounter?.snowAttack?.direction === 'knightSwords') return 'Black: 40 damage · White: 50 damage';
   if (encounter?.snowAttack?.direction === 'undyne') return 'Spear of Justice';
   if (encounter?.snowAttack?.direction === 'tvBolts') return 'TV bolts · Glitch = 5';

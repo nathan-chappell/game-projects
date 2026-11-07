@@ -1,3 +1,4 @@
+import { drawCrossingSwords } from '../knights/crossing-swords-drawing.ts';
 import { partyDuelFrame } from '../knights/party-duel.ts';
 import { drawPartyDuelEffects } from '../knights/party-duel-drawing.ts';
 import { drawKnightSwords } from '../knights/swords-drawing.ts';
@@ -745,13 +746,22 @@ export function createBattleDrawing(
             ctx.restore();
           });
       }
-      if (canControlSoul(encounter) && encounter.snowAttack.direction === 'knightSwords') {
-        const box = encounter.snowAttack.knightSwords.arena;
+      if (
+        canControlSoul(encounter) &&
+        (encounter.snowAttack.direction === 'knightSwords' ||
+          encounter.snowAttack.direction === 'knightCrossing')
+      ) {
+        const box =
+          encounter.snowAttack.direction === 'knightSwords'
+            ? encounter.snowAttack.knightSwords.arena
+            : encounter.snowAttack.knightCrossing.arena;
         rect(box.x, box.y, box.size, box.size, '#07070c');
         ctx.strokeStyle = '#65e895';
         ctx.lineWidth = box.border;
         ctx.strokeRect(box.x, box.y, box.size, box.size);
-        drawKnightSwords(ctx, encounter.snowAttack.knightSwords, reducedParticleMotion.matches);
+        if (encounter.snowAttack.direction === 'knightCrossing')
+          drawCrossingSwords(ctx, encounter.snowAttack.knightCrossing, reducedParticleMotion.matches);
+        else drawKnightSwords(ctx, encounter.snowAttack.knightSwords, reducedParticleMotion.matches);
         drawGrazeRing(encounter);
         drawBattleSoul(encounter);
       }
