@@ -290,6 +290,15 @@ export function setupBattleControls(
         return;
       }
       if (blocked()) return;
+      if (
+        state.bossEncounter?.kind === 'knights' &&
+        (event.key === '2' || event.code === 'Digit2' || event.code === 'Numpad2')
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (!event.repeat && toggleInvincibility(state.bossEncounter)) refresh();
+        return;
+      }
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const b = state.bossEncounter,
           m = present(b.minigame);
@@ -370,7 +379,7 @@ export function setupBattleControls(
       }
       if (
         event.key === 'Shift' &&
-        state.bossEncounter?.kind === 'tenna' &&
+        ['tenna', 'knights'].includes(state.bossEncounter?.kind ?? '') &&
         canControlSoul(state.bossEncounter)
       ) {
         event.preventDefault();
@@ -514,12 +523,14 @@ export function setupBattleControls(
         ? ` Each block gains ${encounter.snowAttack.grazeTP}% TP.`
         : ` Stay near hazards for +${encounter?.snowAttack?.grazeTP ?? (encounter?.kind === 'dark' ? 1 : battleSettings.grazeTP)}% TP every 0.5 seconds.`;
     $('battleTestStatus').textContent =
-      encounter?.kind !== 'tenna'
-        ? ''
-        : encounter.phase === 'minigame'
-          ? `Playtesting · 3: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
-          : `Playtesting · 3: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
-    $('battleTestStatus').hidden = encounter?.kind !== 'tenna';
+      encounter?.kind === 'knights'
+        ? `Playtesting · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: Skip attack`
+        : encounter?.kind !== 'tenna'
+          ? ''
+          : encounter.phase === 'minigame'
+            ? `Playtesting · 3: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
+            : `Playtesting · 3: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
+    $('battleTestStatus').hidden = !['tenna', 'knights'].includes(encounter?.kind ?? '');
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';
     $('battleMenuBack').hidden = !acting || encounter.screen === 'menu';
