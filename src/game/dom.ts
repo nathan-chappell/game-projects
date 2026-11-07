@@ -10,6 +10,16 @@ export interface GameElements {
   roomName: HTMLElement;
   stageMode: HTMLElement;
   game: HTMLCanvasElement;
+  mobileGameControls: HTMLElement;
+  mobileDpad: HTMLElement;
+  mobileConfirm: HTMLButtonElement;
+  mobileBack: HTMLButtonElement;
+  mobileInspect: HTMLButtonElement;
+  mobileInventory: HTMLButtonElement;
+  mobileRun: HTMLButtonElement;
+  mobileKnightTools: HTMLElement;
+  mobileInvincible: HTMLButtonElement;
+  mobileSkip: HTMLButtonElement;
   dialogue: HTMLElement;
   speakerPortrait: HTMLElement;
   speakerName: HTMLElement;

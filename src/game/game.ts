@@ -2,6 +2,7 @@ import { tennaEndingPhases } from '../battle/tenna/ending.ts';
 import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
 import { canPartyAct, canUseBattleAction } from '../battle/shared/availability.ts';
+import { bindMobileControls } from './mobile-controls.ts';
 import { teleportToKnightBattle } from '../battle/knights/teleporter.ts';
 import { setupBattleControls } from '../battle/shared/controls.ts';
 import { createEncounter, useBattleItem } from '../battle/shared/rules.ts';
@@ -1307,6 +1308,14 @@ export function startGame() {
     openItems: toggleInventory,
     announce,
     onChange: syncBossUI,
+  });
+  bindMobileControls(state, $, {
+    confirmBattle: battleControls.confirm,
+    backBattle: battleControls.back,
+    talk,
+    advanceDialogue,
+    inspect: inspectObject,
+    inventory: toggleInventory,
   });
   const { render, reducedParticleMotion } = createRenderer(ctx, state, {
     roomBackground,

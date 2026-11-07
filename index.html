@@ -52,6 +52,27 @@
                 tabindex="0"
                 aria-label="Two Worlds game. Use arrow keys or W A S D to walk. Hold F to run. Press Z or Enter to talk. Press C to inspect nearby objects. C works anywhere on the game page."
               ></canvas>
+              <div id="mobileGameControls" class="mobile-game-controls" aria-label="Touch game controls" hidden>
+                <div id="mobileDpad" class="dpad mobile-dpad" role="group" aria-label="Touch movement">
+                  <button data-dir="up" aria-label="Touch move up">↑</button>
+                  <button data-dir="left" aria-label="Touch move left">←</button>
+                  <button data-dir="down" aria-label="Touch move down">↓</button>
+                  <button data-dir="right" aria-label="Touch move right">→</button>
+                </div>
+                <div class="mobile-actions">
+                  <div id="mobileKnightTools" class="mobile-knight-tools" hidden>
+                    <button id="mobileInvincible" aria-pressed="false">Invincible OFF</button>
+                    <button id="mobileSkip" disabled>Skip attack</button>
+                  </div>
+                  <div class="mobile-action-row">
+                    <button id="mobileInventory" aria-label="Open inventory">Bag</button>
+                    <button id="mobileInspect" aria-label="Inspect nearby object">Look</button>
+                    <button id="mobileRun" data-dir="sprint" aria-label="Hold to run">Run</button>
+                    <button id="mobileBack" class="mobile-round" aria-label="Back to actions">B</button>
+                    <button id="mobileConfirm" class="mobile-round" aria-label="Confirm or talk">A</button>
+                  </div>
+                </div>
+              </div>
               <div class="dialogue" id="dialogue" hidden>
                 <div class="portrait" id="speakerPortrait" aria-hidden="true">✿</div>
                 <div>

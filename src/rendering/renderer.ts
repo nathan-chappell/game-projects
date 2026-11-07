@@ -1,3 +1,4 @@
+import { syncMobileControls } from '../game/mobile-controls.ts';
 import { drawKnightTeleporter } from '../battle/knights/teleporter.ts';
 import { createKnightPathDrawing } from '../rooms/post-show/knight-path-drawing.ts';
 import { postShowScene } from '../rooms/post-show/post-show.ts';
@@ -571,6 +572,7 @@ export function createRenderer(
     if (scene === 'worlds') pixelText('→', 574, 198, '#d6c7fa', 16);
   }
   function render(time: number) {
+    syncMobileControls(state, $);
     if (state.mode === 'play' && state.collisionBlackout) {
       rect(0, 0, 640, 480, '#000000');
       $('gameHint').textContent = '';

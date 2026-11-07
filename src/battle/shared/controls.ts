@@ -647,7 +647,7 @@ export function setupBattleControls(
           encounter.phase === 'rescue' ||
           (encounter.finalAttackComplete && encounter.phase !== 'victory')));
   }
-  return { sync };
+  return { sync, confirm, back };
 }
 
 function isBattleAction(action: string): action is BattleAction {
