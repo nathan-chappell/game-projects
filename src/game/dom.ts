@@ -19,6 +19,7 @@ export interface GameElements {
   locationHint: HTMLElement;
   playControls: HTMLElement;
   restartButton: HTMLButtonElement;
+  knightTeleportButton: HTMLButtonElement;
   sprintButton: HTMLButtonElement;
   inspectButton: HTMLButtonElement;
   talkButton: HTMLButtonElement;

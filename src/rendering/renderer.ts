@@ -1,3 +1,4 @@
+import { drawKnightTeleporter } from '../battle/knights/teleporter.ts';
 import { createKnightPathDrawing } from '../rooms/post-show/knight-path-drawing.ts';
 import { postShowScene } from '../rooms/post-show/post-show.ts';
 import { drawPostShowRoom } from '../rooms/post-show/post-show-drawing.ts';
@@ -715,6 +716,7 @@ export function createRenderer(
     drawCoreCollapse();
     drawJumpPads();
     drawSavePoint(time);
+    if (state.mode === 'play') drawKnightTeleporter(ctx, state, reducedParticleMotion.matches ? 0 : time);
     const flower = floweyPosition();
     if (state.mode === 'play' && state.glitchComfort) {
       drawGlitchComfort(time);

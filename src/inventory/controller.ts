@@ -2,7 +2,7 @@ import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts
 import { tennaEndingPhases } from '../battle/tenna/ending.ts';
 import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
-import { canUseBattleAction } from '../battle/shared/availability.ts';
+import { battlePartyNames, canUseBattleAction } from '../battle/shared/availability.ts';
 import { itemDefinitions, maxHP, partyNames } from '../game/config.ts';
 import type { Elements } from '../game/dom.ts';
 import type { GameState } from '../game/types.ts';
@@ -18,6 +18,7 @@ interface Dependencies {
 export function createInventory(dependencies: Dependencies) {
   const state = dependencies.state;
   function memberInParty(name: string) {
+    if (state.bossEncounter) return battlePartyNames(state.bossEncounter).some((member) => member === name);
     return (
       name === 'Kris' ||
       (name === 'Flowey' ? state.story.joined : state.story.teamJoined && !dependencies.friendsWaiting())

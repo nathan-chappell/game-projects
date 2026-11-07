@@ -1,3 +1,4 @@
+import { knightTeleporterPosition, teleportToKnightBattle } from '../battle/knights/teleporter.ts';
 import { createKnightBattleIntro, createKnightEncounter } from '../battle/knights/introduction.ts';
 import { knightSequenceSeconds } from '../rooms/post-show/knight-choreography.ts';
 import {
@@ -341,6 +342,17 @@ export function createGameLoop(dependencies: Dependencies) {
           'tennaArrival',
         );
       else if (next === 'done') state.tennaEntrance = null;
+      return;
+    }
+    const teleporter = knightTeleporterPosition(state);
+    if (
+      teleporter &&
+      Math.hypot(state.player.x - teleporter.x, state.player.y - teleporter.y) < 16 &&
+      teleportToKnightBattle(state)
+    ) {
+      dependencies.syncBossUI();
+      dependencies.storyUI();
+      dependencies.canvas.focus({ preventScroll: true });
       return;
     }
     if (dependencies.current().scene === 'glitchStudio' && !state.story.studioExplained) {

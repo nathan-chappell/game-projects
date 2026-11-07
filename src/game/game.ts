@@ -2,6 +2,7 @@ import { tennaEndingPhases } from '../battle/tenna/ending.ts';
 import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
 import { canPartyAct, canUseBattleAction } from '../battle/shared/availability.ts';
+import { teleportToKnightBattle } from '../battle/knights/teleporter.ts';
 import { setupBattleControls } from '../battle/shared/controls.ts';
 import { createEncounter, useBattleItem } from '../battle/shared/rules.ts';
 import { createDialogue } from '../dialogue/controller.ts';
@@ -917,6 +918,12 @@ export function startGame() {
     $('inventoryFeedback').textContent = '';
   };
   $('inventoryButton').onclick = toggleInventory;
+  $('knightTeleportButton').onclick = () => {
+    if (document.querySelector('dialog[open]') || !teleportToKnightBattle(state)) return;
+    syncBossUI();
+    storyUI();
+    canvas.focus({ preventScroll: true });
+  };
   $('closeInventoryButton').onclick = () => $('inventoryDialog').close();
   $('inventoryDialog').addEventListener('close', () => {
     if (canPartyAct(state.bossEncounter)) {
