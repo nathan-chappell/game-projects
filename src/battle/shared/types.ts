@@ -242,6 +242,7 @@ export interface EncounterBase {
   knightEnemies?: Record<'roaring' | 'kaizo', EncounterBase['enemy']>;
   knightTarget?: 'roaring' | 'kaizo';
   holdBreath?: boolean;
+  knightDuelAge?: number;
   knightImpacts?: Partial<Record<KnightOwner, { damage: number; age: number }>>;
 }
 export type Encounter = EncounterBase &

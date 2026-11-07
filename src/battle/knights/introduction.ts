@@ -4,6 +4,7 @@ import type { Encounter } from '../shared/types.ts';
 export function createKnightEncounter(): Encounter {
   const encounter = createEncounter();
   encounter.kind = 'knights';
+  encounter.knightDuelAge = 0;
   encounter.knightEnemies = {
     roaring: { name: 'Roaring Knight', hp: 20000, maxHP: 20000, visible: true },
     kaizo: { name: 'Kaizo Knight', hp: 30000, maxHP: 30000, visible: true },

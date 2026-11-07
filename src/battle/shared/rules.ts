@@ -1,3 +1,4 @@
+import { advancePartyDuel } from '../knights/party-duel.ts';
 import { knightDamage } from '../knights/damage.ts';
 import { advanceTennaEnding, beginTennaEnding } from '../tenna/ending.ts';
 import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
@@ -487,8 +488,7 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
-  if (encounter?.snowAttack?.direction === 'knightSwords')
-    return 'Black: 40 damage · White: 50 damage';
+  if (encounter?.snowAttack?.direction === 'knightSwords') return 'Black: 40 damage · White: 50 damage';
   if (encounter?.snowAttack?.direction === 'undyne') return 'Spear of Justice';
   if (encounter?.snowAttack?.direction === 'tvBolts') return 'TV bolts · Glitch = 5';
   if (encounter?.snowAttack?.direction === 'saxophones') return 'Dodge the saxophone notes!';
@@ -770,6 +770,7 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  advancePartyDuel(encounter, dt);
   for (const impact of Object.values(encounter.knightImpacts ?? {})) impact.age += dt;
   if (encounter.kind === 'knights' && partyHP && skipFallenTurns(encounter, partyHP)) return true;
   if (encounter.phase === 'tennaFinaleGlitch') return advanceTennaEnding(encounter, dt);

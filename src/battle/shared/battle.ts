@@ -1,3 +1,5 @@
+import { partyDuelFrame } from '../knights/party-duel.ts';
+import { drawPartyDuelEffects } from '../knights/party-duel-drawing.ts';
 import { drawKnightSwords } from '../knights/swords-drawing.ts';
 import { drawKnightBattlefield } from '../../rooms/post-show/knight-duel-drawing.ts';
 import { drawKnightActor } from '../../rooms/post-show/knight-sprites.ts';
@@ -683,22 +685,36 @@ export function createBattleDrawing(
     ctx.imageSmoothingEnabled = false;
     if (encounter?.kind === 'knights') {
       drawKnightBattlefield(ctx, t);
+      const dueling =
+        !canControlSoul(encounter) &&
+        encounter.phase !== 'victory' &&
+        Object.values(encounter.knightEnemies ?? {}).every((enemy) => enemy.hp > 0);
+      const duel = dueling
+        ? partyDuelFrame(encounter.knightDuelAge ?? 0, reducedParticleMotion.matches)
+        : null;
+      const targetX = duel
+        ? duel[encounter.knightTarget ?? 'roaring'].x
+        : encounter.knightTarget === 'kaizo'
+          ? 540
+          : 365;
       for (const [target, x, kaizo] of [
         ['roaring', 365, false],
         ['kaizo', 540, true],
       ] as const) {
-        const actor = floatingKnight(
-          {
-            x: canControlSoul(encounter) ? (kaizo ? 550 : 90) : x,
-            jump: 112,
-            facing: kaizo ? -1 : 1,
-            swordAngle: 0.12,
-            lean: 0,
-          },
-          time,
-          kaizo,
-          reducedParticleMotion.matches,
-        );
+        const actor =
+          duel?.[target] ??
+          floatingKnight(
+            {
+              x: canControlSoul(encounter) ? (kaizo ? 550 : 90) : x,
+              jump: 112,
+              facing: kaizo ? -1 : 1,
+              swordAngle: 0.12,
+              lean: 0,
+            },
+            time,
+            kaizo,
+            reducedParticleMotion.matches,
+          );
         drawKnightHover(ctx, actor, time, kaizo, reducedParticleMotion.matches);
         drawKnightActor(ctx, actor, kaizo);
         const impact = encounter.knightImpacts?.[target];
@@ -711,8 +727,9 @@ export function createBattleDrawing(
         pixelText(kaizo ? 'KAIZO KNIGHT' : 'ROARING KNIGHT', labelX, labelY, '#eee6f2', 11);
         pixelText(`${enemy?.hp} / ${enemy?.maxHP}`, labelX, labelY + 16, '#c7c0d8', 10);
         if (!canControlSoul(encounter) && encounter.knightTarget === target)
-          pixelText('▼', x - 4, 80, '#fff32a', 14);
+          pixelText('▼', actor.x - 4, 80, '#fff32a', 14);
       }
+      if (duel) drawPartyDuelEffects(ctx, encounter.knightDuelAge ?? 0, reducedParticleMotion.matches);
       if (!canControlSoul(encounter)) {
         drawBattleKris(50, 200, 0.65, encounter.hitActor === 'Kris' ? encounter.hitAge : null);
         drawBattleFlowey(100, 235, t, 0.75);
@@ -740,7 +757,6 @@ export function createBattleDrawing(
       }
       if (isPelletCast(encounter)) {
         ctx.save();
-        const targetX = encounter.knightTarget === 'kaizo' ? 540 : 365;
         ctx.translate(100, 235);
         ctx.scale((targetX - 100) / (528 - 178), (180 - 235) / (192 - 224));
         ctx.translate(-178, -224);
@@ -748,7 +764,6 @@ export function createBattleDrawing(
         ctx.restore();
       }
       if (encounter.hitAge !== null) {
-        const targetX = encounter.knightTarget === 'kaizo' ? 540 : 365;
         ctx.save();
         ctx.translate(targetX - 528, -12);
         if (encounter.hitActor === 'Kris') drawSwordSlash(encounter.hitAge);
