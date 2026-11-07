@@ -21,6 +21,11 @@ test('second knight attack shows diagonal warnings, mixed sword waves, and mobil
     'knightCrossing',
   );
   await frames(page, 36);
+  expect(
+    await page.evaluate(
+      () => window.battleFixtureState.bossEncounter!.snowAttack!.knightCrossing!.miniWarnings.length,
+    ),
+  ).toBe(3);
   const warning = await page.evaluate(
     () => (document.querySelector('#game') as HTMLCanvasElement).toDataURL().split(',')[1],
   );
@@ -28,10 +33,14 @@ test('second knight attack shows diagonal warnings, mixed sword waves, and mobil
   await frames(page, 54);
   const shot = await page.evaluate(() => ({
     owners: window.battleFixtureState.bossEncounter!.snowAttack!.knightCrossing!.swords.map((s) => s.owner),
+    minis: window.battleFixtureState.bossEncounter!.snowAttack!.knightCrossing!.swords.filter(
+      (s) => s.scale === 0.4,
+    ).length,
     image: (document.querySelector('#game') as HTMLCanvasElement).toDataURL().split(',')[1],
   }));
   expect(shot.owners).toContain('roaring');
   expect(shot.owners).toContain('kaizo');
+  expect(shot.minis).toBeGreaterThan(0);
   await writeFile(testInfo.outputPath('knight-crossing-swords.png'), Buffer.from(shot.image, 'base64'));
   await frames(page, 240);
   expect(

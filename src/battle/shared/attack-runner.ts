@@ -79,7 +79,7 @@ export function createAttackRunner(dependencies: Dependencies) {
       const alive = (owner: 'roaring' | 'kaizo') => (encounter.knightEnemies?.[owner].hp ?? 0) > 0;
       const result =
         snow.direction === 'knightCrossing'
-          ? advanceCrossingSwords(snow.knightCrossing, dt, alive)
+          ? advanceCrossingSwords(snow.knightCrossing, dt, alive, soul)
           : advanceKnightSwords(snow.knightSwords, dt, alive);
       let changed = false;
       if (snow.hitCooldown <= 0) {

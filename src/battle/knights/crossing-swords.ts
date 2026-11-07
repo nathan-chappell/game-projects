@@ -39,6 +39,8 @@ export interface CrossingSword extends KnightProjectile, Point {
   launch: number;
   speed: number;
   active: boolean;
+  scale?: number;
+  maxDistance?: number;
 }
 export interface CrossingSwords {
   arena: Arena;
@@ -46,9 +48,19 @@ export interface CrossingSwords {
   waves: number;
   swords: CrossingSword[];
   alive: Record<KnightOwner, boolean>;
+  miniWaves: number;
+  miniWarnings: CrossingSword[];
 }
 export function createCrossingSwords(arena: Arena): CrossingSwords {
-  return { arena: { ...arena }, age: 0, waves: 0, swords: [], alive: { roaring: true, kaizo: true } };
+  return {
+    arena: { ...arena },
+    age: 0,
+    waves: 0,
+    swords: [],
+    alive: { roaring: true, kaizo: true },
+    miniWaves: 0,
+    miniWarnings: [],
+  };
 }
 export function crossingSafePoint(attack: CrossingSwords, wave: number) {
   const offset = safeOffsets[Math.min(5, Math.max(0, wave))];
@@ -88,6 +100,39 @@ export function crossingWarnings(attack: CrossingSwords) {
     ? wave.filter((s) => attack.alive[s.owner])
     : [];
 }
+export const edgeMiniSettings = { perVolley: 3, speed: 340, scale: 0.4, distance: 500 };
+export function edgeMiniVolley(attack: CrossingSwords, wave: number, soul: Point): CrossingSword[] {
+  const { x, y, size, border } = attack.arena;
+  const left = x + border,
+    top = y + border,
+    inner = size - border * 2;
+  return Array.from({ length: edgeMiniSettings.perVolley }, (_, i) => {
+    const side = (wave + i) % 4;
+    const fraction = [0.25, 0.5, 0.75][(wave + i) % 3];
+    const origin =
+      side === 0
+        ? { x: left, y: top + inner * fraction }
+        : side === 1
+          ? { x: left + inner * fraction, y: top }
+          : side === 2
+            ? { x: left + inner, y: top + inner * fraction }
+            : { x: left + inner * fraction, y: top + inner };
+    return {
+      id: 1000 + wave * edgeMiniSettings.perVolley + i,
+      owner: i === wave % 3 ? 'kaizo' : 'roaring',
+      ...origin,
+      origin,
+      angle: Math.atan2(soul.y - origin.y, soul.x - origin.x),
+      launch:
+        crossingSwordSettings.warmup + crossingSwordSettings.warning + wave * crossingSwordSettings.interval,
+      speed: edgeMiniSettings.speed,
+      scale: edgeMiniSettings.scale,
+      maxDistance: edgeMiniSettings.distance,
+      active: false,
+      hitOpponent: false,
+    };
+  });
+}
 function segmentInRect(
   from: Point,
   to: Point,
@@ -115,13 +160,31 @@ export function advanceCrossingSwords(
   attack: CrossingSwords,
   dt: number,
   alive: (owner: KnightOwner) => boolean = () => true,
+  soul: Point = { x: attack.arena.x + attack.arena.size / 2, y: attack.arena.y + attack.arena.size / 2 },
 ) {
   if (!Number.isFinite(dt) || dt <= 0) return { arrived: [], finished: false };
   attack.age += dt;
   attack.alive = { roaring: alive('roaring'), kaizo: alive('kaizo') };
+  attack.miniWarnings = attack.miniWarnings.filter((sword) => attack.alive[sword.owner]);
   attack.swords = attack.swords.filter(
-    (s) => !s.hitOpponent && (attack.age - dt - s.launch) * s.speed < crossingSwordSettings.distance,
+    (s) =>
+      !s.hitOpponent &&
+      (attack.age - dt - s.launch) * s.speed < (s.maxDistance ?? crossingSwordSettings.distance),
   );
+  while (
+    attack.miniWaves < crossingSwordSettings.waves &&
+    attack.age >= crossingSwordSettings.warmup + attack.miniWaves * crossingSwordSettings.interval - 1e-9
+  ) {
+    // Aim once at the start of the warning; moving afterward dodges the shot.
+    attack.miniWarnings.push(
+      ...edgeMiniVolley(attack, attack.miniWaves, soul).filter((s) => attack.alive[s.owner]),
+    );
+    attack.miniWaves++;
+  }
+  for (const sword of attack.miniWarnings) {
+    if (attack.age >= sword.launch - 1e-9) attack.swords.push({ ...sword, active: true });
+  }
+  attack.miniWarnings = attack.miniWarnings.filter((s) => attack.age < s.launch - 1e-9);
   while (
     attack.waves < crossingSwordSettings.waves &&
     attack.age >=
@@ -137,7 +200,8 @@ export function advanceCrossingSwords(
   for (const sword of attack.swords) {
     const cos = Math.cos(sword.angle),
       sin = Math.sin(sword.angle);
-    const previous = { x: sword.x + cos * 35, y: sword.y + sin * 35 };
+    const tip = 35 * (sword.scale ?? 1);
+    const previous = { x: sword.x + cos * tip, y: sword.y + sin * tip };
     const distance = Math.max(0, attack.age - sword.launch) * sword.speed;
     sword.x = sword.origin.x + cos * distance;
     sword.y = sword.origin.y + sin * distance;
@@ -145,7 +209,7 @@ export function advanceCrossingSwords(
       sword.owner === 'roaring'
         ? { x: 482, y: 50, width: 155, height: 240 }
         : { x: 8, y: 50, width: 155, height: 240 };
-    if (segmentInRect(previous, { x: sword.x + cos * 35, y: sword.y + sin * 35 }, target))
+    if (segmentInRect(previous, { x: sword.x + cos * tip, y: sword.y + sin * tip }, target))
       arrived.push(sword);
   }
   return {
@@ -153,7 +217,9 @@ export function advanceCrossingSwords(
     finished:
       attack.waves === crossingSwordSettings.waves &&
       attack.swords.every(
-        (s) => s.hitOpponent || (attack.age - s.launch) * s.speed >= crossingSwordSettings.distance,
+        (s) =>
+          s.hitOpponent ||
+          (attack.age - s.launch) * s.speed >= (s.maxDistance ?? crossingSwordSettings.distance),
       ),
   };
 }
@@ -170,7 +236,11 @@ export function crossingSwordTouches(sword: CrossingSword, soul: Point, width = 
     [10, 25, 5],
     [-17.5, 3.5, 16],
     [-30, 9, 3],
-  ].some(([offset, w, h]) => {
+  ].some(([rawOffset, rawW, rawH]) => {
+    const scale = sword.scale ?? 1;
+    const offset = rawOffset * scale,
+      w = rawW * scale,
+      h = rawH * scale;
     const dx = soul.x - sword.x - cos * offset,
       dy = soul.y - sword.y - sin * offset;
     return (

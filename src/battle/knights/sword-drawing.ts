@@ -2,13 +2,15 @@ import type { KnightOwner } from './projectiles.ts';
 
 export function drawKnightSword(
   ctx: CanvasRenderingContext2D,
-  sword: { x: number; y: number; angle: number; owner: KnightOwner },
+  sword: { x: number; y: number; angle: number; owner: KnightOwner; scale?: number },
   reduced: boolean,
 ) {
   const black = sword.owner === 'roaring';
   ctx.save();
   ctx.translate(Math.round(sword.x), Math.round(sword.y));
   ctx.rotate(sword.angle);
+  const scale = sword.scale ?? 1;
+  ctx.scale(scale, scale);
   if (!reduced) {
     ctx.strokeStyle = black ? '#bcb4d44d' : '#ffffff66';
     ctx.lineWidth = 2;

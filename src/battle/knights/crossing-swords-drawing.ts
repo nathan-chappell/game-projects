@@ -17,6 +17,19 @@ export function drawCrossingSwords(ctx: CanvasRenderingContext2D, attack: Crossi
     );
     ctx.stroke();
   }
+  for (const sword of attack.miniWarnings) {
+    ctx.fillStyle = '#ffc77b';
+    ctx.beginPath();
+    ctx.arc(sword.origin.x, sword.origin.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#eaa95c99';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(sword.origin.x, sword.origin.y);
+    ctx.lineTo(sword.origin.x + Math.cos(sword.angle) * 46, sword.origin.y + Math.sin(sword.angle) * 46);
+    ctx.stroke();
+    drawKnightSword(ctx, sword, true);
+  }
   for (const sword of attack.swords) if (!sword.hitOpponent) drawKnightSword(ctx, sword, reduced);
   ctx.restore();
 }

@@ -5,6 +5,8 @@ import { createKnightEncounter } from './introduction.ts';
 import {
   advanceCrossingSwords,
   createCrossingSwords,
+  edgeMiniVolley,
+  edgeMiniSettings,
   crossingSafePoint,
   crossingSwordSettings,
   crossingSwordTouches,
@@ -42,7 +44,7 @@ test('crossing swords warn first and have exactly six increasingly fast, mixed-c
     maxID = 0;
   for (let i = 0; i < 12 * 60 && !finished; i++) {
     const r = advanceCrossingSwords(a, 1 / 60);
-    for (const sword of a.swords) maxID = Math.max(maxID, sword.id);
+    for (const sword of a.swords) if (!sword.scale) maxID = Math.max(maxID, sword.id);
     for (const sword of r.arrived) sword.hitOpponent = true;
     finished = r.finished;
   }
@@ -133,4 +135,55 @@ test('both projectile colors retain party damage, defense reduction, cooldown an
     assert.equal(hitOpposingKnight(b, sword), 5);
     assert.equal(hitOpposingKnight(b, sword), 0);
   }
+});
+
+test('three mini swords warn on separate arena edges and keep their aim after the player moves', () => {
+  const a = createCrossingSwords(battleArena);
+  const target = { x: 300, y: 180 };
+  advanceCrossingSwords(a, 0.3, () => true, target);
+  assert.equal(a.miniWarnings.length, 3);
+  const aim = a.miniWarnings.map((s) => ({ angle: s.angle, origin: { ...s.origin } }));
+  const sides = new Set();
+  for (const sword of a.miniWarnings) {
+    assert.equal(sword.scale, edgeMiniSettings.scale);
+    assert.equal(sword.active, false);
+    const left = a.arena.x + a.arena.border,
+      top = a.arena.y + a.arena.border;
+    const right = a.arena.x + a.arena.size - a.arena.border,
+      bottom = a.arena.y + a.arena.size - a.arena.border;
+    assert.ok(sword.x === left || sword.x === right || sword.y === top || sword.y === bottom);
+    sides.add(sword.x === left ? 'left' : sword.x === right ? 'right' : sword.y === top ? 'top' : 'bottom');
+    const dx = target.x - sword.x,
+      dy = target.y - sword.y;
+    assert.ok(Math.abs(dx * Math.sin(sword.angle) - dy * Math.cos(sword.angle)) < 1e-6);
+    assert.ok(dx * Math.cos(sword.angle) + dy * Math.sin(sword.angle) > 0);
+    assert.equal(crossingSwordTouches(sword, sword), false);
+  }
+  assert.equal(sides.size, 3);
+  advanceCrossingSwords(a, 0.1, () => true, { x: 410, y: 250 });
+  assert.deepEqual(
+    a.miniWarnings.map((s) => ({ angle: s.angle, origin: s.origin })),
+    aim,
+  );
+  advanceCrossingSwords(a, 0.5, () => true, { x: 410, y: 250 });
+  const minis = a.swords.filter((s) => s.scale);
+  assert.equal(minis.length, 3);
+  assert.equal(a.miniWarnings.length, 0);
+  assert.ok(minis.every((s) => s.active && s.speed === 340));
+  assert.deepEqual(
+    minis.map((s) => ({ angle: s.angle, origin: s.origin })),
+    aim,
+  );
+});
+test('mini sword hitboxes match their smaller artwork and defeated owners do not launch them', () => {
+  const a = createCrossingSwords(battleArena);
+  const mini = { ...edgeMiniVolley(a, 0, { x: 320, y: 163 })[0], x: 320, y: 160, angle: 0, active: true };
+  assert.equal(crossingSwordTouches(mini, { x: 330, y: 166 }, 4, 4), false);
+  assert.equal(crossingSwordTouches({ ...mini, scale: 1 }, { x: 330, y: 166 }, 4, 4), true);
+  advanceCrossingSwords(a, 0.3, (owner) => owner === 'kaizo');
+  assert.ok(a.miniWarnings.length > 0);
+  assert.ok(a.miniWarnings.every((s) => s.owner === 'kaizo'));
+  advanceCrossingSwords(a, 0.6, (owner) => owner === 'roaring');
+  assert.ok(a.swords.every((s) => s.owner === 'roaring'));
+  assert.equal(a.miniWarnings.length, 0);
 });
