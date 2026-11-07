@@ -1094,6 +1094,7 @@ export function startGame() {
     'tennaFinaleShutdown',
     'tennaAftermath',
     'knightStatues',
+    'knightEncounter',
     'undyneCandy',
     'tennaCut',
   ]);

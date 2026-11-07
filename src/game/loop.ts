@@ -6,6 +6,7 @@ import {
   knightPathCamera,
   knightPartyPosition,
   knightPathSettings,
+  knightEncounterConversation,
   statueConversation,
 } from '../rooms/post-show/knight-path.ts';
 import { tennaAftermathConversation } from '../rooms/backstage/tenna-aftermath.ts';
@@ -475,6 +476,7 @@ export function createGameLoop(dependencies: Dependencies) {
         openKnightStatues();
         return;
       }
+      const wasApproaching = path.duelAge < 0;
       const leave = advanceKnightPath(path, dependencies.current(), state.keys, dt);
       if (path.duelAge >= 0) state.keys.clear();
       if (path.duelAge >= knightSequenceSeconds && !state.knightBattle) {
@@ -498,6 +500,15 @@ export function createGameLoop(dependencies: Dependencies) {
         const p = knightPartyPosition(path, 84 + i * 41);
         return { name, x: p.x - camera, y: p.y, trail: [] };
       });
+      if (wasApproaching && path.duelAge >= 0) {
+        path.duelAge = 0;
+        state.player.moving = false;
+        dependencies.openDialogue(
+          knightEncounterConversation.map((line) => `[${line.speaker}] * ${line.text}`),
+          'knightEncounter',
+        );
+        dependencies.canvas.focus({ preventScroll: true });
+      }
       if (path.x >= knightPathSettings.statuesAt && !state.story.knightStatuesExplained) openKnightStatues();
       if (leave && !state.doorCooldown) {
         const target = dependencies.current().doorLinks?.['1,1'];

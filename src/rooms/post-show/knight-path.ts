@@ -9,6 +9,10 @@ export const knightPathSettings = {
   statuesAt: knightStatuePositions[2] + 40,
   duelAt: 3200,
 };
+export const knightEncounterConversation = [
+  { speaker: 'Flowey', text: "And who's that white Knight?" },
+  { speaker: 'Ralsey', text: "I don't know..." },
+];
 export const statueConversation = [
   { speaker: 'Flowey', text: 'What are those statues? That same knight, over and over...' },
   {

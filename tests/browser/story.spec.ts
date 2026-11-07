@@ -1038,6 +1038,14 @@ test('the third statue leads to the charge, two blocked Swoons and three-team in
   await frames(page, 1200);
   await page.keyboard.up('ArrowRight');
   expect(await page.evaluate(() => window.battleFixtureState.knightPath!.x)).toBeGreaterThanOrEqual(3200);
+  await expect(page.locator('#speakerName')).toHaveText('Flowey');
+  await expect(page.locator('#dialogueText')).toContainText("And who's that white Knight?");
+  await confirmRoomDialogue(page);
+  await expect(page.locator('#speakerName')).toHaveText('Ralsey');
+  await frames(page, 60);
+  await expect(page.locator('#dialogueText')).toContainText("I don't know...");
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBe(0);
+  await confirmRoomDialogue(page);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   for (const [age, name] of [
     [1.8, 'roaring-charge-pose'],
@@ -1106,7 +1114,17 @@ test('older progress beyond the third statue can finish its conversation before 
   for (let i = 0; i < 6 && (await page.locator('#dialogue').isVisible()); i++)
     await confirmRoomDialogue(page);
   await frames(page, 2);
-  await expect(page.locator('#dialogue')).toBeHidden();
   expect(await page.evaluate(() => window.battleFixtureState.story.knightStatuesExplained)).toBe(true);
+  await expect(page.locator('#speakerName')).toHaveText('Flowey');
+  await frames(page, 120);
+  await expect(page.locator('#dialogueText')).toContainText("And who's that white Knight?");
+  expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBe(0);
+  await confirmRoomDialogue(page);
+  await expect(page.locator('#speakerName')).toHaveText('Ralsey');
+  await frames(page, 60);
+  await expect(page.locator('#dialogueText')).toContainText("I don't know...");
+  await confirmRoomDialogue(page);
+  await frames(page, 2);
+  await expect(page.locator('#dialogue')).toBeHidden();
   expect(await page.evaluate(() => window.battleFixtureState.knightPath!.duelAge)).toBeGreaterThan(0);
 });
