@@ -1,3 +1,5 @@
+import type { KnightSwordAttack } from '../knights/swords.ts';
+import type { KnightOwner } from '../knights/projectiles.ts';
 import type { UndyneAttack } from '../tenna/undyne.ts';
 import type { TennaMinigame } from '../tenna/minigame.ts';
 import type { TvBolts } from '../tenna/tv-bolts.ts';
@@ -112,7 +114,8 @@ export type AttackDirection =
   | 'dark'
   | 'saxophones'
   | 'tvBolts'
-  | 'undyne';
+  | 'undyne'
+  | 'knightSwords';
 export interface AttackBase {
   direction: AttackDirection;
   grazeTP: number;
@@ -142,6 +145,7 @@ export interface AttackBase {
   saxophones?: SaxAttack;
   tvBolts?: TvBolts;
   undyne?: UndyneAttack;
+  knightSwords?: KnightSwordAttack;
 }
 export type Attack = AttackBase &
   (
@@ -154,6 +158,7 @@ export type Attack = AttackBase &
     | { direction: 'saxophones'; saxophones: SaxAttack }
     | { direction: 'tvBolts'; tvBolts: TvBolts }
     | { direction: 'undyne'; undyne: UndyneAttack }
+    | { direction: 'knightSwords'; knightSwords: KnightSwordAttack }
   );
 export type BattleAction = 'attack' | 'act' | 'item' | 'defend' | 'spare';
 export interface Rescue {
@@ -237,6 +242,7 @@ export interface EncounterBase {
   knightEnemies?: Record<'roaring' | 'kaizo', EncounterBase['enemy']>;
   knightTarget?: 'roaring' | 'kaizo';
   holdBreath?: boolean;
+  knightImpacts?: Partial<Record<KnightOwner, { damage: number; age: number }>>;
 }
 export type Encounter = EncounterBase &
   ({ kind?: 'noelle' } | { kind: 'dark' } | { kind: 'tenna' } | { kind: 'knights' });

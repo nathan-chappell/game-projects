@@ -145,7 +145,7 @@ export function soulArena(encounter: Encounter): {
 export function isSoulInSnow(encounter: Encounter | null) {
   if (!canControlSoul(encounter) || !encounter.snowAttack) return false;
   if (
-    ['dark', 'saxophones', 'tvBolts', 'crossing', 'goal', 'snowgrave'].includes(
+    ['dark', 'saxophones', 'tvBolts', 'crossing', 'goal', 'snowgrave', 'knightSwords'].includes(
       encounter.snowAttack.direction,
     )
   )
@@ -272,6 +272,10 @@ export function startKrisTurn(encounter: Encounter, partyHP?: PartyHP) {
   encounter.defending = false;
   encounter.projectileDamageMultiplier = 1;
   encounter.holdBreath = false;
+  if (encounter.kind === 'knights' && encounter.knightEnemies && encounter.enemy.hp <= 0) {
+    encounter.knightTarget = encounter.knightEnemies.roaring.hp > 0 ? 'roaring' : 'kaizo';
+    encounter.enemy = encounter.knightEnemies[encounter.knightTarget];
+  }
   encounter.message = finishedSnowgrave
     ? 'Snowgrave ends. Kris and Flowey recover 50 HP. Noelle is at 1 HP. Only ATTACK remains.'
     : 'Kris’s turn. Choose an action.';
@@ -315,10 +319,9 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'knights') {
-    encounter.phase = 'enemy';
+    beginEnemyAttack(encounter, 'knightSwords', 'Dodge the black and white swords!');
     encounter.turn = 'Knights';
-    encounter.screen = 'menu';
-    encounter.message = `${message} The knights prepare their next move.`;
+    encounter.enemyAttackCount++;
     return true;
   }
   if (encounter.kind === 'tenna') {
@@ -484,6 +487,8 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
+  if (encounter?.snowAttack?.direction === 'knightSwords')
+    return 'Black: 40 damage · White: 50 damage';
   if (encounter?.snowAttack?.direction === 'undyne') return 'Spear of Justice';
   if (encounter?.snowAttack?.direction === 'tvBolts') return 'TV bolts · Glitch = 5';
   if (encounter?.snowAttack?.direction === 'saxophones') return 'Dodge the saxophone notes!';
@@ -765,6 +770,7 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
   advancePartyStatus(encounter, partyHP, dt);
+  for (const impact of Object.values(encounter.knightImpacts ?? {})) impact.age += dt;
   if (encounter.kind === 'knights' && partyHP && skipFallenTurns(encounter, partyHP)) return true;
   if (encounter.phase === 'tennaFinaleGlitch') return advanceTennaEnding(encounter, dt);
   if (encounter.undyneMenuSpear) {

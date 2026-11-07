@@ -1,3 +1,4 @@
+import { drawKnightSwords } from '../knights/swords-drawing.ts';
 import { drawKnightBattlefield } from '../../rooms/post-show/knight-duel-drawing.ts';
 import { drawKnightActor } from '../../rooms/post-show/knight-sprites.ts';
 import { drawKnightHover, floatingKnight } from '../../rooms/post-show/knight-hover.ts';
@@ -206,33 +207,35 @@ export function createBattleDrawing(
     if (canControlSoul(encounter)) {
       const inSnow = isSoulInSnow(encounter),
         title =
-          encounter.kind === 'tenna'
-            ? encounter.snowAttack?.direction === 'tvBolts'
-              ? 'DODGE THE BOLTS'
-              : encounter.snowAttack?.direction === 'undyne'
-                ? 'BLOCK THE SPEARS'
-                : 'DODGE THE NOTES'
-            : encounter.kind === 'dark'
-              ? encounter.snowAttack?.darkPattern === 2
-                ? 'DODGE THE WARNINGS'
-                : encounter.snowAttack?.darkPattern === 1
-                  ? 'WATCH THE EDGES'
-                  : 'DODGE THE SWORDS'
-              : encounter.snowAttack?.endingAge != null
-                ? 'ATTACK ENDED'
-                : inSnow
-                  ? 'IN SNOW: SLOWED'
-                  : encounter.snowAttack?.direction === 'snowgrave'
-                    ? 'FINAL ATTACK: SNOWGRAVE'
-                    : encounter.snowAttack?.direction === 'goal'
-                      ? 'BLUE SOUL: JUMP & CLIMB'
-                      : encounter.snowAttack?.direction === 'path'
-                        ? 'FOLLOW THE PATH'
-                        : encounter.snowAttack?.direction === 'orbit'
-                          ? 'DODGE THE ICE'
-                          : encounter.snowAttack?.direction === 'crossing'
-                            ? 'DODGE THE SNOWBALLS'
-                            : 'DODGE THE SNOW';
+          encounter.kind === 'knights'
+            ? 'DODGE THE SWORDS'
+            : encounter.kind === 'tenna'
+              ? encounter.snowAttack?.direction === 'tvBolts'
+                ? 'DODGE THE BOLTS'
+                : encounter.snowAttack?.direction === 'undyne'
+                  ? 'BLOCK THE SPEARS'
+                  : 'DODGE THE NOTES'
+              : encounter.kind === 'dark'
+                ? encounter.snowAttack?.darkPattern === 2
+                  ? 'DODGE THE WARNINGS'
+                  : encounter.snowAttack?.darkPattern === 1
+                    ? 'WATCH THE EDGES'
+                    : 'DODGE THE SWORDS'
+                : encounter.snowAttack?.endingAge != null
+                  ? 'ATTACK ENDED'
+                  : inSnow
+                    ? 'IN SNOW: SLOWED'
+                    : encounter.snowAttack?.direction === 'snowgrave'
+                      ? 'FINAL ATTACK: SNOWGRAVE'
+                      : encounter.snowAttack?.direction === 'goal'
+                        ? 'BLUE SOUL: JUMP & CLIMB'
+                        : encounter.snowAttack?.direction === 'path'
+                          ? 'FOLLOW THE PATH'
+                          : encounter.snowAttack?.direction === 'orbit'
+                            ? 'DODGE THE ICE'
+                            : encounter.snowAttack?.direction === 'crossing'
+                              ? 'DODGE THE SNOWBALLS'
+                              : 'DODGE THE SNOW';
       pixelText(title, 38, 385, inSnow ? '#ffbd69' : '#ffffff', 19);
       pixelText(
         encounter.snowAttack?.direction === 'goal'
@@ -685,31 +688,56 @@ export function createBattleDrawing(
         ['kaizo', 540, true],
       ] as const) {
         const actor = floatingKnight(
-          { x, jump: 112, facing: kaizo ? -1 : 1, swordAngle: 0.12, lean: 0 },
+          {
+            x: canControlSoul(encounter) ? (kaizo ? 550 : 90) : x,
+            jump: 112,
+            facing: kaizo ? -1 : 1,
+            swordAngle: 0.12,
+            lean: 0,
+          },
           time,
           kaizo,
           reducedParticleMotion.matches,
         );
         drawKnightHover(ctx, actor, time, kaizo, reducedParticleMotion.matches);
         drawKnightActor(ctx, actor, kaizo);
+        const impact = encounter.knightImpacts?.[target];
+        if (impact && impact.age < 0.65) {
+          pixelText(`-${impact.damage}`, actor.x - 20, 92 - impact.age * 18, '#ffb8c5', 18);
+        }
         const enemy = encounter.knightEnemies?.[target];
-        pixelText(kaizo ? 'KAIZO KNIGHT' : 'ROARING KNIGHT', x - 63, 42, '#eee6f2', 11);
-        pixelText(`${enemy?.hp} / ${enemy?.maxHP}`, x - 63, 58, '#c7c0d8', 10);
-        if (encounter.knightTarget === target) pixelText('▼', x - 4, 80, '#fff32a', 14);
+        const labelX = canControlSoul(encounter) ? (kaizo ? 490 : 8) : x - 63;
+        const labelY = canControlSoul(encounter) ? 22 : 42;
+        pixelText(kaizo ? 'KAIZO KNIGHT' : 'ROARING KNIGHT', labelX, labelY, '#eee6f2', 11);
+        pixelText(`${enemy?.hp} / ${enemy?.maxHP}`, labelX, labelY + 16, '#c7c0d8', 10);
+        if (!canControlSoul(encounter) && encounter.knightTarget === target)
+          pixelText('▼', x - 4, 80, '#fff32a', 14);
       }
-      drawBattleKris(50, 200, 0.65, encounter.hitActor === 'Kris' ? encounter.hitAge : null);
-      drawBattleFlowey(100, 235, t, 0.75);
-      for (const [name, x, y] of [
-        ['Susie', 155, 200],
-        ['Ralsey', 205, 245],
-      ] as const)
-        drawPartyMember(name, x, y, 0.75, encounter.partyStatus[name], () => {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.scale(0.75, 0.75);
-          helpers.drawFountainFriend({ name, x: 0, y: 0, hideName: true }, t);
-          ctx.restore();
-        });
+      if (!canControlSoul(encounter)) {
+        drawBattleKris(50, 200, 0.65, encounter.hitActor === 'Kris' ? encounter.hitAge : null);
+        drawBattleFlowey(100, 235, t, 0.75);
+        for (const [name, x, y] of [
+          ['Susie', 155, 200],
+          ['Ralsey', 205, 245],
+        ] as const)
+          drawPartyMember(name, x, y, 0.75, encounter.partyStatus[name], () => {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(0.75, 0.75);
+            helpers.drawFountainFriend({ name, x: 0, y: 0, hideName: true }, t);
+            ctx.restore();
+          });
+      }
+      if (canControlSoul(encounter) && encounter.snowAttack.direction === 'knightSwords') {
+        const box = encounter.snowAttack.knightSwords.arena;
+        rect(box.x, box.y, box.size, box.size, '#07070c');
+        ctx.strokeStyle = '#65e895';
+        ctx.lineWidth = box.border;
+        ctx.strokeRect(box.x, box.y, box.size, box.size);
+        drawKnightSwords(ctx, encounter.snowAttack.knightSwords, reducedParticleMotion.matches);
+        drawGrazeRing(encounter);
+        drawBattleSoul(encounter);
+      }
       if (isPelletCast(encounter)) {
         ctx.save();
         const targetX = encounter.knightTarget === 'kaizo' ? 540 : 365;

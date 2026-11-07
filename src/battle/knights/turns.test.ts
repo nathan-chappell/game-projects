@@ -30,7 +30,7 @@ test('knight battle has four party turns and separate 20000/30000 HP opponents',
   }
   assert.equal(b.phase, 'enemy');
   assert.equal(b.tp, 40);
-  assert.equal(b.snowAttack, null, 'no borrowed enemy pattern starts before knight attacks are designed');
+  assert.equal(b.snowAttack?.direction, 'knightSwords');
 });
 test('Hold Breath is free, protects the whole team for one enemy turn, and stacks with Defend', () => {
   const b = createKnightEncounter();
@@ -140,6 +140,7 @@ test('fallen party members are skipped and healing items still consume their use
   const result = useBattleItem(b, party, inventory, 'tpElixir', 'Kris');
   assert.equal(result?.tpGained, 15);
   assert.equal(inventory.items.tpElixir, 0);
-  assert.equal(b.nextAttackGrazeTP, 4);
+  assert.equal(b.nextAttackGrazeTP, null);
+  assert.equal(b.snowAttack?.grazeTP, 4);
   assert.equal(b.phase, 'enemy');
 });

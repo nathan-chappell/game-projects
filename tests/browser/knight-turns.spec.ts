@@ -69,7 +69,7 @@ test('knight battle supports party ACTs, target choice, items and a protected en
   await page.locator('#battleAct').click();
   await expect(page.locator('#battleProceedButton')).toHaveText('Heal Player · 50% TP');
   await page.locator('#battleProceedButton').click();
-  await frames(page, 90);
+  await frames(page, 35);
   const result = await page.evaluate(() => ({
     hp: window.battleFixtureState.partyHP.Flowey,
     phase: window.battleFixtureState.bossEncounter!.phase,
@@ -80,6 +80,6 @@ test('knight battle supports party ACTs, target choice, items and a protected en
   expect(result.hp).toBe(100);
   expect(result.phase).toBe('enemy');
   expect(result.multiplier).toBe(0.75);
-  expect(result.attack).toBeNull();
+  expect(result.attack?.direction).toBe('knightSwords');
   await writeFile(testInfo.outputPath('knight-party-turns.png'), Buffer.from(result.png, 'base64'));
 });

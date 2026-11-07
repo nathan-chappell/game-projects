@@ -1,3 +1,5 @@
+import { advanceKnightSwords, knightSwordSettings } from '../knights/swords.ts';
+import { hitOpposingKnight, knightProjectileRules } from '../knights/projectiles.ts';
 import { advanceUndyneAttack, undyneSettings } from '../tenna/undyne.ts';
 import { advanceTvBolts, boltTouches, tvBoltSettings } from '../tenna/tv-bolts.ts';
 import { present } from '../../game/invariants.ts';
@@ -71,6 +73,52 @@ export function createAttackRunner(dependencies: Dependencies) {
   function stepSnowAttack(encounter: Encounter, partyHP: PartyHP, dt: number, random: () => number) {
     const snow = present(encounter.snowAttack),
       soul = present(encounter.soul);
+    if (snow.direction === 'knightSwords') {
+      snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
+      const result = advanceKnightSwords(
+        snow.knightSwords,
+        dt,
+        (owner) => (encounter.knightEnemies?.[owner].hp ?? 0) > 0,
+      );
+      let changed = false;
+      if (snow.hitCooldown <= 0) {
+        const hit = snow.knightSwords.swords.find(
+          (sword) =>
+            !sword.hitOpponent &&
+            swordTouchesSoul(
+              sword,
+              sword.owner === 'roaring' ? 1 : -1,
+              soul,
+              battleSettings.soulWidth,
+              battleSettings.soulHeight,
+            ),
+        );
+        if (hit) {
+          changed = dependencies.damageLivingTeammate(
+            encounter,
+            partyHP,
+            projectileDamage(encounter, knightProjectileRules[hit.owner].partyDamage),
+            hit.owner === 'roaring' ? 'Roaring Knight’s sword' : 'Kaizo Knight’s sword',
+            random,
+          );
+          snow.hitCooldown = knightSwordSettings.hitCooldown;
+        }
+      }
+      for (const sword of result.arrived) changed = hitOpposingKnight(encounter, sword) > 0 || changed;
+      if (encounter.knightEnemies && Object.values(encounter.knightEnemies).every((enemy) => enemy.hp <= 0)) {
+        encounter.phase = 'victory';
+        encounter.turn = null;
+        encounter.soul = encounter.snowAttack = null;
+        encounter.message = 'Both knights are down.';
+        return true;
+      }
+      if (result.finished) {
+        dependencies.startKrisTurn(encounter, partyHP);
+        dependencies.skipFallenTurns(encounter, partyHP);
+        return true;
+      }
+      return changed;
+    }
     if (snow.direction === 'undyne') {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
       const result = advanceUndyneAttack(snow.undyne, dt);
