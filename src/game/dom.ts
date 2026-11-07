@@ -27,6 +27,9 @@ export interface GameElements {
   bossControls: HTMLElement;
   battleTurnText: HTMLElement;
   battleTestStatus: HTMLElement;
+  battleKnightTestingControls: HTMLElement;
+  battleKnightInvincible: HTMLButtonElement;
+  battleKnightSkip: HTMLButtonElement;
   battleTPText: HTMLElement;
   battleTPBar: HTMLProgressElement;
   battleActionButtons: HTMLElement;

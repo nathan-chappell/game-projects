@@ -69,6 +69,30 @@ export function setupBattleControls(
     onChange();
     announce(state.bossEncounter?.message || '');
   }
+  function toggleKnightInvincibility() {
+    if (blocked() || state.bossEncounter?.kind !== 'knights') return;
+    if (toggleInvincibility(state.bossEncounter)) refresh();
+    canvas.focus({ preventScroll: true });
+  }
+  function skipTestingAttack() {
+    const encounter = state.bossEncounter;
+    if (
+      blocked() ||
+      !encounter ||
+      !['tenna', 'knights'].includes(encounter.kind ?? '') ||
+      !canControlSoul(encounter)
+    )
+      return;
+    startKrisTurn(encounter, state.partyHP);
+    encounter.message = 'Attack skipped for playtesting.';
+    state.keys.clear();
+    refresh();
+    canvas.focus({ preventScroll: true });
+  }
+  $('battleKnightInvincible').onclick = toggleKnightInvincibility;
+  $('battleKnightSkip').onclick = () => {
+    if (state.bossEncounter?.kind === 'knights') skipTestingAttack();
+  };
   function choose(action: string) {
     if (state.death) return;
     const encounter = state.bossEncounter;
@@ -296,7 +320,7 @@ export function setupBattleControls(
       ) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        if (!event.repeat && toggleInvincibility(state.bossEncounter)) refresh();
+        if (!event.repeat) toggleKnightInvincibility();
         return;
       }
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
@@ -385,10 +409,7 @@ export function setupBattleControls(
         event.preventDefault();
         event.stopImmediatePropagation();
         if (event.repeat) return;
-        startKrisTurn(state.bossEncounter, state.partyHP);
-        state.bossEncounter.message = 'Attack skipped for playtesting.';
-        state.keys.clear();
-        refresh();
+        skipTestingAttack();
         return;
       }
       if (canControlSoul(state.bossEncounter) && directionKeys[event.key]) {
@@ -531,6 +552,12 @@ export function setupBattleControls(
             ? `Playtesting · 3: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
             : `Playtesting · 3: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
     $('battleTestStatus').hidden = !['tenna', 'knights'].includes(encounter?.kind ?? '');
+    $('battleKnightTestingControls').hidden = !active || encounter.kind !== 'knights';
+    $('battleKnightInvincible').textContent = `Invincibility: ${encounter?.invincible ? 'ON' : 'OFF'}`;
+    $('battleKnightInvincible').setAttribute('aria-pressed', String(!!encounter?.invincible));
+    $('battleKnightInvincible').disabled =
+      !active || !!state.death || (!canPartyAct(encounter) && !canControlSoul(encounter));
+    $('battleKnightSkip').disabled = !active || !!state.death || !canControlSoul(encounter);
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';
     $('battleMenuBack').hidden = !acting || encounter.screen === 'menu';
