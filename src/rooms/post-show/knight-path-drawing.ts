@@ -1,6 +1,5 @@
-import { drawKnightActor } from './knight-sprites.ts';
+import { drawKnightActor, drawRoaringKnightStatue } from './knight-sprites.ts';
 import type { DrawingHelpers } from '../../rendering/types.ts';
-import statueURL from '../../../assets/chamber-statue-transparent.png?inline';
 import type { GameState } from '../../game/types.ts';
 import type { createSprites } from '../../rendering/sprites.ts';
 import { drawKnightDuel, drawKnightBattlefield } from './knight-duel-drawing.ts';
@@ -19,8 +18,11 @@ export function createKnightPathDrawing(
   reducedMotion: MediaQueryList,
   pixelText: DrawingHelpers['pixelText'],
 ) {
-  const statue = new Image();
-  statue.src = statueURL;
+  const statue = document.createElement('canvas');
+  statue.width = 180;
+  statue.height = 180;
+  const stone = statue.getContext('2d');
+  let statueReady = false;
   return function draw(state: GameState, time: number) {
     const path = (state.knightPath ??= createKnightPath(state.player.x, state.player.y));
     if (path.duelAge >= 0) {
@@ -67,9 +69,11 @@ export function createKnightPathDrawing(
       ctx.fillRect(x - 42, 300, 84, 7);
       ctx.fillStyle = '#777080';
       ctx.fillRect(x - 36, 298, 72, 2);
-      if (statue.complete && statue.naturalWidth) {
-        ctx.drawImage(statue, 278, 112, 581, 1074, x - 38, 158, 76, 140);
+      if (!statueReady && stone) {
+        stone.clearRect(0, 0, 180, 180);
+        statueReady = drawRoaringKnightStatue(stone, 90, 170);
       }
+      if (statueReady) ctx.drawImage(statue, x - 90, 128);
       const light = ctx.createRadialGradient(x, 280, 5, x, 280, 100);
       light.addColorStop(0, '#a395c118');
       light.addColorStop(1, '#a395c100');

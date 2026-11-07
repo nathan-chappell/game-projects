@@ -1,3 +1,4 @@
+import statueURL from '../../../assets/roaring-knight-cutout.png?inline';
 import chargeURL from '../../../assets/roaring-knight-charge.png?inline';
 import roaringURL from '../../../assets/roaring-knight-rig.png?inline';
 import kaizoURL from '../../../assets/kaizo-knight-rig.png?inline';
@@ -94,6 +95,31 @@ export function drawKnightCharge(ctx: CanvasRenderingContext2D, actor: KnightAct
   ctx.translate(Math.round(actor.x), Math.round(350 - actor.jump));
   ctx.scale(actor.facing, 1);
   ctx.drawImage(charge.image, b.x, b.y, b.width, b.height, -Math.round(width / 2), -height, width, height);
+  ctx.restore();
+  return true;
+}
+
+let statue: Rig | undefined;
+export function drawRoaringKnightStatue(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  statue ??= load(statueURL, false);
+  const b = statue.body;
+  if (!b) return false;
+  const height = 140,
+    width = Math.round((height * b.width) / b.height);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.filter = 'grayscale(1) brightness(0.65)';
+  ctx.drawImage(
+    statue.image,
+    b.x,
+    b.y,
+    b.width,
+    b.height,
+    Math.round(x - width / 2),
+    y - height,
+    width,
+    height,
+  );
   ctx.restore();
   return true;
 }
