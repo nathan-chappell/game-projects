@@ -1,8 +1,20 @@
+import { floatingKnight, drawKnightHover } from './knight-hover.ts';
 import { knightCameraShot } from './knight-cinematography.ts';
 import fieldURL from '../../../assets/knight-battlefield-reference.png?inline';
 import swoonURL from '../../../assets/red-sweep.png?inline';
 import { drawKnightActor, drawKnightCharge, drawKnightWeapon, drawKnightPortrait } from './knight-sprites.ts';
-import { knightDuelPose, knightSword } from './knight-choreography.ts';
+import { knightDuelPose as choreographyPose, knightSword, swordIntersection } from './knight-choreography.ts';
+function knightDuelPose(age: number, reduced = false) {
+  const pose = choreographyPose(age),
+    roaring = floatingKnight(pose.roaring, age, false, reduced),
+    kaizo = floatingKnight(pose.kaizo, age, true, reduced);
+  return {
+    ...pose,
+    roaring,
+    kaizo,
+    contact: pose.contact ? swordIntersection(knightSword(roaring), knightSword(kaizo)) : null,
+  };
+}
 let field: HTMLImageElement | undefined, swoon: HTMLImageElement | undefined;
 export function drawKnightBattlefield(ctx: CanvasRenderingContext2D) {
   field ??= new Image();
@@ -20,7 +32,7 @@ export function drawKnightBattlefield(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(515, 0, 125, 44);
 }
 function swoonAttack(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
-  const pose = knightDuelPose(age);
+  const pose = knightDuelPose(age, reduced);
   const outgoing = pose.phase === 'roaringSwoon' || pose.phase === 'kaizoBlocksSwoon';
   const returning = pose.phase === 'kaizoSwoon' || pose.phase === 'roaringBlocksSwoon';
   if (!outgoing && !returning) return;
@@ -45,9 +57,9 @@ function swoonAttack(ctx: CanvasRenderingContext2D, age: number, reduced: boolea
   ctx.restore();
 }
 function blockBurst(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
-  const pose = knightDuelPose(age);
+  const pose = knightDuelPose(age, reduced);
   if (pose.impactAge < 0) return;
-  const event = knightDuelPose(age - pose.impactAge);
+  const event = knightDuelPose(age - pose.impactAge, reduced);
   const hit =
     event.phase === 'chargeBlocked'
       ? (event.contact ?? { x: 517, y: 210 })
@@ -125,7 +137,7 @@ function bladeTrails(ctx: CanvasRenderingContext2D, age: number) {
   }
 }
 export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
-  const pose = knightDuelPose(age),
+  const pose = knightDuelPose(age, reduced),
     shot = knightCameraShot(age, reduced);
   if (shot.portrait && drawKnightPortrait(ctx, shot.portrait === 'kaizo', shot.portraitProgress)) return;
   ctx.fillStyle = '#000000';
@@ -141,6 +153,8 @@ export function drawKnightDuel(ctx: CanvasRenderingContext2D, age: number, reduc
       Math.round(Math.sin(age * 90) * pose.clash * 2),
       Math.round(Math.cos(age * 76) * pose.clash),
     );
+  drawKnightHover(ctx, pose.roaring, age, false, reduced, pose.chargePose);
+  drawKnightHover(ctx, pose.kaizo, age, true, reduced);
   if (!reduced && pose.dashing) {
     for (let i = 5; i >= 1; i--) {
       const previous = knightDuelPose(Math.max(0, age - i * 0.032));

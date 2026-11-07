@@ -1,3 +1,4 @@
+import { floatingKnight, drawKnightHover } from './knight-hover.ts';
 import { drawKnightActor, drawRoaringKnightStatue } from './knight-sprites.ts';
 import type { DrawingHelpers } from '../../rendering/types.ts';
 import type { GameState } from '../../game/types.ts';
@@ -28,8 +29,22 @@ export function createKnightPathDrawing(
     if (path.duelAge >= 0) {
       if (state.knightBattle) {
         drawKnightBattlefield(ctx);
-        drawKnightActor(ctx, { x: 320, jump: 25, facing: 1, swordAngle: 0.12, lean: 0 }, false);
-        drawKnightActor(ctx, { x: 535, jump: 25, facing: -1, swordAngle: 0.12, lean: 0 }, true);
+        const roaring = floatingKnight(
+          { x: 320, jump: 25, facing: 1, swordAngle: 0.12, lean: 0 },
+          time,
+          false,
+          reducedMotion.matches,
+        );
+        const kaizo = floatingKnight(
+          { x: 535, jump: 25, facing: -1, swordAngle: 0.12, lean: 0 },
+          time,
+          true,
+          reducedMotion.matches,
+        );
+        drawKnightHover(ctx, roaring, time, false, reducedMotion.matches);
+        drawKnightHover(ctx, kaizo, time, true, reducedMotion.matches);
+        drawKnightActor(ctx, roaring, false);
+        drawKnightActor(ctx, kaizo, true);
         sprites.drawPlayer(30, 320, time);
         sprites.drawFlowey(80, 320, time);
         sprites.drawFountainFriend({ name: 'Susie', x: 130, y: 320 }, time);
