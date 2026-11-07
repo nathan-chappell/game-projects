@@ -44,11 +44,12 @@ test('knight battle supports party ACTs, target choice, items and a protected en
   });
   await page.locator('#battleAct').click();
   await page.locator('#battleKnightTarget').selectOption('kaizo');
+  await expect(page.locator('#battleProceedCount')).toContainText('Deal 20 damage to Kaizo Knight.');
   await page.locator('#battleProceedButton').click();
   await frames(page, 120);
   await expect(page.locator('#battleTurnText')).toHaveText('Susie’s turn');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.knightEnemies!.kaizo.hp)).toBe(
-    29850,
+    29980,
   );
   await page.evaluate(() => {
     window.battleFixtureState.bossEncounter!.tp = 100;
@@ -58,6 +59,9 @@ test('knight battle supports party ACTs, target choice, items and a protected en
   await expect(page.locator('#battleProceedButton')).toHaveText('Rude Buster · 70% TP');
   await page.locator('#battleProceedButton').click();
   await expect(page.locator('#battleTurnText')).toHaveText('Ralsey’s turn');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.knightEnemies!.kaizo.hp)).toBe(
+    29960,
+  );
   await page.evaluate(() => {
     window.battleFixtureState.bossEncounter!.tp = 100;
     window.refreshBattleFixture();

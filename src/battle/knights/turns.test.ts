@@ -60,7 +60,7 @@ test('existing ACTs keep their TP costs, effects, and four-member turn order', (
   assert.equal(party.Flowey, 85);
   advanceBattleTime(b, pelletsDuration + 0.01, party);
   assert.equal(b.turn, 'Susie');
-  assert.equal(b.enemy.hp, 19850);
+  assert.equal(b.enemy.hp, 19970);
   const before = b.enemy.hp;
   assert.equal(useDarkAct(b, party), false);
   assert.equal(b.enemy.hp, before);
@@ -70,7 +70,7 @@ test('existing ACTs keep their TP costs, effects, and four-member turn order', (
     true,
   );
   assert.equal(b.tp, 30);
-  assert.equal(b.enemy.hp, before - 170);
+  assert.equal(b.enemy.hp, before - 30);
   assert.equal(b.turn, 'Ralsey');
   b.tp = 100;
   assert.equal(darkActInfo(b).cost, 50);
@@ -82,19 +82,53 @@ test('existing ACTs keep their TP costs, effects, and four-member turn order', (
   assert.equal(party.Flowey, 100);
   assert.equal(b.phase, 'enemy');
 });
-test('attacks damage the selected knight without triggering Noelle endings or Tenna cuts', () => {
-  const b = createKnightEncounter();
-  b.knightTarget = 'kaizo';
-  b.enemy = b.knightEnemies!.kaizo;
-  for (const damage of [75, 80, 150, 60]) {
-    const before = b.enemy.hp;
-    assert.equal(attackEnemy(b), true);
-    assert.equal(b.enemy.hp, before - damage);
+test('all four basic attacks deal 20 to Roaring Knight and 10 to Kaizo Knight', () => {
+  for (const [target, damage] of [
+    ['roaring', 20],
+    ['kaizo', 10],
+  ] as const) {
+    const b = createKnightEncounter();
+    b.knightTarget = target;
+    b.enemy = b.knightEnemies![target];
+    for (const name of ['Kris', 'Flowey', 'Susie', 'Ralsey']) {
+      assert.equal(b.turn, name);
+      const before = b.enemy.hp;
+      assert.equal(attackEnemy(b), true);
+      assert.equal(b.enemy.hp, before - damage);
+      assert.equal(b.hitDamage, damage);
+    }
+    const other = target === 'roaring' ? 'kaizo' : 'roaring';
+    assert.equal(b.knightEnemies![other].hp, b.knightEnemies![other].maxHP);
+    assert.equal(b.finalAttackPending, false);
+    assert.equal(b.phase, 'enemy');
   }
-  assert.equal(b.knightEnemies!.roaring.hp, 20000);
-  assert.equal(b.knightEnemies!.kaizo.hp, 29635);
-  assert.equal(b.finalAttackPending, false);
-  assert.equal(b.phase, 'enemy');
+});
+test('Flowey and Susie ACTs deal fixed target damage and preserve TP costs and healing', () => {
+  for (const [target, damage] of [
+    ['roaring', 30],
+    ['kaizo', 20],
+  ] as const) {
+    const b = createKnightEncounter(),
+      party = hp();
+    b.knightTarget = target;
+    b.enemy = b.knightEnemies![target];
+    useDarkAct(b, party);
+    b.tp = 100;
+    assert.match(darkActInfo(b).description, new RegExp(`Deal ${damage} damage`));
+    const before = b.enemy.hp;
+    useDarkAct(b, party);
+    advanceBattleTime(b, pelletsDuration + 0.01, party);
+    assert.equal(b.enemy.hp, before - damage);
+    assert.equal(party.Flowey, 85);
+    assert.equal(b.tp, 35);
+    b.tp = 100;
+    assert.match(darkActInfo(b).description, new RegExp(`Deal ${damage} damage`));
+    // Rude Buster no longer varies with its random roll in this battle.
+    useDarkAct(b, party, () => 0.999);
+    assert.equal(b.enemy.hp, before - damage * 2);
+    assert.equal(b.tp, 30);
+    assert.equal(b.turn, 'Ralsey');
+  }
 });
 test('fallen party members are skipped and healing items still consume their user’s turn', () => {
   const b = createKnightEncounter(),

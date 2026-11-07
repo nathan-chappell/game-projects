@@ -1,3 +1,4 @@
+import { knightDamage } from '../knights/damage.ts';
 import { advanceTennaEnding, beginTennaEnding } from '../tenna/ending.ts';
 import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
 import { queueTennaScoreEvent, undyneActive } from '../tenna/score-events.ts';
@@ -655,13 +656,15 @@ export function attackEnemy(encounter: Encounter) {
   const actor = encounter.turn;
   const damage = damageEnemy(
     encounter,
-    ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '') && actor === 'Susie'
-      ? 150
-      : ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '') && actor === 'Ralsey'
-        ? 60
-        : canFloweyAct(encounter)
-          ? battleSettings.floweyAttackDamage
-          : battleSettings.krisAttackDamage,
+    encounter.kind === 'knights'
+      ? knightDamage(encounter, 'attack')
+      : ['dark', 'tenna'].includes(encounter.kind ?? '') && actor === 'Susie'
+        ? 150
+        : ['dark', 'tenna'].includes(encounter.kind ?? '') && actor === 'Ralsey'
+          ? 60
+          : canFloweyAct(encounter)
+            ? battleSettings.floweyAttackDamage
+            : battleSettings.krisAttackDamage,
   );
   const message = `${actor} dealt ${damage} damage to ${encounter.enemy.name}.`;
   if (encounter.phase === 'victory') encounter.message = message + ` ${encounter.enemy.name} was defeated.`;
@@ -807,7 +810,10 @@ export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: Pa
     let changed = false;
     if (!present(cast).impacted && present(cast).age >= pelletsImpactTime - 1e-9) {
       present(cast).impacted = true;
-      const damage = damageEnemy(encounter, battleSettings.pelletsDamage);
+      const damage = damageEnemy(
+        encounter,
+        encounter.kind === 'knights' ? knightDamage(encounter, 'act') : battleSettings.pelletsDamage,
+      );
       if (encounter.phase === 'jackLever') return true;
       if (encounter.phase === 'victory') {
         encounter.pelletsCast = null;
@@ -931,7 +937,10 @@ export function useDarkAct(encounter: Encounter, partyHP: PartyHP, random: () =>
   }
   if (actor === 'Susie') {
     encounter.tp -= act.cost;
-    const amount = 170 + Math.min(60, Math.floor(random() * 61)),
+    const amount =
+        encounter.kind === 'knights'
+          ? knightDamage(encounter, 'act')
+          : 170 + Math.min(60, Math.floor(random() * 61)),
       damage = damageEnemy(encounter, amount);
     const message = `Susie used Rude Buster! ${encounter.enemy.name} took ${damage} damage.`;
     if (encounter.phase === 'victory') encounter.message = message + ` ${encounter.enemy.name} was defeated.`;
