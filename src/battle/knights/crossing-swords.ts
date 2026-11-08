@@ -1,3 +1,4 @@
+import { crossesOpposingKnight } from './projectiles.ts';
 import type { Arena } from '../shared/types.ts';
 import type { KnightOwner, KnightProjectile } from './projectiles.ts';
 import type { Point } from '../../world/types.ts';
@@ -182,11 +183,7 @@ export function advanceAngledSwords(swords: CrossingSword[], age: number, dt: nu
     const distance = Math.max(0, age - sword.launch) * sword.speed;
     sword.x = sword.origin.x + cos * distance;
     sword.y = sword.origin.y + sin * distance;
-    const target =
-      sword.owner === 'roaring'
-        ? { x: 482, y: 50, width: 155, height: 240 }
-        : { x: 8, y: 50, width: 155, height: 240 };
-    if (segmentInRect(previous, { x: sword.x + cos * tip, y: sword.y + sin * tip }, target))
+    if (crossesOpposingKnight(sword.owner, previous, { x: sword.x + cos * tip, y: sword.y + sin * tip }))
       arrived.push(sword);
   }
   return {
@@ -196,29 +193,6 @@ export function advanceAngledSwords(swords: CrossingSword[], age: number, dt: nu
       (s) => s.hitOpponent || (age - s.launch) * s.speed >= (s.maxDistance ?? crossingSwordSettings.distance),
     ),
   };
-}
-function segmentInRect(
-  from: Point,
-  to: Point,
-  rect: { x: number; y: number; width: number; height: number },
-) {
-  let low = 0,
-    high = 1;
-  for (const [a, delta, min, max] of [
-    [from.x, to.x - from.x, rect.x, rect.x + rect.width],
-    [from.y, to.y - from.y, rect.y, rect.y + rect.height],
-  ]) {
-    if (Math.abs(delta) < 1e-9) {
-      if (a < min || a > max) return false;
-      continue;
-    }
-    const t1 = (min - a) / delta,
-      t2 = (max - a) / delta;
-    low = Math.max(low, Math.min(t1, t2));
-    high = Math.min(high, Math.max(t1, t2));
-    if (low > high) return false;
-  }
-  return true;
 }
 export function advanceCrossingSwords(
   attack: CrossingSwords,

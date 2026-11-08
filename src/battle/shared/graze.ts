@@ -1,3 +1,4 @@
+import { starTouchesSoul } from '../knights/starbursts.ts';
 import { crossingSwordTouches } from '../knights/crossing-swords.ts';
 import { boltTouches } from '../tenna/tv-bolts.ts';
 import { miniSwordHazards } from '../dark/mini-swords.ts';
@@ -24,7 +25,13 @@ export function isGrazingHazard(encounter: Encounter, settings: typeof battleSet
       distance = dx * dx + dy * dy;
     hazards.push({ hit: distance <= radius * radius, near: !ball.hit && distance <= (radius + margin) ** 2 });
   };
-  if (snow.direction === 'knightCrossing') {
+  if (snow.direction === 'knightStars') {
+    for (const star of [...snow.knightStars.stars, ...snow.knightStars.fragments])
+      hazards.push({
+        hit: starTouchesSoul(star, soul, width, height),
+        near: starTouchesSoul(star, soul, width, height, margin),
+      });
+  } else if (snow.direction === 'knightCrossing') {
     for (const sword of snow.knightCrossing.swords)
       hazards.push({
         hit: crossingSwordTouches(sword, soul, width, height),

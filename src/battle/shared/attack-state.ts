@@ -1,3 +1,4 @@
+import { createStarbursts } from '../knights/starbursts.ts';
 import { createCrossingSwords } from '../knights/crossing-swords.ts';
 import { createKnightSwords } from '../knights/swords.ts';
 import { createUndyneAttack } from '../tenna/undyne.ts';
@@ -41,6 +42,8 @@ export function createAttackState(
     grazeCooldown: 0,
   };
   switch (direction) {
+    case 'knightStars':
+      return { ...base, direction, knightStars: createStarbursts(arena) };
     case 'knightCrossing':
       return { ...base, direction, knightCrossing: createCrossingSwords(arena) };
     case 'knightSwords':

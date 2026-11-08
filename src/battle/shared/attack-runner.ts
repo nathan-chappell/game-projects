@@ -1,3 +1,4 @@
+import { advanceStarbursts, starTouchesSoul } from '../knights/starbursts.ts';
 import { advanceCrossingSwords, crossingSwordTouches } from '../knights/crossing-swords.ts';
 import { advanceKnightSwords, knightSwordSettings } from '../knights/swords.ts';
 import { hitOpposingKnight, knightProjectileRules } from '../knights/projectiles.ts';
@@ -74,40 +75,54 @@ export function createAttackRunner(dependencies: Dependencies) {
   function stepSnowAttack(encounter: Encounter, partyHP: PartyHP, dt: number, random: () => number) {
     const snow = present(encounter.snowAttack),
       soul = present(encounter.soul);
-    if (snow.direction === 'knightSwords' || snow.direction === 'knightCrossing') {
+    if (
+      snow.direction === 'knightSwords' ||
+      snow.direction === 'knightCrossing' ||
+      snow.direction === 'knightStars'
+    ) {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
       const alive = (owner: 'roaring' | 'kaizo') => (encounter.knightEnemies?.[owner].hp ?? 0) > 0;
       const result =
-        snow.direction === 'knightCrossing'
-          ? advanceCrossingSwords(snow.knightCrossing, dt, alive, soul)
-          : advanceKnightSwords(snow.knightSwords, dt, alive, soul);
+        snow.direction === 'knightStars'
+          ? advanceStarbursts(snow.knightStars, dt, alive)
+          : snow.direction === 'knightCrossing'
+            ? advanceCrossingSwords(snow.knightCrossing, dt, alive, soul)
+            : advanceKnightSwords(snow.knightSwords, dt, alive, soul);
       let changed = false;
       if (snow.hitCooldown <= 0) {
         const hit =
-          snow.direction === 'knightCrossing'
-            ? snow.knightCrossing.swords.find((sword) =>
-                crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+          snow.direction === 'knightStars'
+            ? [...snow.knightStars.stars, ...snow.knightStars.fragments].find((star) =>
+                starTouchesSoul(star, soul, battleSettings.soulWidth, battleSettings.soulHeight),
               )
-            : (snow.knightSwords.swords.find(
-                (sword) =>
-                  !sword.hitOpponent &&
-                  swordTouchesSoul(
-                    sword,
-                    sword.owner === 'roaring' ? 1 : -1,
-                    soul,
-                    battleSettings.soulWidth,
-                    battleSettings.soulHeight,
-                  ),
-              ) ??
-              snow.knightSwords.minis.find((sword) =>
-                crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
-              ));
+            : snow.direction === 'knightCrossing'
+              ? snow.knightCrossing.swords.find((sword) =>
+                  crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+                )
+              : (snow.knightSwords.swords.find(
+                  (sword) =>
+                    !sword.hitOpponent &&
+                    swordTouchesSoul(
+                      sword,
+                      sword.owner === 'roaring' ? 1 : -1,
+                      soul,
+                      battleSettings.soulWidth,
+                      battleSettings.soulHeight,
+                    ),
+                ) ??
+                snow.knightSwords.minis.find((sword) =>
+                  crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+                ));
         if (hit) {
           changed = dependencies.damageLivingTeammate(
             encounter,
             partyHP,
             projectileDamage(encounter, knightProjectileRules[hit.owner].partyDamage),
-            hit.owner === 'roaring' ? 'Roaring Knight’s sword' : 'Kaizo Knight’s sword',
+            snow.direction === 'knightStars'
+              ? 'a starburst'
+              : hit.owner === 'roaring'
+                ? 'Roaring Knight’s sword'
+                : 'Kaizo Knight’s sword',
             random,
           );
           snow.hitCooldown = knightSwordSettings.hitCooldown;
