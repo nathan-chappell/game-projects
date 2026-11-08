@@ -101,7 +101,14 @@ export function crossingWarnings(attack: CrossingSwords) {
     : [];
 }
 export const edgeMiniSettings = { perVolley: 3, speed: 340, scale: 0.4, distance: 500 };
-export function edgeMiniVolley(attack: CrossingSwords, wave: number, soul: Point): CrossingSword[] {
+export function edgeMiniVolley(
+  attack: Pick<CrossingSwords, 'arena'>,
+  wave: number,
+  soul: Point,
+  launch = crossingSwordSettings.warmup +
+    crossingSwordSettings.warning +
+    wave * crossingSwordSettings.interval,
+): CrossingSword[] {
   const { x, y, size, border } = attack.arena;
   const left = x + border,
     top = y + border,
@@ -123,8 +130,7 @@ export function edgeMiniVolley(attack: CrossingSwords, wave: number, soul: Point
       ...origin,
       origin,
       angle: Math.atan2(soul.y - origin.y, soul.x - origin.x),
-      launch:
-        crossingSwordSettings.warmup + crossingSwordSettings.warning + wave * crossingSwordSettings.interval,
+      launch,
       speed: edgeMiniSettings.speed,
       scale: edgeMiniSettings.scale,
       maxDistance: edgeMiniSettings.distance,
@@ -132,6 +138,64 @@ export function edgeMiniVolley(attack: CrossingSwords, wave: number, soul: Point
       hitOpponent: false,
     };
   });
+}
+export function advanceEdgeMinis(
+  attack: Pick<CrossingSwords, 'arena' | 'age' | 'miniWaves' | 'miniWarnings'>,
+  timing: { warmup: number; warning: number; interval: number; waves: number },
+  soul: Point,
+  alive: (owner: KnightOwner) => boolean,
+) {
+  attack.miniWarnings = attack.miniWarnings.filter((sword) => alive(sword.owner));
+  while (
+    attack.miniWaves < timing.waves &&
+    attack.age >= timing.warmup + attack.miniWaves * timing.interval - 1e-9
+  ) {
+    // Aim once at the start of the warning; moving afterward dodges the shot.
+    attack.miniWarnings.push(
+      ...edgeMiniVolley(
+        attack,
+        attack.miniWaves,
+        soul,
+        timing.warmup + timing.warning + attack.miniWaves * timing.interval,
+      ).filter((s) => alive(s.owner)),
+    );
+    attack.miniWaves++;
+  }
+  const launched: CrossingSword[] = [];
+  for (const sword of attack.miniWarnings) {
+    if (attack.age >= sword.launch - 1e-9) launched.push({ ...sword, active: true });
+  }
+  attack.miniWarnings = attack.miniWarnings.filter((s) => attack.age < s.launch - 1e-9);
+  return launched;
+}
+export function advanceAngledSwords(swords: CrossingSword[], age: number, dt: number) {
+  const active = swords.filter(
+    (s) =>
+      !s.hitOpponent && (age - dt - s.launch) * s.speed < (s.maxDistance ?? crossingSwordSettings.distance),
+  );
+  const arrived: CrossingSword[] = [];
+  for (const sword of active) {
+    const cos = Math.cos(sword.angle),
+      sin = Math.sin(sword.angle);
+    const tip = 35 * (sword.scale ?? 1);
+    const previous = { x: sword.x + cos * tip, y: sword.y + sin * tip };
+    const distance = Math.max(0, age - sword.launch) * sword.speed;
+    sword.x = sword.origin.x + cos * distance;
+    sword.y = sword.origin.y + sin * distance;
+    const target =
+      sword.owner === 'roaring'
+        ? { x: 482, y: 50, width: 155, height: 240 }
+        : { x: 8, y: 50, width: 155, height: 240 };
+    if (segmentInRect(previous, { x: sword.x + cos * tip, y: sword.y + sin * tip }, target))
+      arrived.push(sword);
+  }
+  return {
+    swords: active,
+    arrived,
+    finished: active.every(
+      (s) => s.hitOpponent || (age - s.launch) * s.speed >= (s.maxDistance ?? crossingSwordSettings.distance),
+    ),
+  };
 }
 function segmentInRect(
   from: Point,
@@ -165,26 +229,7 @@ export function advanceCrossingSwords(
   if (!Number.isFinite(dt) || dt <= 0) return { arrived: [], finished: false };
   attack.age += dt;
   attack.alive = { roaring: alive('roaring'), kaizo: alive('kaizo') };
-  attack.miniWarnings = attack.miniWarnings.filter((sword) => attack.alive[sword.owner]);
-  attack.swords = attack.swords.filter(
-    (s) =>
-      !s.hitOpponent &&
-      (attack.age - dt - s.launch) * s.speed < (s.maxDistance ?? crossingSwordSettings.distance),
-  );
-  while (
-    attack.miniWaves < crossingSwordSettings.waves &&
-    attack.age >= crossingSwordSettings.warmup + attack.miniWaves * crossingSwordSettings.interval - 1e-9
-  ) {
-    // Aim once at the start of the warning; moving afterward dodges the shot.
-    attack.miniWarnings.push(
-      ...edgeMiniVolley(attack, attack.miniWaves, soul).filter((s) => attack.alive[s.owner]),
-    );
-    attack.miniWaves++;
-  }
-  for (const sword of attack.miniWarnings) {
-    if (attack.age >= sword.launch - 1e-9) attack.swords.push({ ...sword, active: true });
-  }
-  attack.miniWarnings = attack.miniWarnings.filter((s) => attack.age < s.launch - 1e-9);
+  attack.swords.push(...advanceEdgeMinis(attack, crossingSwordSettings, soul, alive));
   while (
     attack.waves < crossingSwordSettings.waves &&
     attack.age >=
@@ -196,31 +241,11 @@ export function advanceCrossingSwords(
     attack.swords.push(...crossingWave(attack, attack.waves).filter((s) => attack.alive[s.owner]));
     attack.waves++;
   }
-  const arrived: CrossingSword[] = [];
-  for (const sword of attack.swords) {
-    const cos = Math.cos(sword.angle),
-      sin = Math.sin(sword.angle);
-    const tip = 35 * (sword.scale ?? 1);
-    const previous = { x: sword.x + cos * tip, y: sword.y + sin * tip };
-    const distance = Math.max(0, attack.age - sword.launch) * sword.speed;
-    sword.x = sword.origin.x + cos * distance;
-    sword.y = sword.origin.y + sin * distance;
-    const target =
-      sword.owner === 'roaring'
-        ? { x: 482, y: 50, width: 155, height: 240 }
-        : { x: 8, y: 50, width: 155, height: 240 };
-    if (segmentInRect(previous, { x: sword.x + cos * tip, y: sword.y + sin * tip }, target))
-      arrived.push(sword);
-  }
+  const result = advanceAngledSwords(attack.swords, attack.age, dt);
+  attack.swords = result.swords;
   return {
-    arrived,
-    finished:
-      attack.waves === crossingSwordSettings.waves &&
-      attack.swords.every(
-        (s) =>
-          s.hitOpponent ||
-          (attack.age - s.launch) * s.speed >= (s.maxDistance ?? crossingSwordSettings.distance),
-      ),
+    arrived: result.arrived,
+    finished: attack.waves === crossingSwordSettings.waves && result.finished,
   };
 }
 export function crossingSwordTouches(sword: CrossingSword, soul: Point, width = 24, height = 21, margin = 0) {

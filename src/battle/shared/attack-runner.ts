@@ -80,7 +80,7 @@ export function createAttackRunner(dependencies: Dependencies) {
       const result =
         snow.direction === 'knightCrossing'
           ? advanceCrossingSwords(snow.knightCrossing, dt, alive, soul)
-          : advanceKnightSwords(snow.knightSwords, dt, alive);
+          : advanceKnightSwords(snow.knightSwords, dt, alive, soul);
       let changed = false;
       if (snow.hitCooldown <= 0) {
         const hit =
@@ -88,7 +88,7 @@ export function createAttackRunner(dependencies: Dependencies) {
             ? snow.knightCrossing.swords.find((sword) =>
                 crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
               )
-            : snow.knightSwords.swords.find(
+            : (snow.knightSwords.swords.find(
                 (sword) =>
                   !sword.hitOpponent &&
                   swordTouchesSoul(
@@ -98,7 +98,10 @@ export function createAttackRunner(dependencies: Dependencies) {
                     battleSettings.soulWidth,
                     battleSettings.soulHeight,
                   ),
-              );
+              ) ??
+              snow.knightSwords.minis.find((sword) =>
+                crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+              ));
         if (hit) {
           changed = dependencies.damageLivingTeammate(
             encounter,

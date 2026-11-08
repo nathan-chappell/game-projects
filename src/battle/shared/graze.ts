@@ -39,6 +39,11 @@ export function isGrazingHazard(encounter: Encounter, settings: typeof battleSet
         near: swordTouchesSoul(sword, motion, soul, width, height, margin),
       });
     }
+    for (const sword of snow.knightSwords.minis)
+      hazards.push({
+        hit: crossingSwordTouches(sword, soul, width, height),
+        near: crossingSwordTouches(sword, soul, width, height, margin),
+      });
   } else if (snow.direction === 'tvBolts') {
     for (const b of snow.tvBolts.bolts)
       hazards.push({

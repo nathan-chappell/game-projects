@@ -1,3 +1,4 @@
+import type { CrossingSword } from './crossing-swords.ts';
 import { crossingWarnings, crossingSwordSettings, type CrossingSwords } from './crossing-swords.ts';
 import { drawKnightSword } from './sword-drawing.ts';
 
@@ -17,7 +18,14 @@ export function drawCrossingSwords(ctx: CanvasRenderingContext2D, attack: Crossi
     );
     ctx.stroke();
   }
-  for (const sword of attack.miniWarnings) {
+  drawEdgeMiniWarnings(ctx, attack.miniWarnings);
+  for (const sword of attack.swords) if (!sword.hitOpponent) drawKnightSword(ctx, sword, reduced);
+  ctx.restore();
+}
+
+export function drawEdgeMiniWarnings(ctx: CanvasRenderingContext2D, warnings: CrossingSword[]) {
+  ctx.save();
+  for (const sword of warnings) {
     ctx.fillStyle = '#ffc77b';
     ctx.beginPath();
     ctx.arc(sword.origin.x, sword.origin.y, 5, 0, Math.PI * 2);
@@ -30,6 +38,5 @@ export function drawCrossingSwords(ctx: CanvasRenderingContext2D, attack: Crossi
     ctx.stroke();
     drawKnightSword(ctx, sword, true);
   }
-  for (const sword of attack.swords) if (!sword.hitOpponent) drawKnightSword(ctx, sword, reduced);
   ctx.restore();
 }

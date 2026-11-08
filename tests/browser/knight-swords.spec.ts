@@ -28,22 +28,30 @@ test('both knights launch swords across the soul arena, damage each other and re
   for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
   await expect(page.locator('#battleSoulControls')).toBeVisible();
   await expect(page.locator('#battleAttack')).toBeDisabled();
+  await frames(page, 24);
+  expect(
+    await page.evaluate(
+      () => window.battleFixtureState.bossEncounter!.snowAttack!.knightSwords!.miniWarnings.length,
+    ),
+  ).toBe(3);
   await page.locator('#game').focus();
   await page.keyboard.down('ArrowDown');
   await frames(page, 10);
   await page.keyboard.up('ArrowDown');
   const moved = await page.evaluate(() => window.battleFixtureState.bossEncounter!.soul!.y);
   expect(moved).toBeGreaterThan(163);
-  await frames(page, 60);
+  await frames(page, 36);
   const scene = await page.evaluate(() => {
     const b = window.battleFixtureState.bossEncounter!;
     return {
       owners: b.snowAttack!.knightSwords!.swords.map((s) => s.owner),
+      minis: b.snowAttack!.knightSwords!.minis.length,
       png: (document.querySelector('#game') as HTMLCanvasElement).toDataURL().split(',')[1],
     };
   });
   expect(scene.owners).toContain('roaring');
   expect(scene.owners).toContain('kaizo');
+  expect(scene.minis).toBeGreaterThan(0);
   await writeFile(testInfo.outputPath('knight-first-swords.png'), Buffer.from(scene.png, 'base64'));
   await frames(page, 100);
   const hp = await page.evaluate(() => window.battleFixtureState.bossEncounter!.knightEnemies!);

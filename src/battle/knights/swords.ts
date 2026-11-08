@@ -1,3 +1,5 @@
+import { advanceEdgeMinis, advanceAngledSwords, type CrossingSword } from './crossing-swords.ts';
+import type { Point } from '../../world/types.ts';
 import type { Arena, Sword } from '../shared/types.ts';
 import type { KnightOwner, KnightProjectile } from './projectiles.ts';
 
@@ -20,9 +22,21 @@ export interface KnightSwordAttack {
   waves: number;
   nextId: number;
   swords: KnightSword[];
+  minis: CrossingSword[];
+  miniWarnings: CrossingSword[];
+  miniWaves: number;
 }
 export function createKnightSwords(arena: Arena): KnightSwordAttack {
-  return { arena: { ...arena }, age: 0, waves: 0, nextId: 0, swords: [] };
+  return {
+    arena: { ...arena },
+    age: 0,
+    waves: 0,
+    nextId: 0,
+    swords: [],
+    minis: [],
+    miniWarnings: [],
+    miniWaves: 0,
+  };
 }
 export function knightSwordLane(attack: KnightSwordAttack, lane: number) {
   return attack.arena.y + 15 + (lane * (attack.arena.size - 30)) / (knightSwordSettings.lanes - 1);
@@ -39,9 +53,25 @@ export function advanceKnightSwords(
   attack: KnightSwordAttack,
   dt: number,
   alive: (owner: KnightOwner) => boolean = () => true,
+  soul: Point = { x: attack.arena.x + attack.arena.size / 2, y: attack.arena.y + attack.arena.size / 2 },
 ) {
   if (!Number.isFinite(dt) || dt <= 0) return { arrived: [], finished: false };
   attack.age += dt;
+  attack.minis.push(
+    ...advanceEdgeMinis(
+      attack,
+      {
+        warmup: knightSwordSettings.warmup - knightSwordSettings.warning,
+        warning: knightSwordSettings.warning,
+        interval: knightSwordSettings.interval,
+        waves: knightSwordSettings.waves,
+      },
+      soul,
+      alive,
+    ),
+  );
+  const miniMotion = advanceAngledSwords(attack.minis, attack.age, dt);
+  attack.minis = miniMotion.swords;
   attack.swords = attack.swords.filter((sword) => !sword.hitOpponent);
   while (
     attack.waves < knightSwordSettings.waves &&
@@ -75,7 +105,10 @@ export function advanceKnightSwords(
     if (sword.owner === 'roaring' ? sword.x + 35 >= 510 : sword.x - 35 <= 130) arrived.push(sword);
   }
   return {
-    arrived,
-    finished: attack.waves === knightSwordSettings.waves && attack.swords.every((sword) => sword.hitOpponent),
+    arrived: [...arrived, ...miniMotion.arrived],
+    finished:
+      attack.waves === knightSwordSettings.waves &&
+      attack.swords.every((sword) => sword.hitOpponent) &&
+      miniMotion.finished,
   };
 }

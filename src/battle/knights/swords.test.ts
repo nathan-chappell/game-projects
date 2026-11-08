@@ -1,3 +1,4 @@
+import { edgeMiniVolley } from './crossing-swords.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createKnightEncounter } from './introduction.ts';
@@ -63,6 +64,7 @@ test('the first wave warns, launches both colors at 600 px/s and leaves a soul-s
   assert.ok(gap > battleSettings.soulHeight + 20);
 });
 test('opponents take all twelve volleys at 30/60/144 FPS and control returns to Kris', () => {
+  const totals: number[][] = [];
   for (const fps of [30, 60, 144]) {
     const b = createKnightEncounter(),
       hp = party();
@@ -72,13 +74,16 @@ test('opponents take all twelve volleys at 30/60/144 FPS and control returns to 
       advanceBattleTime(b, 1 / fps, hp);
       advanceSnowAttack(b, hp, 1 / fps, () => 0);
     }
-    assert.equal(b.knightEnemies!.roaring.hp, 20000 - 12 * 5 * 5);
-    assert.equal(b.knightEnemies!.kaizo.hp, 30000 - 12 * 5 * 5);
+    const damage = [20000 - b.knightEnemies!.roaring.hp, 30000 - b.knightEnemies!.kaizo.hp];
+    assert.ok(damage.every((n) => n >= 12 * 5 * 5 && n <= 12 * 5 * 5 + 12 * 3 * 5 && n % 5 === 0));
+    totals.push(damage);
     assert.equal(b.phase, 'kris');
     assert.equal(b.snowAttack, null);
     assert.equal(b.soul, null);
     assert.equal(b.projectileDamageMultiplier, 1);
   }
+  assert.deepEqual(totals[0], totals[1]);
+  assert.deepEqual(totals[1], totals[2]);
 });
 test('black and white sword hits deal 40/50 with cooldown, and honor Hold Breath, Defend and fallen allies', () => {
   for (const [owner, base] of [
@@ -128,10 +133,11 @@ test('soul movement, TP grazing and a reachable changing safe lane work together
     active: true,
   });
   assert.equal(isGrazingHazard(b, battleSettings, battleArena), true);
-  // Standing in the intended moving gap is a viable no-hit route, not a permanent center safe spot.
+  // Isolate the large-sword lanes here; aimed minis require moving away from the warned position.
   const route = createKnightEncounter();
   const routeHP = party();
   startNextEnemyAttack(route, '');
+  route.snowAttack!.knightSwords!.miniWaves = knightSwordSettings.waves;
   const gaps = [2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5];
   route.soul!.y = knightSwordLane(route.snowAttack!.knightSwords!, gaps[0]);
   for (let frame = 0; frame < 12 * 60 && route.phase === 'enemy'; frame++) {
@@ -162,4 +168,55 @@ test('defeated knights stop launching and projectiles still in flight can finish
   const model = createKnightSwords(battleArena);
   advanceKnightSwords(model, 1, (owner) => owner !== 'roaring');
   assert.ok(model.swords.every((shot) => shot.owner === 'kaizo'));
+});
+
+test('the first attack warns and fires three aimed mini swords with each large-sword wave', () => {
+  const a = createKnightSwords(battleArena);
+  const target = { x: 300, y: 180 };
+  advanceKnightSwords(a, 0.4, () => true, target);
+  assert.equal(a.miniWarnings.length, 3);
+  const angles = a.miniWarnings.map((s) => s.angle);
+  assert.ok(a.miniWarnings.every((s) => !s.active && s.scale === 0.4 && s.launch === 0.9));
+  advanceKnightSwords(a, 0.1, () => true, { x: 400, y: 230 });
+  assert.deepEqual(
+    a.miniWarnings.map((s) => s.angle),
+    angles,
+  );
+  advanceKnightSwords(a, 0.4, () => true, { x: 400, y: 230 });
+  assert.equal(a.minis.length, 3);
+  assert.equal(a.miniWarnings.length, 0);
+  assert.deepEqual(
+    a.minis.map((s) => s.angle),
+    angles,
+  );
+  assert.ok(a.minis.every((s) => s.active && s.speed === 340));
+  assert.equal(new Set(a.minis.map((s) => s.owner)).size, 2);
+});
+
+test('first-attack minis damage the party and award near-miss TP through their scaled hitboxes', () => {
+  for (const [owner, damage] of [
+    ['roaring', 40],
+    ['kaizo', 50],
+  ] as const) {
+    const b = createKnightEncounter(),
+      hp = party();
+    startNextEnemyAttack(b, '');
+    const a = b.snowAttack!.knightSwords!;
+    a.waves = a.miniWaves = knightSwordSettings.waves;
+    a.age = 1;
+    const shot = edgeMiniVolley(a, 0, b.soul!)[0];
+    shot.owner = owner;
+    shot.active = true;
+    shot.launch = 1;
+    shot.angle = 0;
+    shot.origin = { x: b.soul!.x - 340 / 60, y: b.soul!.y };
+    shot.x = shot.origin.x;
+    shot.y = shot.origin.y;
+    a.minis = [shot];
+    advanceSnowAttack(b, hp, 1 / 60, () => 0);
+    assert.equal(hp.Kris, 100 - damage);
+    shot.x = b.soul!.x + 7;
+    shot.y = b.soul!.y + 22;
+    assert.equal(isGrazingHazard(b, battleSettings, battleArena), true);
+  }
 });

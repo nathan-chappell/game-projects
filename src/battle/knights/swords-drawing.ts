@@ -1,3 +1,4 @@
+import { drawEdgeMiniWarnings } from './crossing-swords-drawing.ts';
 import { drawKnightSword } from './sword-drawing.ts';
 import { knightSwordWarning, type KnightSwordAttack } from './swords.ts';
 
@@ -21,5 +22,7 @@ export function drawKnightSwords(ctx: CanvasRenderingContext2D, attack: KnightSw
     if (sword.hitOpponent) continue;
     drawKnightSword(ctx, { ...sword, angle: sword.owner === 'roaring' ? 0 : Math.PI }, reduced);
   }
+  drawEdgeMiniWarnings(ctx, attack.miniWarnings);
+  for (const sword of attack.minis) if (!sword.hitOpponent) drawKnightSword(ctx, sword, reduced);
   ctx.restore();
 }
