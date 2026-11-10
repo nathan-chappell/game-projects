@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { controlFrames, frames } from './frames.ts';
-import { installBattleFixture } from './battle-fixture.ts';
+import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { expect, test } from './test.ts';
 
 test('third knight attack has eight faster swords approaching from outside the box', async ({
@@ -10,7 +10,7 @@ test('third knight attack has eight faster swords approaching from outside the b
   await installBattleFixture(page);
   await page.goto('/');
   await frames(page, 1);
-  await page.locator('#knightTeleportButton').click();
+  await startKnightBattleFixture(page);
   await page.locator('#game').focus();
   await page.keyboard.press('Digit2');
   for (let turn = 0; turn < 3; turn++) {

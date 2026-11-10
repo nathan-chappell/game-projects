@@ -1,6 +1,6 @@
 import { T, tiles } from '../../game/config.ts';
 import type { GameState } from '../../game/types.ts';
-import { createKnightBattleIntro, createKnightEncounter } from './introduction.ts';
+import { postShowScene } from '../../rooms/post-show/post-show.ts';
 
 export function knightTeleporterPosition(state: GameState) {
   if (state.roomIndex !== 0) return null;
@@ -18,7 +18,7 @@ export function knightTeleporterPosition(state: GameState) {
   }
   return null;
 }
-export function teleportToKnightBattle(state: GameState) {
+export function teleportToKnightPath(state: GameState, enterRoom: (index: number) => boolean) {
   if (
     state.mode !== 'play' ||
     state.bossEncounter ||
@@ -36,12 +36,10 @@ export function teleportToKnightBattle(state: GameState) {
     (state.knightPath?.duelAge ?? -1) >= 0
   )
     return false;
+  const index = state.project.rooms.findIndex((room) => room.scene === postShowScene);
+  if (index < 0 || !enterRoom(index)) return false;
   state.keys.clear();
   state.player.moving = false;
-  state.fade = 0;
-  state.knightBattle = createKnightBattleIntro();
-  state.bossEncounter = createKnightEncounter();
-  state.bossEncounter.message = 'Teleported to the knight battle. Kris’s turn. Choose an action.';
   return true;
 }
 export function drawKnightTeleporter(ctx: CanvasRenderingContext2D, state: GameState, time: number) {
@@ -74,6 +72,6 @@ export function drawKnightTeleporter(ctx: CanvasRenderingContext2D, state: GameS
   ctx.font = '10px monospace';
   ctx.textAlign = 'center';
   ctx.fillStyle = '#fff0ff';
-  ctx.fillText('KNIGHT BATTLE', 0, -47);
+  ctx.fillText('STATUE PATH', 0, -47);
   ctx.restore();
 }

@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { installBattleFixture } from './battle-fixture.ts';
+import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { seedProgress } from './progress.ts';
 import { expect, test } from './test.ts';
@@ -76,7 +76,7 @@ test('Shift skips the knight enemy attack, clears its hazards and defense, and p
   await installBattleFixture(page);
   await page.goto('/');
   await frames(page, 1);
-  await page.locator('#knightTeleportButton').click();
+  await startKnightBattleFixture(page);
   await page.locator('#battleAct').click();
   await page.locator('#battleProceedButton').click();
   await page.locator('#game').focus();

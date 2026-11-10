@@ -1,4 +1,4 @@
-import { installBattleFixture } from './battle-fixture.ts';
+import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -41,7 +41,7 @@ test('in-game touch pad supports held movement and releases cleanly; A and B sha
   await expect(page.locator('#mobileGameControls')).toBeHidden();
   await page.locator('#playMode').tap();
   await frames(page, 1);
-  await page.locator('#knightTeleportButton').tap();
+  await startKnightBattleFixture(page);
   await frames(page, 1);
   await expect(page.locator('#mobileDpad')).toBeHidden();
   await page.locator('#mobileConfirm').tap();

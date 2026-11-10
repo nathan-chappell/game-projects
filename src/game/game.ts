@@ -3,7 +3,7 @@ import { isPelletCast } from '../battle/noelle/pellets.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
 import { canPartyAct, canUseBattleAction } from '../battle/shared/availability.ts';
 import { bindMobileControls } from './mobile-controls.ts';
-import { teleportToKnightBattle } from '../battle/knights/teleporter.ts';
+import { teleportToKnightPath } from '../battle/knights/teleporter.ts';
 import { setupBattleControls } from '../battle/shared/controls.ts';
 import { createEncounter, useBattleItem } from '../battle/shared/rules.ts';
 import { createDialogue } from '../dialogue/controller.ts';
@@ -920,7 +920,11 @@ export function startGame() {
   };
   $('inventoryButton').onclick = toggleInventory;
   $('knightTeleportButton').onclick = () => {
-    if (document.querySelector('dialog[open]') || !teleportToKnightBattle(state)) return;
+    if (
+      document.querySelector('dialog[open]') ||
+      !teleportToKnightPath(state, (index) => changeRoom(index, false, undefined, false, true))
+    )
+      return;
     syncBossUI();
     storyUI();
     canvas.focus({ preventScroll: true });

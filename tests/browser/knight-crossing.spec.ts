@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { controlFrames, frames } from './frames.ts';
-import { installBattleFixture } from './battle-fixture.ts';
+import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { expect, test } from './test.ts';
 
 test('second knight attack shows diagonal warnings, mixed sword waves, and mobile skip', async ({
@@ -10,7 +10,7 @@ test('second knight attack shows diagonal warnings, mixed sword waves, and mobil
   await installBattleFixture(page);
   await page.goto('/');
   await frames(page, 1);
-  await page.locator('#knightTeleportButton').click();
+  await startKnightBattleFixture(page);
   await page.locator('#game').focus();
   await page.keyboard.press('Digit2');
   for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();

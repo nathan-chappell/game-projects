@@ -1,4 +1,4 @@
-import { knightTeleporterPosition, teleportToKnightBattle } from '../battle/knights/teleporter.ts';
+import { knightTeleporterPosition, teleportToKnightPath } from '../battle/knights/teleporter.ts';
 import { createKnightBattleIntro, createKnightEncounter } from '../battle/knights/introduction.ts';
 import { knightSequenceSeconds } from '../rooms/post-show/knight-choreography.ts';
 import {
@@ -70,6 +70,7 @@ interface Dependencies {
     throughDoor?: boolean,
     preferred?: Point | undefined,
     bossConfirmed?: boolean,
+    fromKnightTeleporter?: boolean,
   ) => boolean;
   readonly collides: (x: number, y: number) => boolean;
   readonly updateFollower: (dt: number) => void;
@@ -348,7 +349,7 @@ export function createGameLoop(dependencies: Dependencies) {
     if (
       teleporter &&
       Math.hypot(state.player.x - teleporter.x, state.player.y - teleporter.y) < 16 &&
-      teleportToKnightBattle(state)
+      teleportToKnightPath(state, (index) => dependencies.changeRoom(index, false, undefined, false, true))
     ) {
       dependencies.syncBossUI();
       dependencies.storyUI();

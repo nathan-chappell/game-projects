@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { installBattleFixture } from './battle-fixture.ts';
+import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -11,7 +11,7 @@ test('knights keep dueling behind usable party menus without dealing waiting dam
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/');
   await frames(page, 1);
-  await page.locator('#knightTeleportButton').click();
+  await startKnightBattleFixture(page);
   await page.evaluate(async () => {
     const path = '/src/rooms/post-show/knight-sprites.ts';
     const sprites = await import(path);

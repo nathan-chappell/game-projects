@@ -1,3 +1,4 @@
+import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -5,10 +6,11 @@ test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true
 
 test('phone buttons toggle knight invincibility and skip the enemy attack', async ({ page }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await page.goto('/');
   await frames(page, 1);
   await expect(page.locator('#battleKnightTestingControls')).toBeHidden();
-  await page.locator('#knightTeleportButton').tap();
+  await startKnightBattleFixture(page);
   await frames(page, 1);
   const toggle = page.locator('#mobileInvincible');
   const skip = page.locator('#mobileSkip');

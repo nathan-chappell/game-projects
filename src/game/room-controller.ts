@@ -40,6 +40,7 @@ export function createRoomController(dependencies: Dependencies) {
     throughDoor = false,
     preferred: Point | undefined = undefined,
     bossConfirmed = false,
+    fromKnightTeleporter = false,
   ) {
     const next = state.project.rooms[index];
     const previousScene = dependencies.current().scene;
@@ -51,7 +52,12 @@ export function createRoomController(dependencies: Dependencies) {
       dependencies.toast('Wait for Tenna’s backstage invitation.');
       return false;
     }
-    if (next.scene === postShowScene && state.mode === 'play' && !state.story.tennaFinaleComplete) {
+    if (
+      next.scene === postShowScene &&
+      state.mode === 'play' &&
+      !state.story.tennaFinaleComplete &&
+      !fromKnightTeleporter
+    ) {
       dependencies.toast('Finish Tenna’s Finale first.');
       return false;
     }

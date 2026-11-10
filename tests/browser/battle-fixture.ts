@@ -42,3 +42,16 @@ export async function finishAttackFixture(page: Page) {
     window.refreshBattleFixture();
   });
 }
+
+/** Enter combat directly only in tests that exercise combat, independently of exploration shortcuts. */
+export async function startKnightBattleFixture(page: Page) {
+  await page.evaluate(async () => {
+    const modulePath = '/src/battle/knights/introduction.ts';
+    const { createKnightBattleIntro, createKnightEncounter } = await import(modulePath);
+    const state = window.battleFixtureState;
+    state.keys.clear();
+    state.knightBattle = createKnightBattleIntro();
+    state.bossEncounter = createKnightEncounter();
+    window.refreshBattleFixture();
+  });
+}
