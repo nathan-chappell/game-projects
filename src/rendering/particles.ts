@@ -108,6 +108,7 @@ export function createParticles(
         'queenPasscode',
         'collisionChamber',
         'postShowPassage',
+        'mysteriousVoid',
       ].includes(current().scene ?? '')
     )
       return;

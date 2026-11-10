@@ -1,3 +1,4 @@
+import { drawKnightRift } from '../knights/rift-drawing.ts';
 import { drawAimedSwords } from '../knights/aimed-swords-drawing.ts';
 import { drawCrossingSwords } from '../knights/crossing-swords-drawing.ts';
 import { partyDuelFrame } from '../knights/party-duel.ts';
@@ -687,6 +688,10 @@ export function createBattleDrawing(
       t = reducedParticleMotion.matches ? 0 : time;
     const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
+    if (encounter?.phase === 'knightRift') {
+      drawKnightRift(ctx, encounter.animationAge, reducedParticleMotion.matches);
+      return;
+    }
     if (encounter?.kind === 'knights') {
       drawKnightBattlefield(ctx, t);
       const dueling =

@@ -1,3 +1,5 @@
+import { advanceKnightRift } from '../battle/knights/rift.ts';
+import { mysteriousVoidScene } from '../rooms/mysterious-void/room.ts';
 import { knightTeleporterPosition, teleportToKnightPath } from '../battle/knights/teleporter.ts';
 import { createKnightBattleIntro, createKnightEncounter } from '../battle/knights/introduction.ts';
 import { knightSequenceSeconds } from '../rooms/post-show/knight-choreography.ts';
@@ -292,6 +294,19 @@ export function createGameLoop(dependencies: Dependencies) {
         dependencies.canvas.focus({ preventScroll: true });
         return;
       }
+    }
+    if (state.bossEncounter?.phase === 'knightRift') {
+      state.keys.clear();
+      state.player.moving = false;
+      if (dependencies.partyHasFallen()) {
+        dependencies.beginDeath();
+        return;
+      }
+      if (advanceKnightRift(state.bossEncounter, dt)) {
+        const destination = state.project.rooms.findIndex((room) => room.scene === mysteriousVoidScene);
+        if (destination >= 0) dependencies.changeRoom(destination, true);
+      }
+      return;
     }
     if (state.bossEncounter && !state.dialogue) {
       let changed = advanceBattleTime(state.bossEncounter, dt, state.partyHP);

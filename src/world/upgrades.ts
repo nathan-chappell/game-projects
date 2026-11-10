@@ -1,3 +1,4 @@
+import { addMysteriousVoid } from '../rooms/mysterious-void/room.ts';
 import { addPostShowPassage } from '../rooms/post-show/post-show.ts';
 import { addBackstageRoom } from '../rooms/backstage/world.ts';
 import { addCoreEntrance, addDeeperCore, addFurnaceChamber, addLowerCore } from '../rooms/core/world.ts';
@@ -48,6 +49,7 @@ export function upgradeProject(project: Project) {
     addQueenRoom,
     addCollisionChamber,
     addPostShowPassage,
+    addMysteriousVoid,
   ];
   for (const update of updates) project = update(project);
   return project;

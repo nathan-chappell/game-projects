@@ -1,3 +1,4 @@
+import { beginKnightRift } from '../knights/rift.ts';
 import { advancePartyDuel } from '../knights/party-duel.ts';
 import { knightDamage } from '../knights/damage.ts';
 import { advanceTennaEnding, beginTennaEnding } from '../tenna/ending.ts';
@@ -286,6 +287,7 @@ export function startKrisTurn(encounter: Encounter, partyHP?: PartyHP) {
     encounter.knightTarget = encounter.knightEnemies.roaring.hp > 0 ? 'roaring' : 'kaizo';
     encounter.enemy = encounter.knightEnemies[encounter.knightTarget];
   }
+  if (beginKnightRift(encounter)) return true;
   encounter.message = finishedSnowgrave
     ? 'Snowgrave ends. Kris and Flowey recover 50 HP. Noelle is at 1 HP. Only ATTACK remains.'
     : 'Kris’s turn. Choose an action.';

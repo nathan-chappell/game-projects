@@ -1,3 +1,4 @@
+import { drawMysteriousVoid } from '../rooms/mysterious-void/drawing.ts';
 import { syncMobileControls } from '../game/mobile-controls.ts';
 import { drawKnightTeleporter } from '../battle/knights/teleporter.ts';
 import { createKnightPathDrawing } from '../rooms/post-show/knight-path-drawing.ts';
@@ -627,6 +628,7 @@ export function createRenderer(
       for (let x = 0; x < W; x++)
         if (![1, 10].includes(r.map[y][x])) drawTile(r.map[y][x], x * T, y * T, r.theme);
     if (state.mode === 'build' && r.scene === 'glitchBoss') drawNoelleBoss(528, 122, 140);
+    if (r.scene === 'mysteriousVoid') drawMysteriousVoid(ctx, time, reducedParticleMotion.matches);
     if (r.scene === 'glitchStudio') glitchStudioDrawing.room(time, r);
     if (r.scene === postShowScene) drawPostShowRoom(ctx, r, time, reducedParticleMotion.matches);
     if (r.scene === 'glitchBackstage') {

@@ -95,11 +95,19 @@ export function createHud(dependencies: Dependencies) {
         : 'Spare cameras hang above a dark room filled with old show equipment.';
       return;
     }
+    if (dependencies.current().scene === 'mysteriousVoid') {
+      dependencies.$('taskTitle').textContent = 'Mysterious Room';
+      dependencies.$('taskDescription').textContent = 'A pale platform hangs in a silent, black void.';
+      dependencies.$('storySummary').textContent =
+        'The Fountain brought you somewhere between darkness and light.';
+      return;
+    }
     if (state.knightBattle) {
       dependencies.$('taskTitle').textContent = 'Three Teams';
       dependencies.$('taskDescription').textContent =
         'Choose actions for Kris, Flowey, Susie and Ralsey. Select either knight as your target.';
-      dependencies.$('storySummary').textContent = 'Hold Breath costs no TP and reduces the team’s incoming damage by 25% for one enemy turn.';
+      dependencies.$('storySummary').textContent =
+        'Hold Breath costs no TP and reduces the team’s incoming damage by 25% for one enemy turn.';
       return;
     }
     if (dependencies.current().scene === 'postShowPassage') {

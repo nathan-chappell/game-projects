@@ -82,6 +82,7 @@ export function createParty(dependencies: Dependencies) {
           'queenPasscode',
           'collisionChamber',
           'postShowPassage',
+          'mysteriousVoid',
         ].includes(room.scene ?? ''))
     );
   }

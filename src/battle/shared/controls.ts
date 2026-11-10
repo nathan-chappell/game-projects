@@ -471,12 +471,13 @@ export function setupBattleControls(
       active = state.mode === 'play' && !!encounter;
     const intro = active && encounter.phase === 'intro',
       acting = active && !state.death && canPartyAct(encounter);
-    $('bossControls').hidden = !active || intro || !!state.death || isBattleBlackout(encounter);
+    $('bossControls').hidden =
+      !active || intro || !!state.death || encounter?.phase === 'knightRift' || isBattleBlackout(encounter);
     $('playControls').hidden = state.mode !== 'play' || (active && !intro);
     $('talkButton').disabled = $('inspectButton').disabled = active && !intro;
     $('inventoryButton').disabled =
       active &&
-      (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(encounter.phase) ||
+      (['minigame', 'minigameIntro', 'knightRift', ...tennaEndingPhases].includes(encounter.phase) ||
         isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));
@@ -641,7 +642,7 @@ export function setupBattleControls(
     $('leaveBossButton').disabled =
       encounter?.kind === 'knights' ||
       (active &&
-        (['minigame', 'minigameIntro', ...tennaEndingPhases].includes(encounter.phase) ||
+        (['minigame', 'minigameIntro', 'knightRift', ...tennaEndingPhases].includes(encounter.phase) ||
           isPelletCast(encounter) ||
           isProceedScene(encounter) ||
           encounter.phase === 'rescue' ||

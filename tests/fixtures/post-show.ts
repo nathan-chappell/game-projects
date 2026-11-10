@@ -2,6 +2,7 @@ import type { Project } from '../../src/world/types.ts';
 
 /** Reconstruct the world before the post-Finale extension for older-build migration tests. */
 export function removePostShowFixture(project: Project) {
+  if (project.rooms.at(-1)?.scene === 'mysteriousVoid') project.rooms.pop();
   const passage = project.rooms.findIndex((room) => room.scene === 'postShowPassage');
   if (passage < 0) return project;
   if (passage !== project.rooms.length - 1) throw new Error('Post-show fixture must be the last room');
