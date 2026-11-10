@@ -102,7 +102,7 @@ test('second attack is selected after the first, then finishes at 30/60/144 FPS 
     assert.ok(losses.every((loss) => loss > 0 && loss % 5 === 0));
     results.push(losses);
     startNextEnemyAttack(b, '');
-    assert.equal((b as Encounter).snowAttack?.direction, 'knightStars');
+    assert.equal((b as Encounter).snowAttack?.direction, 'knightAimed');
     startKrisTurn(b, party);
     startNextEnemyAttack(b, '');
     assert.equal((b as Encounter).snowAttack?.direction, 'knightSwords');

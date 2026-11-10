@@ -1,4 +1,4 @@
-import { drawStarbursts } from '../knights/starbursts-drawing.ts';
+import { drawAimedSwords } from '../knights/aimed-swords-drawing.ts';
 import { drawCrossingSwords } from '../knights/crossing-swords-drawing.ts';
 import { partyDuelFrame } from '../knights/party-duel.ts';
 import { drawPartyDuelEffects } from '../knights/party-duel-drawing.ts';
@@ -212,8 +212,8 @@ export function createBattleDrawing(
       const inSnow = isSoulInSnow(encounter),
         title =
           encounter.kind === 'knights'
-            ? encounter.snowAttack.direction === 'knightStars'
-              ? 'DODGE THE STARBURSTS'
+            ? encounter.snowAttack.direction === 'knightAimed'
+              ? 'DODGE THE AIMED SWORDS'
               : 'DODGE THE SWORDS'
             : encounter.kind === 'tenna'
               ? encounter.snowAttack?.direction === 'tvBolts'
@@ -712,7 +712,7 @@ export function createBattleDrawing(
               x: canControlSoul(encounter) ? (kaizo ? 550 : 90) : x,
               jump: 112,
               facing: kaizo ? -1 : 1,
-              swordAngle: encounter.snowAttack?.direction === 'knightStars' ? -Math.PI / 2 : 0.12,
+              swordAngle: 0.12,
               lean: 0,
             },
             time,
@@ -753,20 +753,20 @@ export function createBattleDrawing(
         canControlSoul(encounter) &&
         (encounter.snowAttack.direction === 'knightSwords' ||
           encounter.snowAttack.direction === 'knightCrossing' ||
-          encounter.snowAttack.direction === 'knightStars')
+          encounter.snowAttack.direction === 'knightAimed')
       ) {
         const box =
           encounter.snowAttack.direction === 'knightSwords'
             ? encounter.snowAttack.knightSwords.arena
-            : encounter.snowAttack.direction === 'knightStars'
-              ? encounter.snowAttack.knightStars.arena
+            : encounter.snowAttack.direction === 'knightAimed'
+              ? encounter.snowAttack.knightAimed.arena
               : encounter.snowAttack.knightCrossing.arena;
         rect(box.x, box.y, box.size, box.size, '#07070c');
         ctx.strokeStyle = '#65e895';
         ctx.lineWidth = box.border;
         ctx.strokeRect(box.x, box.y, box.size, box.size);
-        if (encounter.snowAttack.direction === 'knightStars')
-          drawStarbursts(ctx, encounter.snowAttack.knightStars, reducedParticleMotion.matches);
+        if (encounter.snowAttack.direction === 'knightAimed')
+          drawAimedSwords(ctx, encounter.snowAttack.knightAimed, reducedParticleMotion.matches);
         else if (encounter.snowAttack.direction === 'knightCrossing')
           drawCrossingSwords(ctx, encounter.snowAttack.knightCrossing, reducedParticleMotion.matches);
         else drawKnightSwords(ctx, encounter.snowAttack.knightSwords, reducedParticleMotion.matches);

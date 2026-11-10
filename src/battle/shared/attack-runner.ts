@@ -1,4 +1,4 @@
-import { advanceStarbursts, starTouchesSoul } from '../knights/starbursts.ts';
+import { advanceAimedSwords } from '../knights/aimed-swords.ts';
 import { advanceCrossingSwords, crossingSwordTouches } from '../knights/crossing-swords.ts';
 import { advanceKnightSwords, knightSwordSettings } from '../knights/swords.ts';
 import { hitOpposingKnight, knightProjectileRules } from '../knights/projectiles.ts';
@@ -78,22 +78,22 @@ export function createAttackRunner(dependencies: Dependencies) {
     if (
       snow.direction === 'knightSwords' ||
       snow.direction === 'knightCrossing' ||
-      snow.direction === 'knightStars'
+      snow.direction === 'knightAimed'
     ) {
       snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
       const alive = (owner: 'roaring' | 'kaizo') => (encounter.knightEnemies?.[owner].hp ?? 0) > 0;
       const result =
-        snow.direction === 'knightStars'
-          ? advanceStarbursts(snow.knightStars, dt, alive)
+        snow.direction === 'knightAimed'
+          ? advanceAimedSwords(snow.knightAimed, dt, alive, soul)
           : snow.direction === 'knightCrossing'
             ? advanceCrossingSwords(snow.knightCrossing, dt, alive, soul)
             : advanceKnightSwords(snow.knightSwords, dt, alive, soul);
       let changed = false;
       if (snow.hitCooldown <= 0) {
         const hit =
-          snow.direction === 'knightStars'
-            ? [...snow.knightStars.stars, ...snow.knightStars.fragments].find((star) =>
-                starTouchesSoul(star, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+          snow.direction === 'knightAimed'
+            ? [...snow.knightAimed.rim, ...snow.knightAimed.swords].find((sword) =>
+                crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
               )
             : snow.direction === 'knightCrossing'
               ? snow.knightCrossing.swords.find((sword) =>
@@ -118,11 +118,7 @@ export function createAttackRunner(dependencies: Dependencies) {
             encounter,
             partyHP,
             projectileDamage(encounter, knightProjectileRules[hit.owner].partyDamage),
-            snow.direction === 'knightStars'
-              ? 'a starburst'
-              : hit.owner === 'roaring'
-                ? 'Roaring Knight’s sword'
-                : 'Kaizo Knight’s sword',
+            hit.owner === 'roaring' ? 'Roaring Knight’s sword' : 'Kaizo Knight’s sword',
             random,
           );
           snow.hitCooldown = knightSwordSettings.hitCooldown;

@@ -1,4 +1,4 @@
-import type { Starbursts } from '../knights/starbursts.ts';
+import type { AimedSwords } from '../knights/aimed-swords.ts';
 import type { CrossingSwords } from '../knights/crossing-swords.ts';
 import type { KnightSwordAttack } from '../knights/swords.ts';
 import type { KnightOwner } from '../knights/projectiles.ts';
@@ -119,7 +119,7 @@ export type AttackDirection =
   | 'undyne'
   | 'knightSwords'
   | 'knightCrossing'
-  | 'knightStars';
+  | 'knightAimed';
 export interface AttackBase {
   direction: AttackDirection;
   grazeTP: number;
@@ -151,7 +151,7 @@ export interface AttackBase {
   undyne?: UndyneAttack;
   knightSwords?: KnightSwordAttack;
   knightCrossing?: CrossingSwords;
-  knightStars?: Starbursts;
+  knightAimed?: AimedSwords;
 }
 export type Attack = AttackBase &
   (
@@ -166,7 +166,7 @@ export type Attack = AttackBase &
     | { direction: 'undyne'; undyne: UndyneAttack }
     | { direction: 'knightSwords'; knightSwords: KnightSwordAttack }
     | { direction: 'knightCrossing'; knightCrossing: CrossingSwords }
-    | { direction: 'knightStars'; knightStars: Starbursts }
+    | { direction: 'knightAimed'; knightAimed: AimedSwords }
   );
 export type BattleAction = 'attack' | 'act' | 'item' | 'defend' | 'spare';
 export interface Rescue {

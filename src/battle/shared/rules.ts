@@ -155,7 +155,7 @@ export function isSoulInSnow(encounter: Encounter | null) {
       'snowgrave',
       'knightSwords',
       'knightCrossing',
-      'knightStars',
+      'knightAimed',
     ].includes(encounter.snowAttack.direction)
   )
     return false;
@@ -328,14 +328,14 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'knights') {
-    const direction = (['knightSwords', 'knightCrossing', 'knightStars'] as const)[
+    const direction = (['knightSwords', 'knightCrossing', 'knightAimed'] as const)[
       encounter.enemyAttackCount % 3
     ];
     beginEnemyAttack(
       encounter,
       direction,
-      direction === 'knightStars'
-        ? 'The knights cast stars! Move away before each star bursts into six shots.'
+      direction === 'knightAimed'
+        ? 'Eight swords surround the soul! Move away from their locked aim.'
         : direction === 'knightCrossing'
           ? 'Watch the red lines! Six crossing sword waves get faster!'
           : 'Dodge the black and white swords!',
@@ -507,7 +507,7 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
-  if (encounter?.snowAttack?.direction === 'knightStars') return 'Stars burst into six shots!';
+  if (encounter?.snowAttack?.direction === 'knightAimed') return 'Eight aimed swords · Watch the edges';
   if (encounter?.snowAttack?.direction === 'knightCrossing')
     return `Crossing swords · Wave ${Math.max(1, Math.min(6, encounter.snowAttack.knightCrossing.waves))} / 6`;
   if (encounter?.snowAttack?.direction === 'knightSwords') return 'Black: 40 damage · White: 50 damage';
