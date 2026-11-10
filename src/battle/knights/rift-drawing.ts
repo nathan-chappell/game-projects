@@ -19,7 +19,7 @@ export function drawKnightRift(ctx: CanvasRenderingContext2D, age: number, reduc
       x,
       jump: 95 + hover,
       facing: side,
-      swordAngle: f.raised ? -0.9 : -1.2 + Math.min(1, f.beat / 0.4) * 2.7,
+      swordAngle: f.raised ? Math.PI + 0.7 : -1.2 + Math.min(1, f.beat / 0.4) * 2.7,
       lean: f.raised ? 0 : side * 0.08,
     };
     drawKnightHover(ctx, actor, age, kaizo, reduced);
