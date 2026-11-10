@@ -8,9 +8,9 @@ export const aimedSwordSettings = {
   bigPerVolley: 8,
   warmup: 0.3,
   warning: 0.7,
-  interval: 1.7,
+  interval: 1.15,
   speed: 700,
-  spawnGap: 100,
+  spawnGap: 60,
 };
 export interface AimedSwords {
   arena: Arena;
@@ -26,22 +26,23 @@ export function createAimedVolley(
   soul: Point,
 ): CrossingSword[] {
   const { x, y, size } = attack.arena;
+  // Side banks keep all eight full-size swords visible above the battle HUD.
   const positions = [
-    [0, 0],
-    [0.5, 0],
-    [1, 0],
-    [1, 0.5],
-    [1, 1],
-    [0.5, 1],
-    [0, 1],
-    [0, 0.5],
+    [0, 0.12],
+    [1, 0.12],
+    [0, 0.36],
+    [1, 0.36],
+    [0, 0.64],
+    [1, 0.64],
+    [0, 0.88],
+    [1, 0.88],
   ];
   return positions.map(([px, py], i) => {
     const gap = aimedSwordSettings.spawnGap;
-    const origin = { x: x - gap + px * (size + gap * 2), y: y - gap + py * (size + gap * 2) };
+    const origin = { x: x - gap + px * (size + gap * 2), y: y + py * size };
     return {
       id: wave * 8 + i,
-      owner: px === 0 ? 'roaring' : px === 1 ? 'kaizo' : py === 0 ? 'kaizo' : 'roaring',
+      owner: px === 0 ? 'roaring' : 'kaizo',
       ...origin,
       origin,
       angle: Math.atan2(soul.y - origin.y, soul.x - origin.x),

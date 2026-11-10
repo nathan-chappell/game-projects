@@ -11,12 +11,12 @@ test('third attack warns and launches exactly eight aimed big swords without min
   assert.equal(a.warnings.filter((s) => s.owner === 'kaizo').length, 4);
   assert.ok(a.warnings.every((s) => s.speed === 700));
   for (const sword of a.warnings) {
-    const { x, y, size } = a.arena;
-    assert.ok(
-      sword.x <= x - 100 || sword.x >= x + size + 100 || sword.y <= y - 100 || sword.y >= y + size + 100,
-    );
-    assert.ok(Math.hypot(target.x - sword.x, target.y - sword.y) > 200);
+    const { x, size } = a.arena;
+    assert.ok(sword.x <= x - 60 || sword.x >= x + size + 60);
+    assert.ok(Math.hypot(target.x - sword.x, target.y - sword.y) > 170);
   }
+  // A 43px radius encloses the complete sword at every possible aim angle.
+  assert.ok(a.warnings.every((s) => s.x - 43 >= 0 && s.x + 43 <= 640 && s.y - 43 >= 0 && s.y + 43 <= 295));
   const angles = a.warnings.map((s) => s.angle);
   for (const s of a.warnings) {
     assert.ok(Math.abs(Math.atan2(target.y - s.y, target.x - s.x) - s.angle) < 1e-9);
@@ -47,4 +47,18 @@ test('defeated knights do not launch new aimed swords', () => {
   advanceAimedSwords(a, 0.7, (owner) => owner === 'kaizo');
   assert.equal(a.swords.filter((s) => !s.scale).length, 4);
   assert.ok(a.swords.every((s) => s.owner === 'kaizo'));
+});
+
+test('new volleys arrive every 1.15 seconds while preserving the full warning', () => {
+  const a = createAimedSwords(battleArena);
+  advanceAimedSwords(a, 0.3);
+  assert.equal(a.prepared, 1);
+  advanceAimedSwords(a, 1.14);
+  assert.equal(a.prepared, 1);
+  advanceAimedSwords(a, 0.01);
+  assert.equal(a.prepared, 2);
+  assert.equal(a.waves, 1);
+  assert.equal(a.warnings.length, 8);
+  advanceAimedSwords(a, 0.7);
+  assert.equal(a.waves, 2);
 });
