@@ -507,7 +507,7 @@ export function snowFillPercent(encounter: Encounter | null) {
   return Math.min(50, Math.floor((height / innerSize) * 100));
 }
 export function snowAttackStatus(encounter: Encounter | null) {
-  if (encounter?.snowAttack?.direction === 'knightAimed') return 'Eight aimed swords · Watch the edges';
+  if (encounter?.snowAttack?.direction === 'knightAimed') return 'Eight aimed swords · Dodge their aim';
   if (encounter?.snowAttack?.direction === 'knightCrossing')
     return `Crossing swords · Wave ${Math.max(1, Math.min(6, encounter.snowAttack.knightCrossing.waves))} / 6`;
   if (encounter?.snowAttack?.direction === 'knightSwords') return 'Black: 40 damage · White: 50 damage';

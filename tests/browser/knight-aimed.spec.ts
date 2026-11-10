@@ -3,9 +3,7 @@ import { controlFrames, frames } from './frames.ts';
 import { installBattleFixture } from './battle-fixture.ts';
 import { expect, test } from './test.ts';
 
-test('third knight attack has eight aimed swords, edge minis and a stationary sword rim', async ({
-  page,
-}, testInfo) => {
+test('third knight attack has eight slower aimed swords without minis', async ({ page }, testInfo) => {
   await controlFrames(page);
   await installBattleFixture(page);
   await page.goto('/');
@@ -25,14 +23,14 @@ test('third knight attack has eight aimed swords, edge minis and a stationary sw
     const a = window.battleFixtureState.bossEncounter!.snowAttack!.knightAimed!;
     return {
       big: a.warnings.length,
-      mini: a.miniWarnings.length,
-      rim: a.rim.length,
+      mini: a.swords.filter((s) => s.scale).length,
+      speed: a.warnings[0].speed,
       image: (document.querySelector('#game') as HTMLCanvasElement).toDataURL().split(',')[1],
     };
   });
   expect(warning.big).toBe(8);
-  expect(warning.mini).toBe(3);
-  expect(warning.rim).toBe(16);
+  expect(warning.mini).toBe(0);
+  expect(warning.speed).toBe(550);
   await writeFile(testInfo.outputPath('eight-aimed-swords.png'), Buffer.from(warning.image, 'base64'));
   await frames(page, 37);
   expect(

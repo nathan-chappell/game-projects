@@ -92,7 +92,7 @@ export function createAttackRunner(dependencies: Dependencies) {
       if (snow.hitCooldown <= 0) {
         const hit =
           snow.direction === 'knightAimed'
-            ? [...snow.knightAimed.rim, ...snow.knightAimed.swords].find((sword) =>
+            ? snow.knightAimed.swords.find((sword) =>
                 crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
               )
             : snow.direction === 'knightCrossing'
