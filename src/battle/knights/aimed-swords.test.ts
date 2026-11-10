@@ -9,7 +9,14 @@ test('third attack warns and launches exactly eight aimed big swords without min
   advanceAimedSwords(a, 0.3, () => true, target);
   assert.equal(a.warnings.length, 8);
   assert.equal(a.warnings.filter((s) => s.owner === 'kaizo').length, 4);
-  assert.ok(a.warnings.every((s) => s.speed === 550));
+  assert.ok(a.warnings.every((s) => s.speed === 700));
+  for (const sword of a.warnings) {
+    const { x, y, size } = a.arena;
+    assert.ok(
+      sword.x <= x - 100 || sword.x >= x + size + 100 || sword.y <= y - 100 || sword.y >= y + size + 100,
+    );
+    assert.ok(Math.hypot(target.x - sword.x, target.y - sword.y) > 200);
+  }
   const angles = a.warnings.map((s) => s.angle);
   for (const s of a.warnings) {
     assert.ok(Math.abs(Math.atan2(target.y - s.y, target.x - s.x) - s.angle) < 1e-9);
@@ -24,7 +31,7 @@ test('third attack warns and launches exactly eight aimed big swords without min
   );
 });
 
-test('six slower sword volleys finish at different frame rates', () => {
+test('six faster sword volleys finish at different frame rates', () => {
   for (const fps of [30, 60, 144]) {
     const a = createAimedSwords(battleArena);
     let done = false;

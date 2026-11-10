@@ -3,7 +3,9 @@ import { controlFrames, frames } from './frames.ts';
 import { installBattleFixture } from './battle-fixture.ts';
 import { expect, test } from './test.ts';
 
-test('third knight attack has eight slower aimed swords without minis', async ({ page }, testInfo) => {
+test('third knight attack has eight faster swords approaching from outside the box', async ({
+  page,
+}, testInfo) => {
   await controlFrames(page);
   await installBattleFixture(page);
   await page.goto('/');
@@ -30,7 +32,7 @@ test('third knight attack has eight slower aimed swords without minis', async ({
   });
   expect(warning.big).toBe(8);
   expect(warning.mini).toBe(0);
-  expect(warning.speed).toBe(550);
+  expect(warning.speed).toBe(700);
   await writeFile(testInfo.outputPath('eight-aimed-swords.png'), Buffer.from(warning.image, 'base64'));
   await frames(page, 37);
   expect(

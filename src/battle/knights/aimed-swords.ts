@@ -9,7 +9,8 @@ export const aimedSwordSettings = {
   warmup: 0.3,
   warning: 0.7,
   interval: 1.7,
-  speed: 550,
+  speed: 700,
+  spawnGap: 100,
 };
 export interface AimedSwords {
   arena: Arena;
@@ -36,10 +37,11 @@ export function createAimedVolley(
     [0, 0.5],
   ];
   return positions.map(([px, py], i) => {
-    const origin = { x: x + 34 + px * (size - 68), y: y + 34 + py * (size - 68) };
+    const gap = aimedSwordSettings.spawnGap;
+    const origin = { x: x - gap + px * (size + gap * 2), y: y - gap + py * (size + gap * 2) };
     return {
       id: wave * 8 + i,
-      owner: i % 2 ? 'kaizo' : 'roaring',
+      owner: px === 0 ? 'roaring' : px === 1 ? 'kaizo' : py === 0 ? 'kaizo' : 'roaring',
       ...origin,
       origin,
       angle: Math.atan2(soul.y - origin.y, soul.x - origin.x),
