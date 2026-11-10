@@ -141,6 +141,7 @@ export function soulArena(encounter: Encounter): {
 } {
   if (encounter?.snowAttack?.direction === 'snowgrave') return snowgraveArena;
   if (encounter?.snowAttack?.direction === 'goal') return goalArena;
+  if (encounter?.snowAttack?.direction === 'knightAimed') return encounter.snowAttack.knightAimed.arena;
   return encounter?.snowAttack?.orbit?.box || battleArena;
 }
 export function isSoulInSnow(encounter: Encounter | null) {
@@ -438,6 +439,10 @@ export function beginEnemyAttack(encounter: Encounter, direction: AttackDirectio
   );
   encounter.nextAttackGrazeTP = null;
   if (encounter.snowAttack.direction === 'undyne') encounter.soul = { ...encounter.snowAttack.undyne.center };
+  if (encounter.snowAttack.direction === 'knightAimed') {
+    const box = encounter.snowAttack.knightAimed.arena;
+    encounter.soul = { x: box.x + box.size / 2, y: box.y + box.size / 2 };
+  }
   if (direction === 'tvBolts') encounter.soul.y = battleArena.y + battleArena.size - 35;
   if (direction === 'saxophones') encounter.soul.y = battleArena.y + battleArena.size - 35;
   if (direction === 'dark') {

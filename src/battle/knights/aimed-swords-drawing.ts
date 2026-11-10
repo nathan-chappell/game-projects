@@ -1,4 +1,4 @@
-import type { AimedSwords } from './aimed-swords.ts';
+import { aimedWarningAngle, type AimedSwords } from './aimed-swords.ts';
 import { drawKnightSword } from './sword-drawing.ts';
 
 export function drawAimedSwords(ctx: CanvasRenderingContext2D, attack: AimedSwords, reduced: boolean) {
@@ -14,7 +14,7 @@ export function drawAimedSwords(ctx: CanvasRenderingContext2D, attack: AimedSwor
     ctx.moveTo(sword.x, sword.y);
     ctx.lineTo(sword.x + Math.cos(sword.angle) * 200, sword.y + Math.sin(sword.angle) * 200);
     ctx.stroke();
-    drawKnightSword(ctx, sword, true);
+    drawKnightSword(ctx, { ...sword, angle: aimedWarningAngle(sword, attack.arena) }, true);
   }
   ctx.globalAlpha = 1;
   for (const sword of attack.swords) if (!sword.hitOpponent) drawKnightSword(ctx, sword, reduced);

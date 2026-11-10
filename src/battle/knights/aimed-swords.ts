@@ -26,23 +26,25 @@ export function createAimedVolley(
   soul: Point,
 ): CrossingSword[] {
   const { x, y, size } = attack.arena;
-  // Side banks keep all eight full-size swords visible above the battle HUD.
   const positions = [
-    [0, 0.12],
-    [1, 0.12],
-    [0, 0.36],
-    [1, 0.36],
-    [0, 0.64],
-    [1, 0.64],
-    [0, 0.88],
-    [1, 0.88],
+    [0, 0.3],
+    [0, 0.7],
+    [1, 0.3],
+    [1, 0.7],
+    [0.3, 0],
+    [0.7, 0],
+    [0.3, 1],
+    [0.7, 1],
   ];
   return positions.map(([px, py], i) => {
     const gap = aimedSwordSettings.spawnGap;
-    const origin = { x: x - gap + px * (size + gap * 2), y: y + py * size };
+    const origin = {
+      x: px === 0 ? x - gap : px === 1 ? x + size + gap : x + px * size,
+      y: py === 0 ? y - 20 : py === 1 ? y + size + 19 : y + py * size,
+    };
     return {
       id: wave * 8 + i,
-      owner: px === 0 ? 'roaring' : 'kaizo',
+      owner: px < 0.5 ? 'roaring' : 'kaizo',
       ...origin,
       origin,
       angle: Math.atan2(soul.y - origin.y, soul.x - origin.x),
@@ -54,9 +56,13 @@ export function createAimedVolley(
     };
   });
 }
+/** Horizontal staging keeps top/bottom swords visible outside the box before launch. */
+export function aimedWarningAngle(sword: CrossingSword, arena: Arena) {
+  return sword.origin.y < arena.y || sword.origin.y > arena.y + arena.size ? 0 : sword.angle;
+}
 export function createAimedSwords(arena: Arena): AimedSwords {
   return {
-    arena: { ...arena },
+    arena: { ...arena, x: arena.x + 5, y: 40, size: 220 },
     age: 0,
     waves: 0,
     prepared: 0,

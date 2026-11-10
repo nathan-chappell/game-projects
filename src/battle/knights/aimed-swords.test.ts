@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { advanceAimedSwords, createAimedSwords } from './aimed-swords.ts';
+import { advanceAimedSwords, createAimedSwords, aimedWarningAngle } from './aimed-swords.ts';
 import { battleArena } from '../shared/settings.ts';
 
 test('third attack warns and launches exactly eight aimed big swords without mini swords', () => {
@@ -10,13 +10,24 @@ test('third attack warns and launches exactly eight aimed big swords without min
   assert.equal(a.warnings.length, 8);
   assert.equal(a.warnings.filter((s) => s.owner === 'kaizo').length, 4);
   assert.ok(a.warnings.every((s) => s.speed === 700));
+  const sides = new Set<string>();
   for (const sword of a.warnings) {
-    const { x, size } = a.arena;
-    assert.ok(sword.x <= x - 60 || sword.x >= x + size + 60);
-    assert.ok(Math.hypot(target.x - sword.x, target.y - sword.y) > 170);
+    const { x, y, size } = a.arena;
+    const vertical = sword.y < y || sword.y > y + size;
+    sides.add(sword.y < y ? 'top' : sword.y > y + size ? 'bottom' : sword.x < x ? 'left' : 'right');
+    const radiusX = 43,
+      radiusY = vertical ? 16 : 43;
+    assert.ok(sword.x - radiusX >= 0 && sword.x + radiusX <= 640);
+    assert.ok(sword.y - radiusY >= 0 && sword.y + radiusY <= 295);
+    assert.ok(
+      sword.x + radiusX < x ||
+        sword.x - radiusX > x + size ||
+        sword.y + radiusY < y ||
+        sword.y - radiusY > y + size,
+    );
+    if (vertical) assert.equal(aimedWarningAngle(sword, a.arena), 0);
   }
-  // A 43px radius encloses the complete sword at every possible aim angle.
-  assert.ok(a.warnings.every((s) => s.x - 43 >= 0 && s.x + 43 <= 640 && s.y - 43 >= 0 && s.y + 43 <= 295));
+  assert.equal(sides.size, 4);
   const angles = a.warnings.map((s) => s.angle);
   for (const s of a.warnings) {
     assert.ok(Math.abs(Math.atan2(target.y - s.y, target.x - s.x) - s.angle) < 1e-9);
@@ -61,4 +72,16 @@ test('new volleys arrive every 1.15 seconds while preserving the full warning', 
   assert.equal(a.warnings.length, 8);
   advanceAimedSwords(a, 0.7);
   assert.equal(a.waves, 2);
+});
+
+test('soul movement uses the third attack box and starts centered inside it', async () => {
+  const { createKnightEncounter } = await import('./introduction.ts');
+  const { beginEnemyAttack, soulArena, moveSoul } = await import('../shared/rules.ts');
+  const b = createKnightEncounter();
+  beginEnemyAttack(b, 'knightAimed', '');
+  const box = b.snowAttack!.knightAimed!.arena;
+  assert.deepEqual(soulArena(b), box);
+  assert.deepEqual(b.soul, { x: box.x + box.size / 2, y: box.y + box.size / 2 });
+  moveSoul(b, new Set(['ArrowDown']), 10);
+  assert.ok(b.soul!.y < box.y + box.size);
 });
