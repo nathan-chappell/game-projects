@@ -23,9 +23,8 @@ export function drawKnightBattlefield(ctx: CanvasRenderingContext2D, time = 0) {
   ctx.fillRect(0, 0, 640, 480);
   ctx.imageSmoothingEnabled = false;
   if (field.complete && field.naturalWidth) {
-    // Only the empty center and overhead scenery are sampled; the reference's fighters are excluded.
+    // Sample only the empty center; exclude the fighters and overhead scenery.
     ctx.drawImage(field, 174, 40, 330, 183, 0, 44, 640, 436);
-    ctx.drawImage(field, 140, 0, 360, 38, 180, 0, 280, 36);
   }
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, 180, 36);
