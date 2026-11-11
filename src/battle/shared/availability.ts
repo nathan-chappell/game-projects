@@ -13,7 +13,7 @@ export function canFloweyAct(encounter: Encounter | null) {
 export const battlePartyNames: (encounter: Encounter | null) => PartyName[] = (
   encounter: Encounter | null,
 ) =>
-  ['dark', 'tenna', 'knights'].includes(encounter?.kind ?? '')
+  ['dark', 'tenna', 'knights', 'vessel'].includes(encounter?.kind ?? '')
     ? ['Kris', 'Flowey', 'Susie', 'Ralsey']
     : ['Kris', 'Flowey'];
 
@@ -21,7 +21,7 @@ export function canPartyAct(encounter: Encounter | null): boolean {
   return (
     canKrisAct(encounter) ||
     canFloweyAct(encounter) ||
-    (['dark', 'tenna', 'knights'].includes(encounter?.kind ?? '') &&
+    (['dark', 'tenna', 'knights', 'vessel'].includes(encounter?.kind ?? '') &&
       ['Susie', 'Ralsey'].includes(encounter?.turn ?? '') &&
       present(encounter).phase === present(present(encounter).turn).toLowerCase())
   );
@@ -31,7 +31,7 @@ export function canUseBattleAction(encounter: Encounter | null, action: string):
   return (
     !!encounter &&
     canPartyAct(encounter) &&
-    (action !== 'spare' || ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')) &&
+    (action !== 'spare' || ['dark', 'tenna', 'knights', 'vessel'].includes(encounter.kind ?? '')) &&
     !(encounter.kind === 'dark' && action === 'attack' && !encounter.darkUnlocked) &&
     (!encounter.finalAttackComplete || (canKrisAct(encounter) && action === 'attack'))
   );

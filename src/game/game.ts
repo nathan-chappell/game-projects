@@ -1107,6 +1107,7 @@ export function startGame() {
     'tennaAftermath',
     'knightStatues',
     'knightEncounter',
+    'mysteriousArrival',
     'undyneCandy',
     'tennaCut',
   ]);
@@ -1164,6 +1165,7 @@ export function startGame() {
     state.story.knightStatuesExplained = false;
     state.knightPath = null;
     state.knightBattle = null;
+    state.vesselArrival = null;
     state.story.jackCandyReceived = false;
     state.story.jackRevealed = false;
     state.story.collisionSeen = false;

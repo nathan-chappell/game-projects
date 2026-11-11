@@ -1,3 +1,5 @@
+import { drawVessel } from '../vessel/drawing.ts';
+import { drawMysteriousVoid } from '../../rooms/mysterious-void/drawing.ts';
 import { drawKnightRift } from '../knights/rift-drawing.ts';
 import { drawAimedSwords } from '../knights/aimed-swords-drawing.ts';
 import { drawCrossingSwords } from '../knights/crossing-swords-drawing.ts';
@@ -278,7 +280,7 @@ export function createBattleDrawing(
         encounter.kind === 'tenna' && !undynePresent(encounter) ? 'TV TIME!' : 'SPARE',
         227,
         386,
-        ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')
+        ['dark', 'tenna', 'knights', 'vessel'].includes(encounter.kind ?? '')
           ? acting && encounter.selectedAction === 'spare'
             ? '#fff32a'
             : acting
@@ -289,7 +291,7 @@ export function createBattleDrawing(
       );
       if (acting && encounter.selectedAction === 'spare') pixelText('>', 204, 386, '#fff32a', 19);
       // Ice bars make the locked action visible even in the canvas menu.
-      if (!['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')) {
+      if (!['dark', 'tenna', 'knights', 'vessel'].includes(encounter.kind ?? '')) {
         rect(218, 373, 119, 3, '#bcefff');
         rect(224, 382, 106, 2, '#67a5c9');
       }
@@ -327,6 +329,9 @@ export function createBattleDrawing(
         14,
       );
       pixelText('THE FINALE', 391, 435, '#ffca50', 14);
+    } else if (encounter.kind === 'vessel') {
+      pixelText('VESSEL', 391, 407, '#eeeeee', 18);
+      pixelText('A silent challenger.', 391, 435, '#bbbbbb', 12);
     } else if (encounter.kind === 'knights') {
       const act = darkActInfo(encounter);
       pixelText(
@@ -690,6 +695,29 @@ export function createBattleDrawing(
     ctx.imageSmoothingEnabled = false;
     if (encounter?.phase === 'knightRift') {
       drawKnightRift(ctx, encounter.animationAge, reducedParticleMotion.matches);
+      return;
+    }
+    if (encounter?.kind === 'vessel') {
+      drawMysteriousVoid(ctx, t, reducedParticleMotion.matches);
+      drawVessel(ctx, 460, 285, 150);
+      drawBattleKris(180, 250, 0.65);
+      drawBattleFlowey(225, 280, t, 0.75);
+      for (const [name, x, y] of [
+        ['Susie', 270, 250],
+        ['Ralsey', 310, 280],
+      ] as const) {
+        drawPartyMember(name, x, y, 0.75, encounter.partyStatus[name], () => {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.scale(0.75, 0.75);
+          helpers.drawFountainFriend({ name, x: 0, y: 0, hideName: true }, t);
+          ctx.restore();
+        });
+      }
+      pixelText('VESSEL', 460, 90, '#dddddd', 18);
+      drawDarkPartyStatus();
+      drawBattleMenu();
+      $('gameHint').textContent = encounter.message;
       return;
     }
     if (encounter?.kind === 'knights') {

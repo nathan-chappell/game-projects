@@ -477,7 +477,9 @@ export function setupBattleControls(
     $('talkButton').disabled = $('inspectButton').disabled = active && !intro;
     $('inventoryButton').disabled =
       active &&
-      (['minigame', 'minigameIntro', 'knightRift', ...tennaEndingPhases].includes(encounter.phase) ||
+      (['minigame', 'minigameIntro', 'knightRift', 'vesselFaceoff', ...tennaEndingPhases].includes(
+        encounter.phase,
+      ) ||
         isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));
@@ -640,9 +642,11 @@ export function setupBattleControls(
             ? `Deals ${encounter?.fastKill ? battleSettings.fastKillDamage : battleSettings.pelletsDamage} damage · Heals Flowey 35 HP`
             : `Proceed: ${encounter?.proceedCount || 0} / ${battleSettings.proceedsToDisappear}`;
     $('leaveBossButton').disabled =
-      encounter?.kind === 'knights' ||
+      ['knights', 'vessel'].includes(encounter?.kind ?? '') ||
       (active &&
-        (['minigame', 'minigameIntro', 'knightRift', ...tennaEndingPhases].includes(encounter.phase) ||
+        (['minigame', 'minigameIntro', 'knightRift', 'vesselFaceoff', ...tennaEndingPhases].includes(
+          encounter.phase,
+        ) ||
           isPelletCast(encounter) ||
           isProceedScene(encounter) ||
           encounter.phase === 'rescue' ||

@@ -106,6 +106,7 @@ export function createRoomController(dependencies: Dependencies) {
     state.cameraShakeTime = 0;
     dependencies.positionPlayer(next, preferred);
     state.knightBattle = null;
+    state.vesselArrival = null;
     state.knightPath = next.scene === postShowScene ? createKnightPath(state.player.x, state.player.y) : null;
     state.storageHallway =
       next.scene === 'storageHallway'

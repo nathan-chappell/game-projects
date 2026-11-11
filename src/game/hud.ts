@@ -95,6 +95,12 @@ export function createHud(dependencies: Dependencies) {
         : 'Spare cameras hang above a dark room filled with old show equipment.';
       return;
     }
+    if (state.bossEncounter?.kind === 'vessel') {
+      dependencies.$('taskTitle').textContent = 'Vessel';
+      dependencies.$('taskDescription').textContent = 'A gray figure stands in your way.';
+      dependencies.$('storySummary').textContent = 'The Vessel raises its blade toward the party.';
+      return;
+    }
     if (dependencies.current().scene === 'mysteriousVoid') {
       dependencies.$('taskTitle').textContent = 'Mysterious Room';
       dependencies.$('taskDescription').textContent = 'A pale platform hangs in a silent, black void.';

@@ -83,9 +83,7 @@ test('seven knight rounds lead through the protected Fountain cutscene into the 
     })),
   ).toEqual(resources);
   await capture('mysterious-room.png');
-  const x = await page.evaluate(() => window.battleFixtureState.player.x);
-  await page.keyboard.down('ArrowRight');
-  await frames(page, 20);
-  await page.keyboard.up('ArrowRight');
-  expect(await page.evaluate(() => window.battleFixtureState.player.x)).toBeGreaterThan(x);
+  await frames(page, 35);
+  await expect(page.locator('#dialogue')).toBeVisible();
+  await expect(page.locator('#dialogueText')).toContainText('Where are we?');
 });

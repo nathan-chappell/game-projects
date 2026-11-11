@@ -1,3 +1,8 @@
+import {
+  beginVesselConversation,
+  advanceVesselAppearance,
+  vesselConversation,
+} from '../battle/vessel/entrance.ts';
 import { advanceKnightRift } from '../battle/knights/rift.ts';
 import { mysteriousVoidScene } from '../rooms/mysterious-void/room.ts';
 import { knightTeleporterPosition, teleportToKnightPath } from '../battle/knights/teleporter.ts';
@@ -124,6 +129,22 @@ export function createGameLoop(dependencies: Dependencies) {
       dependencies.$('inventoryDialog').open
     )
       return;
+    if (dependencies.current().scene === 'mysteriousVoid' && !state.bossEncounter) {
+      if (!state.vesselArrival && !state.dialogue) {
+        state.keys.clear();
+        state.player.moving = false;
+        if (state.fade > 0) return;
+        if (beginVesselConversation(state)) {
+          dependencies.openDialogue(vesselConversation, 'mysteriousArrival');
+          dependencies.canvas.focus({ preventScroll: true });
+          return;
+        }
+      }
+      if (state.vesselArrival?.phase === 'appear') {
+        if (advanceVesselAppearance(state, dt)) dependencies.syncBossUI();
+        return;
+      }
+    }
     if (state.collisionBlackout && !state.dialogue) {
       state.keys.clear();
       state.player.moving = false;
@@ -318,7 +339,7 @@ export function createGameLoop(dependencies: Dependencies) {
       }
       if (
         state.bossEncounter.phase === 'victory' &&
-        !['dark', 'tenna', 'knights'].includes(state.bossEncounter.kind ?? '')
+        !['dark', 'tenna', 'knights', 'vessel'].includes(state.bossEncounter.kind ?? '')
       ) {
         state.story.noelleGone = true;
         state.story.noelleEscaped = state.bossEncounter.noelleEscaped;

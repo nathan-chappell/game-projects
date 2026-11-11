@@ -1,3 +1,4 @@
+import { completeVesselConversation } from '../battle/vessel/entrance.ts';
 import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
 import { completeTennaOutburst, completeTennaShutdown } from '../battle/tenna/ending.ts';
 import { completeTennaScoreEvent } from '../battle/tenna/score-events.ts';
@@ -258,6 +259,8 @@ export function createDialogue(dependencies: Dependencies) {
   function isImportantCutscene() {
     return (
       knightEncounterActive(state) ||
+      state.vesselArrival?.phase === 'appear' ||
+      state.bossEncounter?.kind === 'vessel' ||
       !!state.dive ||
       !!state.buster ||
       !!state.tennaEntrance ||
@@ -417,6 +420,7 @@ export function createDialogue(dependencies: Dependencies) {
         if (studio >= 0) dependencies.changeRoom(studio, true);
       }
       if (npcId === 'core-warning-froggit') state.story.coreFroggitWarned = true;
+      if (kind === 'mysteriousArrival') completeVesselConversation(state);
       if (kind === 'knightStatues') {
         state.story.knightStatuesExplained = true;
         dependencies.storyUI();

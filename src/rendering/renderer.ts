@@ -1,3 +1,4 @@
+import { drawVessel } from '../battle/vessel/drawing.ts';
 import { drawMysteriousVoid } from '../rooms/mysterious-void/drawing.ts';
 import { syncMobileControls } from '../game/mobile-controls.ts';
 import { drawKnightTeleporter } from '../battle/knights/teleporter.ts';
@@ -629,6 +630,8 @@ export function createRenderer(
         if (![1, 10].includes(r.map[y][x])) drawTile(r.map[y][x], x * T, y * T, r.theme);
     if (state.mode === 'build' && r.scene === 'glitchBoss') drawNoelleBoss(528, 122, 140);
     if (r.scene === 'mysteriousVoid') drawMysteriousVoid(ctx, time, reducedParticleMotion.matches);
+    if (r.scene === 'mysteriousVoid' && state.vesselArrival?.phase === 'appear')
+      drawVessel(ctx, 450, 285, 135, state.vesselArrival.age / 1.2);
     if (r.scene === 'glitchStudio') glitchStudioDrawing.room(time, r);
     if (r.scene === postShowScene) drawPostShowRoom(ctx, r, time, reducedParticleMotion.matches);
     if (r.scene === 'glitchBackstage') {

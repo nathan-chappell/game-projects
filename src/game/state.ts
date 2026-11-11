@@ -25,6 +25,7 @@ export function createGameState(project: Project): GameState {
     queenDeparture: null,
     knightPath: null,
     knightBattle: null,
+    vesselArrival: null,
     storageHallway: null,
     traffic: null,
     pendingBossRoom: null,
