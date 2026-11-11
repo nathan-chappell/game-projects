@@ -7,7 +7,6 @@ export const vesselSettings = {
   actDamage: 20,
   xSlashSeconds: 0.75,
   openingSeconds: 1,
-  guardSeconds: 1,
 };
 export const vesselBattleLayout = {
   kris: { x: 185, y: 238, scale: 1.1 },

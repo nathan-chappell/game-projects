@@ -1,3 +1,4 @@
+import { createVesselRain } from '../vessel/sword-rain.ts';
 import { createAimedSwords } from '../knights/aimed-swords.ts';
 import { createCrossingSwords } from '../knights/crossing-swords.ts';
 import { createKnightSwords } from '../knights/swords.ts';
@@ -42,6 +43,8 @@ export function createAttackState(
     grazeCooldown: 0,
   };
   switch (direction) {
+    case 'vesselRain':
+      return { ...base, direction, vesselRain: createVesselRain() };
     case 'knightAimed':
       return { ...base, direction, knightAimed: createAimedSwords(arena) };
     case 'knightCrossing':

@@ -378,20 +378,25 @@ export function setupBattleControls(
     const intro = active && encounter.phase === 'intro',
       acting = active && !state.death && canPartyAct(encounter);
     $('bossControls').hidden =
-      !active || intro || !!state.death || encounter?.phase === 'knightRift' || isBattleBlackout(encounter);
+      !active ||
+      intro ||
+      !!state.death ||
+      encounter?.phase === 'knightRift' ||
+      encounter?.snowAttack?.direction === 'vesselRain' ||
+      isBattleBlackout(encounter);
     $('playControls').hidden = state.mode !== 'play' || (active && !intro);
     $('talkButton').disabled = $('inspectButton').disabled = active && !intro;
     $('inventoryButton').disabled =
       active &&
-      ([
-        'minigame',
-        'minigameIntro',
-        'knightRift',
-        'vesselFaceoff',
-        'vesselXSlash',
-        'vesselWatch',
-        ...tennaEndingPhases,
-      ].includes(encounter.phase) ||
+      (encounter.snowAttack?.direction === 'vesselRain' ||
+        [
+          'minigame',
+          'minigameIntro',
+          'knightRift',
+          'vesselFaceoff',
+          'vesselXSlash',
+          ...tennaEndingPhases,
+        ].includes(encounter.phase) ||
         isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));
@@ -549,7 +554,6 @@ export function setupBattleControls(
           'knightRift',
           'vesselFaceoff',
           'vesselXSlash',
-          'vesselWatch',
           ...tennaEndingPhases,
         ].includes(encounter.phase) ||
           isPelletCast(encounter) ||

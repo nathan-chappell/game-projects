@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createVesselEncounter } from './entrance.ts';
 import { xSlashBackgroundShake } from './combat.ts';
-import { attackEnemy, advanceBattleTime, useDarkAct, defend } from '../shared/rules.ts';
+import { attackEnemy, advanceBattleTime, useDarkAct, defend, advanceSnowAttack } from '../shared/rules.ts';
 import { darkActInfo } from '../dark/dark-acts.ts';
 
 const hp = () => ({ Kris: 100, Flowey: 100, Susie: 100, Ralsey: 100 });
@@ -70,7 +70,7 @@ test('Flowey pellets deal 20 on impact and then hand off to Susie; Rude Buster d
   assert.equal(b.tp, 30);
   assert.equal(b.turn, 'Ralsey');
 });
-test('Ralsey still heals, fallen party members are skipped and an unfinished enemy pattern never borrows Noelle attacks', () => {
+test('Ralsey still heals, fallen party members are skipped and the sword rain returns control to the next living teammate', () => {
   const b = fixture(),
     party = hp();
   b.turn = 'Ralsey';
@@ -82,9 +82,11 @@ test('Ralsey still heals, fallen party members are skipped and an unfinished ene
   );
   assert.equal(party.Kris, 90);
   assert.equal(b.tp, 50);
-  assert.equal(b.phase, 'vesselWatch');
+  assert.equal(b.phase, 'enemy');
+  assert.equal(b.snowAttack?.direction, 'vesselRain');
+  b.invincible = true;
   party.Kris = 0;
-  advanceBattleTime(b, 1.1, party);
+  advanceSnowAttack(b, party, 20, () => 0.37);
   assert.equal(b.turn, 'Flowey');
   assert.equal(b.snowAttack, null);
 });

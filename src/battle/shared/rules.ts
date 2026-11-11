@@ -1,3 +1,4 @@
+import { vesselRainArena } from '../vessel/sword-rain.ts';
 import { vesselDamage, vesselSettings } from '../vessel/combat.ts';
 import { beginKnightRift } from '../knights/rift.ts';
 import { advancePartyDuel } from '../knights/party-duel.ts';
@@ -93,6 +94,7 @@ export function soulArena(encounter: Encounter): {
   height?: number;
   border: number;
 } {
+  if (encounter?.snowAttack?.direction === 'vesselRain') return vesselRainArena;
   if (encounter?.snowAttack?.direction === 'snowgrave') return snowgraveArena;
   if (encounter?.snowAttack?.direction === 'goal') return goalArena;
   if (encounter?.snowAttack?.direction === 'knightAimed') return encounter.snowAttack.knightAimed.arena;
@@ -111,6 +113,7 @@ export function isSoulInSnow(encounter: Encounter | null) {
       'knightSwords',
       'knightCrossing',
       'knightAimed',
+      'vesselRain',
     ].includes(encounter.snowAttack.direction)
   )
     return false;
@@ -284,11 +287,9 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'vessel') {
-    encounter.phase = 'vesselWatch';
+    beginEnemyAttack(encounter, 'vesselRain', `${message} Dodge the falling swords and their bursts!`);
     encounter.turn = 'Vessel';
-    encounter.animationAge = 0;
     encounter.enemyAttackCount++;
-    encounter.message = `${message} The Vessel watches your movements.`;
     return true;
   }
 
@@ -402,6 +403,7 @@ export function beginEnemyAttack(encounter: Encounter, direction: AttackDirectio
     darkPattern,
   );
   encounter.nextAttackGrazeTP = null;
+  if (direction === 'vesselRain') encounter.soul = { x: 320, y: 240 };
   if (encounter.snowAttack.direction === 'undyne') encounter.soul = { ...encounter.snowAttack.undyne.center };
   if (encounter.snowAttack.direction === 'knightAimed') {
     const box = encounter.snowAttack.knightAimed.arena;
@@ -491,6 +493,7 @@ export function snowAttackStatus(encounter: Encounter | null) {
     return (encounter.snowAttack?.swords?.motion ?? 0) > 0
       ? 'Swords: left to right'
       : 'Swords: right to left';
+  if (encounter?.snowAttack?.direction === 'vesselRain') return 'Dodge the falling swords and their bursts!';
   if (encounter?.snowAttack?.direction === 'snowgrave')
     return `Snowgrave: ${Math.ceil(Math.max(0, snowgraveDuration - encounter.snowAttack.snowgrave.age))}s left`;
   if (encounter?.snowAttack?.direction === 'goal')
@@ -789,12 +792,9 @@ export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: Pa
       }
     }
   }
-  if (encounter.kind === 'vessel' && ['vesselFaceoff', 'vesselWatch'].includes(encounter.phase)) {
+  if (encounter.kind === 'vessel' && encounter.phase === 'vesselFaceoff') {
     encounter.animationAge += dt;
-    if (
-      encounter.animationAge >=
-      (encounter.phase === 'vesselFaceoff' ? vesselSettings.openingSeconds : vesselSettings.guardSeconds)
-    ) {
+    if (encounter.animationAge >= vesselSettings.openingSeconds) {
       encounter.phase = 'intro';
       startKrisTurn(encounter, partyHP);
       if (partyHP) skipFallenTurns(encounter, partyHP);

@@ -24,7 +24,13 @@ export function isGrazingHazard(encounter: Encounter, settings: typeof battleSet
       distance = dx * dx + dy * dy;
     hazards.push({ hit: distance <= radius * radius, near: !ball.hit && distance <= (radius + margin) ** 2 });
   };
-  if (snow.direction === 'knightAimed') {
+  if (snow.direction === 'vesselRain') {
+    for (const sword of snow.vesselRain.swords)
+      hazards.push({
+        hit: crossingSwordTouches(sword, soul, width, height),
+        near: crossingSwordTouches(sword, soul, width, height, margin),
+      });
+  } else if (snow.direction === 'knightAimed') {
     for (const sword of snow.knightAimed.swords)
       hazards.push({
         hit: crossingSwordTouches(sword, soul, width, height),

@@ -222,7 +222,13 @@ export function advanceCrossingSwords(
     finished: attack.waves === crossingSwordSettings.waves && result.finished,
   };
 }
-export function crossingSwordTouches(sword: CrossingSword, soul: Point, width = 24, height = 21, margin = 0) {
+export function crossingSwordTouches(
+  sword: Pick<CrossingSword, 'x' | 'y' | 'angle' | 'scale' | 'active' | 'hitOpponent'>,
+  soul: Point,
+  width = 24,
+  height = 21,
+  margin = 0,
+) {
   if (!sword.active || sword.hitOpponent) return false;
   const cos = Math.cos(sword.angle),
     sin = Math.sin(sword.angle),

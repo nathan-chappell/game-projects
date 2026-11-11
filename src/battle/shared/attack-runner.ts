@@ -1,3 +1,4 @@
+import { advanceVesselRain, vesselRainSettings } from '../vessel/sword-rain.ts';
 import { advanceAimedSwords } from '../knights/aimed-swords.ts';
 import { advanceCrossingSwords, crossingSwordTouches } from '../knights/crossing-swords.ts';
 import { advanceKnightSwords, knightSwordSettings } from '../knights/swords.ts';
@@ -75,6 +76,35 @@ export function createAttackRunner(dependencies: Dependencies) {
   function stepSnowAttack(encounter: Encounter, partyHP: PartyHP, dt: number, random: () => number) {
     const snow = present(encounter.snowAttack),
       soul = present(encounter.soul);
+    if (snow.direction === 'vesselRain') {
+      snow.hitCooldown = Math.max(0, snow.hitCooldown - dt);
+      const finished = advanceVesselRain(snow.vesselRain, dt, soul, random);
+      let changed = false;
+      if (snow.hitCooldown <= 1e-9) {
+        const hit = snow.vesselRain.swords.find((sword) =>
+          crossingSwordTouches(sword, soul, battleSettings.soulWidth, battleSettings.soulHeight),
+        );
+        if (hit) {
+          changed = dependencies.damageLivingTeammate(
+            encounter,
+            partyHP,
+            projectileDamage(
+              encounter,
+              hit.kind === 'falling' ? vesselRainSettings.fallingDamage : vesselRainSettings.miniDamage,
+            ),
+            hit.kind === 'falling' ? 'a falling sword' : 'a mini sword',
+            random,
+          );
+          snow.hitCooldown = vesselRainSettings.hitCooldown;
+        }
+      }
+      if (finished) {
+        dependencies.startKrisTurn(encounter, partyHP);
+        dependencies.skipFallenTurns(encounter, partyHP);
+        return true;
+      }
+      return changed;
+    }
     if (
       snow.direction === 'knightSwords' ||
       snow.direction === 'knightCrossing' ||

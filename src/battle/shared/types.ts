@@ -1,3 +1,4 @@
+import type { VesselRain } from '../vessel/sword-rain.ts';
 import type { AimedSwords } from '../knights/aimed-swords.ts';
 import type { CrossingSwords } from '../knights/crossing-swords.ts';
 import type { KnightSwordAttack } from '../knights/swords.ts';
@@ -119,7 +120,8 @@ export type AttackDirection =
   | 'undyne'
   | 'knightSwords'
   | 'knightCrossing'
-  | 'knightAimed';
+  | 'knightAimed'
+  | 'vesselRain';
 export interface AttackBase {
   direction: AttackDirection;
   grazeTP: number;
@@ -152,6 +154,7 @@ export interface AttackBase {
   knightSwords?: KnightSwordAttack;
   knightCrossing?: CrossingSwords;
   knightAimed?: AimedSwords;
+  vesselRain?: VesselRain;
 }
 export type Attack = AttackBase &
   (
@@ -167,6 +170,7 @@ export type Attack = AttackBase &
     | { direction: 'knightSwords'; knightSwords: KnightSwordAttack }
     | { direction: 'knightCrossing'; knightCrossing: CrossingSwords }
     | { direction: 'knightAimed'; knightAimed: AimedSwords }
+    | { direction: 'vesselRain'; vesselRain: VesselRain }
   );
 export type BattleAction = 'attack' | 'act' | 'item' | 'defend' | 'spare';
 export interface Rescue {

@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { installBattleFixture, prepareBattle } from './battle-fixture.ts';
+import { installBattleFixture, prepareBattle, finishAttackFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -33,7 +33,7 @@ test('larger Vessel battle supports the requested attacks, X-Slash and teammate 
     await page.locator('#battleTargetButton').click();
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.enemy.hp)).toBe(expected);
   }
-  await frames(page, 70);
+  await finishAttackFixture(page);
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
   await page.locator('#battleAct').click();
   await expect(page.locator('#battleProceedButton')).toHaveText('X-Slash · 0% TP');

@@ -1,3 +1,4 @@
+import { drawVesselRain } from '../vessel/sword-rain-drawing.ts';
 import { drawVessel, drawVesselXSlash } from '../vessel/drawing.ts';
 import { vesselBattleLayout, xSlashBackgroundShake } from '../vessel/combat.ts';
 import { drawMysteriousVoid } from '../../rooms/mysterious-void/drawing.ts';
@@ -705,6 +706,12 @@ export function createBattleDrawing(
     ctx.imageSmoothingEnabled = false;
     if (encounter?.phase === 'knightRift') {
       drawKnightRift(ctx, encounter.animationAge, reducedParticleMotion.matches);
+      return;
+    }
+    if (encounter?.snowAttack?.direction === 'vesselRain' && encounter.soul) {
+      drawVesselRain(ctx, encounter.snowAttack.vesselRain, reducedParticleMotion.matches);
+      drawGrazeRing(encounter);
+      drawBattleSoul(encounter);
       return;
     }
     if (encounter?.kind === 'vessel') {
