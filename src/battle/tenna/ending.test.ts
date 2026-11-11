@@ -1,8 +1,9 @@
+import { addTennaTestingPoints } from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createTennaEncounter } from '../../rooms/backstage/tenna-finale.ts';
 import { createEncounter, advanceBattleTime } from '../shared/rules.ts';
-import { addTennaTestingPoints, queueTennaScoreEvent } from './score-events.ts';
+import { queueTennaScoreEvent } from './score-events.ts';
 import {
   beginTennaEnding,
   completeTennaOutburst,

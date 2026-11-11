@@ -1,3 +1,4 @@
+import { addTennaTestingPoints } from '../../../tests/fixtures/combat-tools.ts';
 import { undyneDropOffset } from './undyne.ts';
 import { createShootingMinigame } from './minigame.ts';
 import assert from 'node:assert/strict';
@@ -13,12 +14,7 @@ import {
   finishTennaMinigame,
 } from '../shared/rules.ts';
 import { freshPartyHP } from '../../game/config.ts';
-import {
-  addTennaTestingPoints,
-  completeTennaScoreEvent,
-  queueTennaScoreEvent,
-  undyneActive,
-} from './score-events.ts';
+import { completeTennaScoreEvent, queueTennaScoreEvent, undyneActive } from './score-events.ts';
 import {
   advanceUndyneAttack,
   createUndyneAttack,

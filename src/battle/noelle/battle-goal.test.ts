@@ -1,3 +1,4 @@
+import { toggleRepeatAttack } from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readBlueRoutes } from '../../../tests/fixtures/routes.ts';
@@ -16,7 +17,6 @@ import {
   snowAttackStatus,
   soulArena,
   startKrisTurn,
-  toggleRepeatAttack,
 } from '../shared/rules.ts';
 import { battleSettings } from '../shared/settings.ts';
 import { attackState } from '../shared/test-state.ts';

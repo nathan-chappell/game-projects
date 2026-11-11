@@ -1,14 +1,8 @@
+import { requestSpecialAttack } from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { battlePartyNames, canUseBattleAction } from '../../battle/shared/availability.ts';
-import {
-  attackEnemy,
-  completeTennaCut,
-  defend,
-  proceed,
-  requestSpecialAttack,
-  spareInDark,
-} from '../../battle/shared/rules.ts';
+import { attackEnemy, completeTennaCut, defend, proceed, spareInDark } from '../../battle/shared/rules.ts';
 import { createTennaEncounter, finaleConversation } from './tenna-finale.ts';
 test('the Finale introduces fighting Tenna with all four party turns', () => {
   assert.ok(finaleConversation.some((l) => /fighting ME/.test(l.text)));

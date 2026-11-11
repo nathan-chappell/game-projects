@@ -33,12 +33,6 @@ export function bindMobileControls(
   $('mobileInventory').onclick = () => {
     if (available()) actions.inventory();
   };
-  $('mobileInvincible').onclick = () => {
-    if (available()) $('battleKnightInvincible').click();
-  };
-  $('mobileSkip').onclick = () => {
-    if (available()) $('battleKnightSkip').click();
-  };
 }
 
 /** The overlay shares the existing action handlers and held-direction input. */
@@ -71,9 +65,4 @@ export function syncMobileControls(state: GameState, $: Elements) {
       battle?.phase === 'minigame'
     );
   $('mobileBack').hidden = !canPartyAct(battle) || battle?.screen === 'menu';
-  const testing = battle?.kind === 'knights' && (canPartyAct(battle) || soul);
-  $('mobileKnightTools').hidden = !testing;
-  $('mobileInvincible').textContent = `Invincible ${battle?.invincible ? 'ON' : 'OFF'}`;
-  $('mobileInvincible').setAttribute('aria-pressed', String(!!battle?.invincible));
-  $('mobileSkip').disabled = !soul;
 }

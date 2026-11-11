@@ -1,4 +1,4 @@
-import { beginTennaEnding, tennaEndingPhases } from './ending.ts';
+import { beginTennaEnding } from './ending.ts';
 import { undynePresent } from './undyne-actions.ts';
 import { canPartyAct } from '../shared/availability.ts';
 import type { Encounter } from '../shared/types.ts';
@@ -39,12 +39,5 @@ export function completeTennaScoreEvent(b: Encounter) {
   b.phase = b.guestResumePhase ?? 'kris';
   b.guestResumePhase = undefined;
   b.guestEvent = null;
-  return true;
-}
-export function addTennaTestingPoints(b: Encounter, points: number) {
-  if (b.kind !== 'tenna' || b.phase === 'victory' || tennaEndingPhases.includes(b.phase)) return false;
-  b.score = (b.score ?? 0) + points;
-  b.message = `+${points} points for playtesting.`;
-  queueTennaScoreEvent(b);
   return true;
 }

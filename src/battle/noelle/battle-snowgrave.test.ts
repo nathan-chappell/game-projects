@@ -1,3 +1,8 @@
+import {
+  requestSpecialAttack,
+  toggleInvincibility,
+  toggleRepeatAttack,
+} from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { freshPartyHP } from '../../game/config.ts';
@@ -11,11 +16,8 @@ import {
   friendlynessPellets,
   isSoulInSnow,
   moveSoul,
-  requestSpecialAttack,
   soulArena,
   startKrisTurn,
-  toggleInvincibility,
-  toggleRepeatAttack,
 } from '../shared/rules.ts';
 import { battleSettings } from '../shared/settings.ts';
 import { attackState } from '../shared/test-state.ts';

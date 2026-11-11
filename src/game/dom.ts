@@ -17,9 +17,6 @@ export interface GameElements {
   mobileInspect: HTMLButtonElement;
   mobileInventory: HTMLButtonElement;
   mobileRun: HTMLButtonElement;
-  mobileKnightTools: HTMLElement;
-  mobileInvincible: HTMLButtonElement;
-  mobileSkip: HTMLButtonElement;
   dialogue: HTMLElement;
   speakerPortrait: HTMLElement;
   speakerName: HTMLElement;
@@ -29,17 +26,13 @@ export interface GameElements {
   locationHint: HTMLElement;
   playControls: HTMLElement;
   restartButton: HTMLButtonElement;
-  knightTeleportButton: HTMLButtonElement;
+  vesselTeleportButton: HTMLButtonElement;
   sprintButton: HTMLButtonElement;
   inspectButton: HTMLButtonElement;
   talkButton: HTMLButtonElement;
   editorCaption: HTMLElement;
   bossControls: HTMLElement;
   battleTurnText: HTMLElement;
-  battleTestStatus: HTMLElement;
-  battleKnightTestingControls: HTMLElement;
-  battleKnightInvincible: HTMLButtonElement;
-  battleKnightSkip: HTMLButtonElement;
   battleTPText: HTMLElement;
   battleTPBar: HTMLProgressElement;
   battleActionButtons: HTMLElement;

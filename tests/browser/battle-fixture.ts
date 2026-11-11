@@ -55,3 +55,25 @@ export async function startKnightBattleFixture(page: Page) {
     window.refreshBattleFixture();
   });
 }
+
+/** Explicit automation setup, independent of production keyboard bindings. */
+export async function battleFixtureCommand(page: Page, command: 'invincible' | 'skip' | number) {
+  await page.evaluate(async (command) => {
+    const state = window.battleFixtureState,
+      b = state.bossEncounter;
+    if (!b) throw new Error('Fixture command needs a battle');
+    const rulesPath = '/src/battle/shared/rules.ts';
+    const rules = await import(rulesPath);
+    if (command === 'invincible') b.invincible = !b.invincible;
+    else if (command === 'skip') {
+      if (!state.dialogue && b.phase === 'enemy') rules.startKrisTurn(b, state.partyHP);
+      else if (!state.dialogue && b.phase === 'minigame') rules.finishTennaMinigame(b, state.partyHP);
+      state.keys.clear();
+    } else {
+      const path = '/tests/fixtures/combat-tools.ts';
+      const { addTennaTestingPoints } = await import(path);
+      addTennaTestingPoints(b, command);
+    }
+    window.refreshBattleFixture();
+  }, command);
+}

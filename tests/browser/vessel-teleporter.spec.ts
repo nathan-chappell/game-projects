@@ -4,9 +4,7 @@ import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
 for (const method of ['button', 'walking'] as const) {
-  test(`knight teleporter enters the long statue path from a new adventure by ${method}`, async ({
-    page,
-  }, testInfo) => {
+  test(`Vessel teleporter enters its fight from a new adventure by ${method}`, async ({ page }, testInfo) => {
     await controlFrames(page);
     await installBattleFixture(page);
     await page.goto('/');
@@ -23,7 +21,7 @@ for (const method of ['button', 'walking'] as const) {
         () => (document.querySelector('#game') as HTMLCanvasElement).toDataURL().split(',')[1],
       );
       await writeFile(testInfo.outputPath('knight-teleporter.png'), Buffer.from(png, 'base64'));
-      await page.locator('#knightTeleportButton').click();
+      await page.locator('#vesselTeleportButton').click();
     } else {
       await page.locator('#game').focus();
       await page.keyboard.down('ArrowRight');
@@ -41,21 +39,17 @@ for (const method of ['button', 'walking'] as const) {
       const s = window.battleFixtureState;
       return {
         scene: s.project.rooms[s.roomIndex].scene,
-        battle: s.bossEncounter,
-        path: s.knightPath,
+        kind: s.bossEncounter?.kind,
+        hp: s.bossEncounter?.enemy.hp,
         finaleComplete: s.story.tennaFinaleComplete,
       };
     });
-    expect(arrived.scene).toBe('postShowPassage');
-    expect(arrived.battle).toBeNull();
-    expect(arrived.path!.duelAge).toBe(-1);
+    expect(arrived.scene).toBe('mysteriousVoid');
+    expect(arrived.kind).toBe('vessel');
+    expect(arrived.hp).toBe(10000);
     expect(arrived.finaleComplete).toBe(false);
-    await page.locator('#game').focus();
-    await page.keyboard.down('ArrowDown');
-    await frames(page, 15);
-    await page.keyboard.up('ArrowDown');
-    expect(await page.evaluate(() => window.battleFixtureState.knightPath!.y)).toBeGreaterThan(
-      arrived.path!.y,
-    );
+    await frames(page, 75);
+    await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+    await expect(page.locator('#battleAttack')).toBeEnabled();
   });
 }

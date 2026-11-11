@@ -1,4 +1,9 @@
-import { installBattleFixture, prepareBattle, finishAttackFixture } from './battle-fixture.ts';
+import {
+  battleFixtureCommand,
+  installBattleFixture,
+  prepareBattle,
+  finishAttackFixture,
+} from './battle-fixture.ts';
 import { queenKeyPath } from '../../src/rooms/queen-terminal/queen-puzzle.ts';
 import { confirmRoomDialogue, controlFrames, frames } from './frames.ts';
 import { seedProgress } from './progress.ts';
@@ -6,6 +11,7 @@ import { expect, test } from './test.ts';
 
 test('Queen accepts the adjacent keyboard route and begins the success conversation', async ({ page }) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'queenPasscode', { queenSolved: false }, { x: 194, y: 294 });
   await page.goto('/');
   await frames(page, 1);
@@ -55,8 +61,11 @@ test('dark encounter retains Shine progression and returns to the lit chamber', 
   await expect(page.locator('#dialogue')).toBeVisible();
 });
 
-test('Tenna starts the Helpers attack and returns to party controls after skipping it', async ({ page }) => {
+test('Tenna starts the Helpers attack and returns to party controls after the enemy phase', async ({
+  page,
+}) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -71,7 +80,7 @@ test('Tenna starts the Helpers attack and returns to party controls after skippi
   await expect(page.locator('#battleSoulControls')).toBeVisible();
   await expect(page.locator('#battleSnowText')).toContainText('saxophone');
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   await expect(page.locator('#battleAttack')).toBeEnabled();
 });
 
@@ -168,6 +177,7 @@ test('Tenna’s paired saxophone paths replace each other and finish after five 
   page,
 }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -178,7 +188,7 @@ test('Tenna’s paired saxophone paths replace each other and finish after five 
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('i');
+  await battleFixtureCommand(page, 'invincible');
   await frames(page, 90);
   await expect(page.locator('#battleSoulControls')).toBeVisible();
   await page.locator('#game').screenshot({ path: testInfo.outputPath('paired-paths-wave-one.png') });
@@ -196,6 +206,7 @@ test('Tenna stops the glitching on the studio battlefield before the first turn'
   page,
 }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -229,6 +240,7 @@ test('Tenna stops the glitching on the studio battlefield before the first turn'
 
 test('Tenna’s second attack moves a TV above the box and fires glitch bursts', async ({ page }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -238,12 +250,12 @@ test('Tenna’s second attack moves a TV above the box and fires glitch bursts',
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
   await frames(page, 2);
   await expect(page.locator('#battleSnowText')).toContainText('TV bolts');
   await page.locator('#game').focus();
-  await page.keyboard.press('i');
+  await battleFixtureCommand(page, 'invincible');
   await frames(page, 158);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('tv-glitch-warning.png') });
   await frames(page, 26);
@@ -257,6 +269,7 @@ test('Susie and Ralsey show their own downed poses and revive through the invent
   page,
 }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' }, { gCandy: 2 });
   await page.addInitScript(async () => {
@@ -292,6 +305,7 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
   page,
 }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -369,7 +383,7 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   await page.locator('#battleAct').click();
   await page.locator('#battleProceedButton').click();
   await frames(page, 2);
@@ -383,6 +397,7 @@ test('Kris Minigame ACT plays the gallery, pays points and applies X penalties o
 
 test('Tenna cuts every party attack and heals to full before the next turn', async ({ page }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -418,6 +433,7 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
   page,
 }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -428,12 +444,12 @@ test('second minigame is fifteen-second Surfers with jumps, coins and one Flowey
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   for (let i = 0; i < 3; i++) await page.locator('#battleDefend').click();
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   await page.locator('#battleAct').click();
   await expect(page.locator('#battleProceedCount')).toContainText('Surfers');
   await page.locator('#battleProceedButton').click();
@@ -485,6 +501,7 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
   page,
 }, testInfo) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
   await page.goto('/');
   await frames(page, 1);
@@ -498,12 +515,12 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
       await confirmRoomDialogue(page);
     }
     await page.locator('#game').focus();
-    await page.keyboard.press('Shift');
+    await battleFixtureCommand(page, 'skip');
     for (let i = 0; i < 3; i++) await page.locator('#battleDefend').click();
     await frames(page, 2);
     if (round === 0) await confirmRoomDialogue(page);
     await page.locator('#game').focus();
-    await page.keyboard.press('Shift');
+    await battleFixtureCommand(page, 'skip');
   }
   await page.locator('#battleAct').click();
   await expect(page.locator('#battleProceedCount')).toContainText('Hammer Time');
@@ -527,7 +544,7 @@ test('third minigame keeps Susie stationary while mouse and arrows aim hammers',
   await page.keyboard.press('z');
   await frames(page, 2);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('hammer-keyboard-aim.png') });
-  await page.keyboard.press('i');
+  await battleFixtureCommand(page, 'invincible');
   const crosshairX = () =>
     page.locator('#game').evaluate((canvas) => {
       const pixels = (canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 640, 480).data;
@@ -596,9 +613,9 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   await page.locator('#talkButton').click();
   for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('3');
+  await battleFixtureCommand(page, 200);
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(200);
-  await page.keyboard.press('2');
+  await battleFixtureCommand(page, 500);
   await frames(page, 2);
   await expect(page.locator('#speakerName')).toHaveText('Tenna');
   await page.keyboard.press('Enter');
@@ -621,7 +638,7 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
   await expect(page.locator('#battleSnowText')).toContainText('Spear of Justice');
   await page.locator('#game').focus();
-  await page.keyboard.press('i');
+  await battleFixtureCommand(page, 'invincible');
   const soul = await page.evaluate(() => ({ ...window.battleFixtureState.bossEncounter!.soul }));
   await page.keyboard.down('ArrowRight');
   await frames(page, 113);
@@ -659,9 +676,9 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   ).toBeGreaterThan(0);
   await page.locator('#game').screenshot({ path: testInfo.outputPath('undyne-yellow-spear.png') });
 
-  await page.keyboard.press('3');
+  await battleFixtureCommand(page, 200);
   await expect(page.locator('#battleSoulControls')).toBeVisible();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   await frames(page, 2);
   await expect(page.locator('#dialogue')).toBeVisible();
   await confirmRoomDialogue(page);
@@ -671,8 +688,8 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await expect(page.locator('#battleSnowText')).toContainText('saxophone');
-  await page.keyboard.press('Shift');
-  await page.keyboard.press('2');
+  await battleFixtureCommand(page, 'skip');
+  await battleFixtureCommand(page, 500);
   await frames(page, 2);
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.tennaHeadGlitch)).toBe(true);
   await expect(page.locator('#battleAct')).toBeEnabled();
@@ -703,52 +720,12 @@ test('Tenna score milestones introduce Undyne, restore normal attacks, and glitc
   expect(await staticHash()).not.toBe(still);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await frames(page, 1);
-  await page.keyboard.press('3');
+  await battleFixtureCommand(page, 200);
   await frames(page, 2);
   await expect(page.locator('#battleAct')).toBeDisabled();
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe(
     'tennaFinaleOutburst',
   );
-});
-
-test('Tenna score keys work during dialogue and attack introductions with number-row and numpad layouts', async ({
-  page,
-}) => {
-  await controlFrames(page);
-  await installBattleFixture(page);
-  await seedProgress(page, 'glitchBackstage', {}, { x: 340, y: 340, facing: 'up' });
-  await page.goto('/');
-  await frames(page, 1);
-  await page.locator('#talkButton').click();
-  for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
-  await page.locator('#game').focus();
-  await page.keyboard.press('3');
-  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(200);
-  for (let member = 0; member < 4; member++) await page.locator('#battleDefend').click();
-  // Physical Digit2 must work even when the keyboard layout supplies a symbol.
-  await page.evaluate(() =>
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: '"', code: 'Digit2', bubbles: true })),
-  );
-  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(700);
-  await frames(page, 2);
-  await expect(page.locator('#dialogue')).toBeVisible();
-  await page.keyboard.press('Numpad2');
-  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1200);
-  await page.keyboard.press('Numpad3');
-  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1400);
-  await page.evaluate(() =>
-    document.dispatchEvent(
-      new KeyboardEvent('keydown', { key: '2', code: 'Digit2', repeat: true, bubbles: true }),
-    ),
-  );
-  expect(
-    await page.evaluate(() => ({
-      score: window.battleFixtureState.bossEncounter!.score,
-      invincible: window.battleFixtureState.bossEncounter!.invincible,
-      tp: window.battleFixtureState.bossEncounter!.tp,
-    })),
-  ).toEqual({ score: 1400, invincible: false, tp: 40 });
-  await expect(page.locator('#dialogue')).toBeVisible();
 });
 
 test('Undyne uses the reference sprite, blocks menu options, awards attack points, and receives G. Candy', async ({
@@ -762,7 +739,7 @@ test('Undyne uses the reference sprite, blocks menu options, awards attack point
   await page.locator('#talkButton').click();
   for (let line = 0; line < 5; line++) await confirmRoomDialogue(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('2');
+  await battleFixtureCommand(page, 500);
   await frames(page, 2);
   await confirmRoomDialogue(page);
   await confirmRoomDialogue(page);
@@ -866,7 +843,7 @@ test('1500 earned points end Tenna’s show and return the party backstage for U
   await page.locator('#battleProceedButton').click();
   await expect(page.locator('#battleMinigameControls')).toBeVisible();
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   await frames(page, 2);
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1500);
   await page.keyboard.press('Enter');
@@ -882,8 +859,8 @@ test('1500 earned points end Tenna’s show and return the party backstage for U
   await expect(page.locator('#leaveBossButton')).toBeDisabled();
   await page.keyboard.press('o');
   await expect(page.locator('#inventoryDialog')).toBeHidden();
-  await page.keyboard.press('Shift');
-  await page.keyboard.press('3');
+  await battleFixtureCommand(page, 'skip');
+  await battleFixtureCommand(page, 200);
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.score)).toBe(1500);
   await frames(page, 90);
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.enemy.visible)).toBe(false);
@@ -923,6 +900,7 @@ test('1500 earned points end Tenna’s show and return the party backstage for U
 
 test('completed Tenna saves restore backstage without restarting his Finale', async ({ page }) => {
   await controlFrames(page);
+  await installBattleFixture(page);
   await seedProgress(
     page,
     'glitchBackstage',

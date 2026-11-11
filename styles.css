@@ -976,8 +976,6 @@ dialog .primary {
   }
   .mobile-action-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
   .mobile-actions .mobile-round { border-radius: 50%; width: 48px; height: 48px; font-weight: 700; font-size: 20px; }
-  .mobile-knight-tools { display: flex; flex-direction: column; gap: 5px; }
-  .mobile-knight-tools button { width: 96px; font-size: 11px; }
   #playControls > .dpad, #sprintButton, #inspectButton, #talkButton,
-  #battleSoulControls .dpad, #battleKnightTestingControls { display: none; }
+  #battleSoulControls .dpad { display: none; }
 }

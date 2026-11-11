@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
+import { battleFixtureCommand, installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -12,11 +12,11 @@ test('seven knight rounds lead through the protected Fountain cutscene into the 
   await frames(page, 1);
   await startKnightBattleFixture(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Digit2');
+  await battleFixtureCommand(page, 'invincible');
   for (let round = 1; round <= 7; round++) {
     for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
     await page.locator('#game').focus();
-    await page.keyboard.press('Shift');
+    await battleFixtureCommand(page, 'skip');
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe(
       round === 7 ? 'knightRift' : 'kris',
     );

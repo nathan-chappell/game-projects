@@ -1,3 +1,9 @@
+import {
+  requestSpecialAttack,
+  toggleFastKill,
+  toggleInvincibility,
+  toggleRepeatAttack,
+} from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { freshPartyHP } from '../../game/config.ts';
@@ -13,11 +19,7 @@ import {
   createEncounter,
   defend,
   friendlynessPellets,
-  requestSpecialAttack,
   startKrisTurn,
-  toggleFastKill,
-  toggleInvincibility,
-  toggleRepeatAttack,
 } from './rules.ts';
 import { battleArena, battleSettings, enemyAttacks } from './settings.ts';
 import { attackState } from './test-state.ts';

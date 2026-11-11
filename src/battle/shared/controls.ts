@@ -1,10 +1,9 @@
 import { tennaEndingPhases } from '../tenna/ending.ts';
 import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
-import { addTennaTestingPoints } from '../tenna/score-events.ts';
 import { setHammerAimKey, setHammerThrowKey, throwHammer } from '../tenna/hammers.ts';
 import { jumpSurfer } from '../tenna/surfers.ts';
 import { shootGallery, moveGalleryAim, minigamePoints } from '../tenna/minigame.ts';
-import { requestTennaMinigame, finishTennaMinigame } from './rules.ts';
+import { requestTennaMinigame } from './rules.ts';
 import type { Elements, GameElements } from '../../game/dom.ts';
 import { present } from '../../game/invariants.ts';
 import type { GameState } from '../../game/types.ts';
@@ -26,15 +25,10 @@ import {
   advanceProceedDialogue,
   attackEnemy,
   defend,
-  fillTPForTesting,
   friendlynessPellets,
   proceed,
   snowAttackStatus,
   spareInDark,
-  startKrisTurn,
-  toggleFastKill,
-  toggleInvincibility,
-  toggleRepeatAttack,
   useDarkAct,
 } from './rules.ts';
 import { battleActions, battleSettings } from './settings.ts';
@@ -69,30 +63,6 @@ export function setupBattleControls(
     onChange();
     announce(state.bossEncounter?.message || '');
   }
-  function toggleKnightInvincibility() {
-    if (blocked() || state.bossEncounter?.kind !== 'knights') return;
-    if (toggleInvincibility(state.bossEncounter)) refresh();
-    canvas.focus({ preventScroll: true });
-  }
-  function skipTestingAttack() {
-    const encounter = state.bossEncounter;
-    if (
-      blocked() ||
-      !encounter ||
-      !['tenna', 'knights'].includes(encounter.kind ?? '') ||
-      !canControlSoul(encounter)
-    )
-      return;
-    startKrisTurn(encounter, state.partyHP);
-    encounter.message = 'Attack skipped for playtesting.';
-    state.keys.clear();
-    refresh();
-    canvas.focus({ preventScroll: true });
-  }
-  $('battleKnightInvincible').onclick = toggleKnightInvincibility;
-  $('battleKnightSkip').onclick = () => {
-    if (state.bossEncounter?.kind === 'knights') skipTestingAttack();
-  };
   function choose(action: string) {
     if (state.death) return;
     const encounter = state.bossEncounter;
@@ -294,35 +264,7 @@ export function setupBattleControls(
         (event.target instanceof HTMLElement && event.target.isContentEditable)
       )
         return;
-      if (
-        state.bossEncounter?.kind === 'tenna' &&
-        state.mode === 'play' &&
-        !state.death &&
-        !document.querySelector('dialog[open]') &&
-        (['3', '2'].includes(event.key) || ['Digit3', 'Digit2', 'Numpad3', 'Numpad2'].includes(event.code))
-      ) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (
-          !event.repeat &&
-          addTennaTestingPoints(
-            state.bossEncounter,
-            ['Digit3', 'Numpad3'].includes(event.code) || event.key === '3' ? 200 : 500,
-          )
-        )
-          refresh();
-        return;
-      }
       if (blocked()) return;
-      if (
-        state.bossEncounter?.kind === 'knights' &&
-        (event.key === '2' || event.code === 'Digit2' || event.code === 'Numpad2')
-      ) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (!event.repeat) toggleKnightInvincibility();
-        return;
-      }
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const b = state.bossEncounter,
           m = present(b.minigame);
@@ -339,9 +281,6 @@ export function setupBattleControls(
             'C',
             'Enter',
             ' ',
-            'Shift',
-            'i',
-            'I',
           ].includes(event.key)
         ) {
           event.preventDefault();
@@ -352,9 +291,7 @@ export function setupBattleControls(
               if (event.key === 'ArrowUp') jumpSurfer(m);
             } else if (m.kind === 'hammers') setHammerAimKey(m, event.key, true);
             else moveGalleryAim(m, event.key);
-          } else if (event.key === 'Shift') finishTennaMinigame(b, state.partyHP);
-          else if (event.key.toLowerCase() === 'i') b.invincible = !b.invincible;
-          else if (m.kind === 'surf') jumpSurfer(m);
+          } else if (m.kind === 'surf') jumpSurfer(m);
           else if (m.kind === 'hammers') {
             if (event.key.toLowerCase() === 'z' || event.key === ' ') setHammerThrowKey(m, event.key, true);
             else throwHammer(m);
@@ -379,37 +316,6 @@ export function setupBattleControls(
           event.stopImmediatePropagation();
           if (!event.repeat) confirm();
         }
-        return;
-      }
-      const repeatKey = event.key === '6' || event.code === 'Numpad6',
-        invincibleKey = event.key.toLowerCase() === 'i',
-        fastKillKey = event.key === '4' || event.code === 'Numpad4',
-        fillTPKey = event.key === '5' || event.code === 'Numpad5';
-      if (state.bossEncounter?.kind === 'tenna' && (repeatKey || invincibleKey || fastKillKey || fillTPKey)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (event.repeat) return;
-        const changed = repeatKey
-          ? toggleRepeatAttack(present(state.bossEncounter))
-          : invincibleKey
-            ? toggleInvincibility(present(state.bossEncounter))
-            : fastKillKey
-              ? toggleFastKill(present(state.bossEncounter))
-              : fillTPForTesting(present(state.bossEncounter));
-        if (changed) {
-          refresh();
-        }
-        return;
-      }
-      if (
-        event.key === 'Shift' &&
-        ['tenna', 'knights'].includes(state.bossEncounter?.kind ?? '') &&
-        canControlSoul(state.bossEncounter)
-      ) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (event.repeat) return;
-        skipTestingAttack();
         return;
       }
       if (canControlSoul(state.bossEncounter) && directionKeys[event.key]) {
@@ -552,21 +458,6 @@ export function setupBattleControls(
       encounter?.snowAttack?.direction === 'undyne'
         ? ` Each block gains ${encounter.snowAttack.grazeTP}% TP.`
         : ` Stay near hazards for +${encounter?.snowAttack?.grazeTP ?? (encounter?.kind === 'dark' ? 1 : battleSettings.grazeTP)}% TP every 0.5 seconds.`;
-    $('battleTestStatus').textContent =
-      encounter?.kind === 'knights'
-        ? `Playtesting · 2: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: Skip attack`
-        : encounter?.kind !== 'tenna'
-          ? ''
-          : encounter.phase === 'minigame'
-            ? `Playtesting · 3: +200 points · 2: +500 points · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · Shift: End minigame`
-            : `Playtesting · 3: +200 points · 2: +500 points · 5: Fill TP · 6: Repeat ${encounter.repeatAttack ? 'ON' : 'OFF'} · I: Invincible ${encounter.invincible ? 'ON' : 'OFF'} · 4: Fast kill ${encounter.fastKill ? 'ON' : 'OFF'} · Shift: Skip`;
-    $('battleTestStatus').hidden = !['tenna', 'knights'].includes(encounter?.kind ?? '');
-    $('battleKnightTestingControls').hidden = !active || encounter.kind !== 'knights';
-    $('battleKnightInvincible').textContent = `Invincibility: ${encounter?.invincible ? 'ON' : 'OFF'}`;
-    $('battleKnightInvincible').setAttribute('aria-pressed', String(!!encounter?.invincible));
-    $('battleKnightInvincible').disabled =
-      !active || !!state.death || (!canPartyAct(encounter) && !canControlSoul(encounter));
-    $('battleKnightSkip').disabled = !active || !!state.death || !canControlSoul(encounter);
     $('battleTargetPanel').hidden = !acting || encounter.screen !== 'attack';
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';
     $('battleMenuBack').hidden = !acting || encounter.screen === 'menu';

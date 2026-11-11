@@ -1,4 +1,4 @@
-import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
+import { battleFixtureCommand, installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -55,7 +55,7 @@ test('in-game touch pad supports held movement and releases cleanly; A and B sha
   await page.locator('#mobileConfirm').tap();
   await frames(page, 1);
   await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
-  await page.locator('#mobileInvincible').tap();
+  await battleFixtureCommand(page, 'invincible');
   await frames(page, 1);
   for (let i = 0; i < 3; i++) await page.locator('#battleDefend').tap();
   await frames(page, 70);
@@ -65,7 +65,7 @@ test('in-game touch pad supports held movement and releases cleanly; A and B sha
   await page.screenshot({ path: testInfo.outputPath('mobile-in-game-controls.png'), fullPage: true });
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.locator('#mobileDpad')).toBeVisible();
-  await page.locator('#mobileSkip').tap();
+  await battleFixtureCommand(page, 'skip');
   await frames(page, 1);
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
 });

@@ -1,3 +1,8 @@
+import {
+  requestSpecialAttack,
+  toggleFastKill,
+  toggleRepeatAttack,
+} from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { freshPartyHP } from '../../game/config.ts';
@@ -11,10 +16,7 @@ import {
   finishPartyTurn,
   friendlynessPellets,
   proceed,
-  requestSpecialAttack,
   startKrisTurn,
-  toggleFastKill,
-  toggleRepeatAttack,
 } from '../shared/rules.ts';
 import { attackState } from '../shared/test-state.ts';
 import {

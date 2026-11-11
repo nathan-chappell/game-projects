@@ -1,8 +1,9 @@
+import { addTennaTestingPoints } from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createTennaEncounter } from '../../rooms/backstage/tenna-finale.ts';
 import { freshPartyHP } from '../../game/config.ts';
-import { addTennaTestingPoints, completeTennaScoreEvent } from './score-events.ts';
+import { completeTennaScoreEvent } from './score-events.ts';
 import { rejectUndyneAction } from './undyne-actions.ts';
 import {
   attackEnemy,

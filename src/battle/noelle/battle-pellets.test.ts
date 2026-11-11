@@ -1,3 +1,4 @@
+import { fillTPForTesting, requestSpecialAttack } from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { freshPartyHP } from '../../game/config.ts';
@@ -7,9 +8,7 @@ import {
   attackEnemy,
   createEncounter,
   defend,
-  fillTPForTesting,
   friendlynessPellets,
-  requestSpecialAttack,
   startKrisTurn,
 } from '../shared/rules.ts';
 import { attackState } from '../shared/test-state.ts';

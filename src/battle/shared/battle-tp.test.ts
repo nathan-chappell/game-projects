@@ -1,3 +1,4 @@
+import { requestSpecialAttack } from '../../../tests/fixtures/combat-tools.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { freshPartyHP } from '../../game/config.ts';
@@ -15,7 +16,6 @@ import {
   defend,
   friendlynessPellets,
   proceed,
-  requestSpecialAttack,
   startKrisTurn,
 } from './rules.ts';
 import { battleArena, battleSettings } from './settings.ts';

@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
+import { battleFixtureCommand, installBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { seedProgress } from './progress.ts';
 import { expect, test } from './test.ts';
@@ -22,8 +22,7 @@ test('both knights launch swords across the soul arena, damage each other and re
   });
   await frames(page, 2);
   await page.locator('#game').focus();
-  await page.keyboard.press('Digit2');
-  await expect(page.locator('#battleTestStatus')).toContainText('Invincible ON');
+  await battleFixtureCommand(page, 'invincible');
   const initialPartyHP = await page.evaluate(() => structuredClone(window.battleFixtureState.partyHP));
   for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
   await expect(page.locator('#battleSoulControls')).toBeVisible();
@@ -59,59 +58,11 @@ test('both knights launch swords across the soul arena, damage each other and re
   expect(hp.kaizo.hp).toBeLessThan(30000);
   await frames(page, 650);
   expect(await page.evaluate(() => window.battleFixtureState.partyHP)).toEqual(initialPartyHP);
-  await page.keyboard.press('Numpad2');
-  await expect(page.locator('#battleTestStatus')).toContainText('Invincible OFF');
+  await battleFixtureCommand(page, 'invincible');
   await expect(page.locator('#battleSoulControls')).toBeHidden();
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
   await expect(page.locator('#battleAct')).toBeEnabled();
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.projectileDamageMultiplier)).toBe(
     1,
   );
-});
-
-test('Shift skips the knight enemy attack, clears its hazards and defense, and preserves HP', async ({
-  page,
-}) => {
-  await controlFrames(page);
-  await installBattleFixture(page);
-  await page.goto('/');
-  await frames(page, 1);
-  await startKnightBattleFixture(page);
-  await page.locator('#battleAct').click();
-  await page.locator('#battleProceedButton').click();
-  await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
-  await expect(page.locator('#battleTurnText')).toHaveText('Flowey’s turn');
-  await page.keyboard.press('Digit2');
-  await page.evaluate(() => {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: '2', code: 'Digit2', repeat: true }));
-  });
-  await expect(page.locator('#battleTestStatus')).toContainText('Invincible ON');
-  for (let i = 0; i < 3; i++) await page.locator('#battleDefend').click();
-  await frames(page, 70);
-  const before = await page.evaluate(() => ({
-    party: structuredClone(window.battleFixtureState.partyHP),
-    enemies: structuredClone(window.battleFixtureState.bossEncounter!.knightEnemies),
-  }));
-  await page.locator('#game').focus();
-  await page.keyboard.down('ArrowDown');
-  await page.keyboard.press('Shift');
-  await page.keyboard.up('ArrowDown');
-  await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
-  await expect(page.locator('#battleSoulControls')).toBeHidden();
-  await expect(page.locator('#battleFeedback')).toContainText('Attack skipped');
-  const after = await page.evaluate(() => ({
-    party: window.battleFixtureState.partyHP,
-    enemies: window.battleFixtureState.bossEncounter!.knightEnemies,
-    soul: window.battleFixtureState.bossEncounter!.soul,
-    attack: window.battleFixtureState.bossEncounter!.snowAttack,
-    defense: window.battleFixtureState.bossEncounter!.projectileDamageMultiplier,
-    keys: window.battleFixtureState.keys.size,
-  }));
-  expect(after.party).toEqual(before.party);
-  expect(after.enemies).toEqual(before.enemies);
-  expect(after.soul).toBeNull();
-  expect(after.attack).toBeNull();
-  expect(after.defense).toBe(1);
-  expect(after.keys).toBe(0);
 });

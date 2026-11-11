@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { controlFrames, frames } from './frames.ts';
-import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
+import { battleFixtureCommand, installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { expect, test } from './test.ts';
 
 test('third knight attack has eight faster swords approaching from outside the box', async ({
@@ -12,12 +12,12 @@ test('third knight attack has eight faster swords approaching from outside the b
   await frames(page, 1);
   await startKnightBattleFixture(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Digit2');
+  await battleFixtureCommand(page, 'invincible');
   for (let turn = 0; turn < 3; turn++) {
     for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
     if (turn < 2) {
       await page.locator('#game').focus();
-      await page.keyboard.press('Shift');
+      await battleFixtureCommand(page, 'skip');
     }
   }
   await frames(page, 25);
@@ -43,6 +43,6 @@ test('third knight attack has eight faster swords approaching from outside the b
     ),
   ).toBe(8);
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
 });

@@ -1,9 +1,9 @@
 import { writeFile } from 'node:fs/promises';
 import { controlFrames, frames } from './frames.ts';
-import { installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
+import { battleFixtureCommand, installBattleFixture, startKnightBattleFixture } from './battle-fixture.ts';
 import { expect, test } from './test.ts';
 
-test('second knight attack shows diagonal warnings, mixed sword waves, and mobile skip', async ({
+test('second knight attack shows diagonal warnings, mixed sword waves, on mobile', async ({
   page,
 }, testInfo) => {
   await controlFrames(page);
@@ -12,10 +12,10 @@ test('second knight attack shows diagonal warnings, mixed sword waves, and mobil
   await frames(page, 1);
   await startKnightBattleFixture(page);
   await page.locator('#game').focus();
-  await page.keyboard.press('Digit2');
+  await battleFixtureCommand(page, 'invincible');
   for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
   await page.locator('#game').focus();
-  await page.keyboard.press('Shift');
+  await battleFixtureCommand(page, 'skip');
   for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.direction)).toBe(
     'knightCrossing',
@@ -48,7 +48,7 @@ test('second knight attack shows diagonal warnings, mixed sword waves, and mobil
   ).toBe(4);
   await page.setViewportSize({ width: 390, height: 844 });
   await frames(page, 1);
-  await page.locator('#mobileSkip').click();
+  await battleFixtureCommand(page, 'skip');
   await frames(page, 1);
   await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
   await expect(page.locator('#battleSoulControls')).toBeHidden();

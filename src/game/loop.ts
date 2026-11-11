@@ -5,7 +5,7 @@ import {
 } from '../battle/vessel/entrance.ts';
 import { advanceKnightRift } from '../battle/knights/rift.ts';
 import { mysteriousVoidScene } from '../rooms/mysterious-void/room.ts';
-import { knightTeleporterPosition, teleportToKnightPath } from '../battle/knights/teleporter.ts';
+import { vesselTeleporterPosition, teleportToVesselBattle } from '../battle/vessel/teleporter.ts';
 import { createKnightBattleIntro, createKnightEncounter } from '../battle/knights/introduction.ts';
 import { knightSequenceSeconds } from '../rooms/post-show/knight-choreography.ts';
 import {
@@ -77,7 +77,6 @@ interface Dependencies {
     throughDoor?: boolean,
     preferred?: Point | undefined,
     bossConfirmed?: boolean,
-    fromKnightTeleporter?: boolean,
   ) => boolean;
   readonly collides: (x: number, y: number) => boolean;
   readonly updateFollower: (dt: number) => void;
@@ -381,11 +380,11 @@ export function createGameLoop(dependencies: Dependencies) {
       else if (next === 'done') state.tennaEntrance = null;
       return;
     }
-    const teleporter = knightTeleporterPosition(state);
+    const teleporter = vesselTeleporterPosition(state);
     if (
       teleporter &&
       Math.hypot(state.player.x - teleporter.x, state.player.y - teleporter.y) < 16 &&
-      teleportToKnightPath(state, (index) => dependencies.changeRoom(index, false, undefined, false, true))
+      teleportToVesselBattle(state, (index) => dependencies.changeRoom(index))
     ) {
       dependencies.syncBossUI();
       dependencies.storyUI();

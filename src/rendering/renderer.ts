@@ -1,7 +1,7 @@
 import { drawVesselArrival } from '../battle/vessel/drawing.ts';
 import { drawMysteriousVoid } from '../rooms/mysterious-void/drawing.ts';
 import { syncMobileControls } from '../game/mobile-controls.ts';
-import { drawKnightTeleporter } from '../battle/knights/teleporter.ts';
+import { drawVesselTeleporter } from '../battle/vessel/teleporter.ts';
 import { createKnightPathDrawing } from '../rooms/post-show/knight-path-drawing.ts';
 import { postShowScene } from '../rooms/post-show/post-show.ts';
 import { drawPostShowRoom } from '../rooms/post-show/post-show-drawing.ts';
@@ -723,7 +723,7 @@ export function createRenderer(
     drawCoreCollapse();
     drawJumpPads();
     drawSavePoint(time);
-    if (state.mode === 'play') drawKnightTeleporter(ctx, state, reducedParticleMotion.matches ? 0 : time);
+    if (state.mode === 'play') drawVesselTeleporter(ctx, state, reducedParticleMotion.matches ? 0 : time);
     const flower = floweyPosition();
     if (state.mode === 'play' && state.glitchComfort) {
       drawGlitchComfort(time);

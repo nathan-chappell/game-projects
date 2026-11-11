@@ -60,10 +60,6 @@
                   <button data-dir="right" aria-label="Touch move right">→</button>
                 </div>
                 <div class="mobile-actions">
-                  <div id="mobileKnightTools" class="mobile-knight-tools" hidden>
-                    <button id="mobileInvincible" aria-pressed="false">Invincible OFF</button>
-                    <button id="mobileSkip" disabled>Skip attack</button>
-                  </div>
                   <div class="mobile-action-row">
                     <button id="mobileInventory" aria-label="Open inventory">Bag</button>
                     <button id="mobileInspect" aria-label="Inspect nearby object">Look</button>
@@ -94,7 +90,7 @@
               ><button data-dir="right" aria-label="Walk right">→</button>
             </div>
             <div class="controls-right">
-              <button id="knightTeleportButton">Knight statue path teleporter</button>
+              <button id="vesselTeleportButton">Vessel fight teleporter</button>
               <button id="restartButton" class="quiet">Restart story</button
               ><button id="sprintButton" title="Hold to run" aria-label="Hold to run, F">Run <span class="key">F</span></button
               ><button id="inspectButton">Inspect <span class="key">C</span></button
@@ -106,11 +102,6 @@
           </p>
           <div id="bossControls" hidden class="hint-card">
             <strong id="battleTurnText" role="status">Kris’s turn</strong>
-            <p id="battleTestStatus" class="helptext" role="status" aria-live="polite"></p>
-            <div id="battleKnightTestingControls" class="battle-actions" role="group" aria-label="Knight battle playtesting" hidden>
-              <button id="battleKnightInvincible" aria-pressed="false">Invincibility: OFF</button>
-              <button id="battleKnightSkip" disabled>Skip attack</button>
-            </div>
             <div class="battle-tp">
               <label id="battleTPText" for="battleTPBar">TP: 0%</label
               ><progress id="battleTPBar" value="0" max="100" aria-label="Tension points"></progress>
