@@ -90,9 +90,9 @@ export function createAttackRunner(dependencies: Dependencies) {
             partyHP,
             projectileDamage(
               encounter,
-              hit.kind === 'falling' ? vesselRainSettings.fallingDamage : vesselRainSettings.miniDamage,
+              hit.kind === 'mini' ? vesselRainSettings.miniDamage : vesselRainSettings.fallingDamage,
             ),
-            hit.kind === 'falling' ? 'a falling sword' : 'a mini sword',
+            hit.kind === 'mini' ? 'a mini sword' : 'a sword',
             random,
           );
           snow.hitCooldown = vesselRainSettings.hitCooldown;

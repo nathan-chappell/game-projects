@@ -2,10 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { advanceVesselRain, createVesselRain, type VesselSword, vesselRainArena } from './sword-rain.ts';
 import { createVesselEncounter } from './entrance.ts';
-import { advanceSnowAttack, beginEnemyAttack, moveSoul, soulArena } from '../shared/rules.ts';
+import {
+  advanceSnowAttack,
+  beginEnemyAttack,
+  moveSoul,
+  soulArena,
+  startNextEnemyAttack,
+} from '../shared/rules.ts';
 
 const hp = () => ({ Kris: 100, Flowey: 100, Susie: 100, Ralsey: 100 });
-const sword = (kind: 'falling' | 'mini', x = 320, y = 240): VesselSword => ({
+const sword = (kind: VesselSword['kind'], x = 320, y = 240): VesselSword => ({
   kind,
   x,
   y,
@@ -17,7 +23,7 @@ const sword = (kind: 'falling' | 'mini', x = 320, y = 240): VesselSword => ({
   active: true,
   hitOpponent: false,
 });
-function fixture(kind: 'falling' | 'mini') {
+function fixture(kind: VesselSword['kind']) {
   const b = createVesselEncounter();
   beginEnemyAttack(b, 'vesselRain', 'Rain');
   assert.equal(b.snowAttack?.direction, 'vesselRain');
@@ -72,6 +78,7 @@ test('soul can reach all screen edges with no snow slowdown', () => {
 test('swords deal 40 or 15, respect Defend and do not damage a dead teammate', () => {
   for (const [kind, damage] of [
     ['falling', 40],
+    ['launched', 40],
     ['mini', 15],
   ] as const) {
     const b = fixture(kind),
@@ -99,4 +106,58 @@ test('near-misses award TP on the normal half-second timer', () => {
   b.snowAttack!.vesselRain!.swords[0].vy = -1;
   advanceSnowAttack(b, party, 0.25, () => 0);
   assert.equal(b.tp, 3);
+});
+
+test('edge warnings can originate on all four sides and lock their aim before launch', () => {
+  for (let side = 0; side < 4; side++) {
+    const rain = createVesselRain('edges');
+    const rolls = [(side + 0.1) / 4, 0, 0.5, 0.5];
+    advanceVesselRain(rain, 0.7, { x: 320, y: 240 }, () => rolls.shift() ?? 0.5);
+    assert.equal(rain.warnings.length, 2);
+    const warning = rain.warnings[0];
+    assert.equal(side < 2 ? warning.x : warning.y, [-40, 680, -40, 520][side]);
+    const aim = warning.angle;
+    advanceVesselRain(rain, 0.51, { x: 50, y: 50 }, () => 0.5);
+    assert.equal(rain.swords[0].kind, 'launched');
+    assert.equal(rain.swords[0].angle, aim);
+    assert.equal(rain.swords.length, 2);
+  }
+});
+
+test('a launched sword bursts on each destination edge into four inward mini swords', () => {
+  for (const [x, y, angle, axis, sign] of [
+    [605, 240, 0, 'vx', -1],
+    [35, 240, Math.PI, 'vx', 1],
+    [320, 35, -Math.PI / 2, 'vy', 1],
+    [320, 445, Math.PI / 2, 'vy', -1],
+  ] as const) {
+    const rain = createVesselRain('edges');
+    rain.nextVolley = 100;
+    rain.swords.push({
+      ...sword('launched', x, y),
+      angle,
+      vx: Math.cos(angle) * 270,
+      vy: Math.sin(angle) * 270,
+    });
+    advanceVesselRain(rain, 1 / 60, { x: 320, y: 240 });
+    assert.equal(rain.bursts.length, 1);
+    assert.equal(rain.swords.length, 4);
+    assert.ok(rain.swords.every((s) => s.kind === 'mini' && s[axis] * sign > 0));
+    advanceVesselRain(rain, 0.1, { x: 320, y: 240 });
+    assert.equal(rain.bursts.length, 1);
+  }
+});
+
+test('Vessel alternates rain and edge attacks and returns to the party after each', () => {
+  const b = createVesselEncounter(),
+    party = hp();
+  b.invincible = true;
+  for (const pattern of ['rain', 'edges', 'rain', 'edges']) {
+    startNextEnemyAttack(b, '');
+    assert.equal(b.snowAttack?.vesselRain?.pattern, pattern);
+    advanceSnowAttack(b, party, 20, () => 0.37);
+    assert.equal(b.phase, 'kris');
+    assert.equal(b.snowAttack, null);
+  }
+  assert.equal(b.enemy.hp, 10000);
 });

@@ -1,4 +1,4 @@
-import { vesselRainArena } from '../vessel/sword-rain.ts';
+import { createVesselRain, vesselRainArena } from '../vessel/sword-rain.ts';
 import { vesselDamage, vesselSettings } from '../vessel/combat.ts';
 import { beginKnightRift } from '../knights/rift.ts';
 import { advancePartyDuel } from '../knights/party-duel.ts';
@@ -287,7 +287,16 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'vessel') {
-    beginEnemyAttack(encounter, 'vesselRain', `${message} Dodge the falling swords and their bursts!`);
+    const edges = encounter.enemyAttackCount % 2 === 1;
+    beginEnemyAttack(
+      encounter,
+      'vesselRain',
+      edges
+        ? `${message} Swords launch from the edges! Watch their warnings!`
+        : `${message} Dodge the falling swords and their bursts!`,
+    );
+    if (edges && encounter.snowAttack?.direction === 'vesselRain')
+      encounter.snowAttack.vesselRain = createVesselRain('edges');
     encounter.turn = 'Vessel';
     encounter.enemyAttackCount++;
     return true;

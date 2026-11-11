@@ -10,13 +10,19 @@ export function drawVesselRain(ctx: CanvasRenderingContext2D, rain: VesselRain, 
     ctx.strokeStyle = '#be273e';
     ctx.globalAlpha = 0.35 + progress * 0.5;
     ctx.lineWidth = 2;
+    ctx.save();
+    ctx.translate(Math.max(8, Math.min(632, warning.x)), Math.max(8, Math.min(472, warning.y)));
+    ctx.rotate(warning.angle);
     ctx.beginPath();
-    ctx.moveTo(warning.x - 8, 8);
-    ctx.lineTo(warning.x, 18);
-    ctx.lineTo(warning.x + 8, 8);
+    ctx.moveTo(-5, -8);
+    ctx.lineTo(5, 0);
+    ctx.lineTo(-5, 8);
     ctx.stroke();
-    ctx.fillStyle = '#a92436';
-    ctx.fillRect(warning.x - 12, 477, 24, 3);
+    ctx.restore();
+    if (rain.pattern === 'rain') {
+      ctx.fillStyle = '#a92436';
+      ctx.fillRect(warning.x - 12, 477, 24, 3);
+    }
   }
   ctx.globalAlpha = 1;
   for (const sword of rain.swords) drawKnightSword(ctx, { ...sword, owner: 'kaizo' }, reduced);
@@ -25,15 +31,19 @@ export function drawVesselRain(ctx: CanvasRenderingContext2D, rain: VesselRain, 
     ctx.globalAlpha = 1 - progress;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
+    ctx.save();
+    ctx.translate(burst.x, burst.y);
+    ctx.rotate(burst.angle + Math.PI / 2);
     ctx.beginPath();
-    ctx.ellipse(burst.x, burst.y, 8 + progress * 42, 4 + progress * 22, 0, Math.PI, Math.PI * 2);
+    ctx.ellipse(0, 0, 8 + progress * 42, 4 + progress * 22, 0, Math.PI, Math.PI * 2);
     ctx.stroke();
     for (let i = 0; i < 7; i++) {
       const angle = -Math.PI + (i / 6) * Math.PI;
       const radius = 10 + progress * 35;
       ctx.fillStyle = i % 2 ? '#b8c7de' : '#ffffff';
-      ctx.fillRect(burst.x + Math.cos(angle) * radius, burst.y + Math.sin(angle) * radius, 3, 3);
+      ctx.fillRect(Math.cos(angle) * radius, Math.sin(angle) * radius, 3, 3);
     }
+    ctx.restore();
   }
   ctx.restore();
 }
