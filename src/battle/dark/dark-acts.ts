@@ -13,6 +13,13 @@ export const darkActDefinitions: Record<string, { name: string; cost: number; de
 };
 export function darkActInfo(b: Encounter | null) {
   const act = darkActDefinitions[b?.turn ?? 'Kris'] || darkActDefinitions.Kris;
+  if (b?.kind === 'vessel') {
+    if (b.turn === 'Kris')
+      return { name: 'X-Slash', cost: 0, description: 'Deal 250 damage with two crossing sword strikes.' };
+    if (b.turn === 'Flowey' || b.turn === 'Susie')
+      return { ...act, description: `Deal 20 damage.${b.turn === 'Flowey' ? ' Heal Flowey 35 HP.' : ''}` };
+    return act;
+  }
   if (b?.kind !== 'knights') return act;
   if (b.turn === 'Kris')
     return {

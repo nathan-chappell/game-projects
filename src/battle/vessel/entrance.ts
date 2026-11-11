@@ -1,8 +1,9 @@
+import { vesselSettings } from './combat.ts';
 import type { GameState } from '../../game/types.ts';
 import { createEncounter } from '../shared/rules.ts';
 
 export const vesselConversation = ['[Flowey] * Where are we?', "[Ralsey] * I don't know..."];
-export const vesselAppearanceSeconds = 1.6;
+export const vesselAppearanceSeconds = 3.2;
 export interface VesselArrival {
   phase: 'dialogue' | 'appear' | 'battle';
   age: number;
@@ -29,7 +30,13 @@ export function completeVesselConversation(state: GameState) {
 export function createVesselEncounter() {
   const encounter = createEncounter();
   encounter.kind = 'vessel';
-  encounter.enemy = { ...encounter.enemy, name: 'Vessel', visible: true };
+  encounter.enemy = {
+    ...encounter.enemy,
+    name: 'Vessel',
+    hp: vesselSettings.hp,
+    maxHP: vesselSettings.hp,
+    visible: true,
+  };
   encounter.phase = 'vesselFaceoff';
   encounter.turn = 'Vessel';
   encounter.message = 'The Vessel silently raises its blade.';

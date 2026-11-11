@@ -43,7 +43,7 @@ test('Flowey and Ralsey speak before the left-facing grayscale Vessel appears an
     await writeFile(testInfo.outputPath(name), Buffer.from(png, 'base64'));
   };
   await capture('vessel-appears.png');
-  await frames(page, 60);
+  await frames(page, 160);
   await expect(page.locator('#dialogue')).toBeHidden();
   expect(
     await page.evaluate(() => ({
@@ -54,7 +54,10 @@ test('Flowey and Ralsey speak before the left-facing grayscale Vessel appears an
   await expect(page.locator('#battleTurnText')).toHaveText('Vessel’s turn');
   await expect(page.locator('#inventoryButton')).toBeDisabled();
   await capture('vessel-battle.png');
-  await frames(page, 300);
+  await frames(page, 70);
+  await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+  await expect(page.locator('#battleAttack')).toBeEnabled();
+  await frames(page, 230);
   expect(
     await page.evaluate(() => ({
       hp: window.battleFixtureState.partyHP,

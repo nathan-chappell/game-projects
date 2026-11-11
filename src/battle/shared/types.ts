@@ -251,6 +251,7 @@ export interface EncounterBase {
   knightTarget?: 'roaring' | 'kaizo';
   holdBreath?: boolean;
   knightDuelAge?: number;
+  vesselXSlashAge?: number;
   knightImpacts?: Partial<Record<KnightOwner, { damage: number; age: number }>>;
 }
 export type Encounter = EncounterBase &

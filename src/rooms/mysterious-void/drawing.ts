@@ -1,5 +1,5 @@
 /** The reference's pale landing platform and floating gray diamonds in a black void. */
-export function drawMysteriousVoid(ctx: CanvasRenderingContext2D, time: number, reduced: boolean) {
+export function drawMysteriousVoid(ctx: CanvasRenderingContext2D, time: number, reduced: boolean, shake = 0) {
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, 640, 480);
   const diamonds = [
@@ -16,6 +16,10 @@ export function drawMysteriousVoid(ctx: CanvasRenderingContext2D, time: number, 
   ctx.fillStyle = '#808080';
   for (const [x, y, width, height] of diamonds) {
     const bob = reduced ? 0 : Math.sin(time * 0.45 + x) * 2;
+    const dx = reduced ? 0 : Math.sin(time * 95 + x) * shake;
+    const dy = reduced ? 0 : Math.cos(time * 87 + y) * shake;
+    ctx.save();
+    ctx.translate(dx, dy);
     ctx.beginPath();
     ctx.moveTo(x, y - height + bob);
     ctx.lineTo(x + width, y + bob);
@@ -23,6 +27,7 @@ export function drawMysteriousVoid(ctx: CanvasRenderingContext2D, time: number, 
     ctx.lineTo(x - width, y + bob);
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
   }
   ctx.fillStyle = '#f5f5f5';
   ctx.fillRect(160, 200, 360, 160);

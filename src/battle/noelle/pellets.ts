@@ -5,9 +5,14 @@ export const pelletsDuration = pelletsImpactTime + pelletsSettings.recover;
 export const isPelletCast = (encounter: Encounter | null) => encounter?.phase === 'pellets';
 
 // The white pellet ring forms at Flowey, surrounds the enemy, then closes in.
-export function pelletsFrame(age: number, reducedMotion = false, dark: boolean = false) {
-  const origin = dark ? { x: 83, y: 202 } : { x: 178, y: 224 },
-    target = dark ? { x: 512, y: 80 } : { x: 528, y: 192 };
+export function pelletsFrame(
+  age: number,
+  reducedMotion = false,
+  dark: boolean = false,
+  layout?: { origin: { x: number; y: number }; target: { x: number; y: number } },
+) {
+  const origin = layout?.origin ?? (dark ? { x: 83, y: 202 } : { x: 178, y: 224 }),
+    target = layout?.target ?? (dark ? { x: 512, y: 80 } : { x: 528, y: 192 });
   let x = target.x,
     y = target.y,
     radius = 76,

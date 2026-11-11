@@ -24,10 +24,13 @@ export function createPelletsDrawing(ctx: CanvasRenderingContext2D, reducedMotio
       if (pixel === '1') ink.fillRect(x, y, 1, 1);
     }),
   );
-  return function drawPellets(encounter: Encounter) {
+  return function drawPellets(
+    encounter: Encounter,
+    layout?: { origin: { x: number; y: number }; target: { x: number; y: number } },
+  ) {
     const cast = encounter.pelletsCast;
     if (!cast) return;
-    const frame = pelletsFrame(cast.age, reducedMotion.matches, encounter.kind === 'dark');
+    const frame = pelletsFrame(cast.age, reducedMotion.matches, encounter.kind === 'dark', layout);
     ctx.save();
     ctx.globalAlpha = frame.alpha;
     ctx.imageSmoothingEnabled = false;

@@ -29,10 +29,12 @@ test('Vessel waits for both dialogue lines before appearing and starts one battl
   for (const dt of [0, -1, NaN, Infinity]) assert.equal(advanceVesselAppearance(state, dt), false);
   assert.equal(advanceVesselAppearance(state, 1), false);
   assert.equal(state.bossEncounter, null);
-  assert.equal(advanceVesselAppearance(state, 0.6), true);
+  assert.equal(advanceVesselAppearance(state, 2.2), true);
   const b = state.bossEncounter!;
   assert.equal(b.kind, 'vessel');
   assert.equal(b.enemy.name, 'Vessel');
+  assert.equal(b.enemy.hp, 10000);
+  assert.equal(b.enemy.maxHP, 10000);
   assert.equal(b.phase, 'vesselFaceoff');
   assert.equal(canPartyAct(b), false);
   assert.equal(canControlSoul(b), false);

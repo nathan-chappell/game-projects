@@ -131,7 +131,7 @@ export function setupBattleControls(
                 ? 'Minigame: Susie throws hammers at incoming TVs. Tenna +5; Flowey or collision adds X. No TP cost.'
                 : 'Minigame: shoot enemies and do not shoot Flowey. No TP cost.'
             : 'Check Tenna.'
-          : ['dark', 'knights'].includes(encounter.kind ?? '')
+          : ['dark', 'knights', 'vessel'].includes(encounter.kind ?? '')
             ? `${darkActInfo(encounter).description} ${darkActLocked(encounter) ? 'Locked until Shine is used three times.' : ''}`
             : canFloweyAct(encounter)
               ? `Friendlyness Pellets needs 90% TP. Deals ${encounter.fastKill ? battleSettings.fastKillDamage : battleSettings.pelletsDamage} damage and heals Flowey 35 HP.`
@@ -162,7 +162,7 @@ export function setupBattleControls(
       if (encounter.kind === 'tenna') {
         if (encounter.turn === 'Kris') requestTennaMinigame(encounter);
         else encounter.message = 'Tenna is ready for his big Finale.';
-      } else if (['dark', 'knights'].includes(encounter.kind ?? '')) {
+      } else if (['dark', 'knights', 'vessel'].includes(encounter.kind ?? '')) {
         if (!useDarkAct(encounter, state.partyHP))
           encounter.message = darkActLocked(encounter)
             ? 'Locked. Kris must use Shine three times.'
@@ -446,7 +446,7 @@ export function setupBattleControls(
       else if (encounter.screen === 'menu') {
         const step = ['ArrowUp', 'ArrowLeft'].includes(event.key) ? -1 : 1;
         const available: BattleAction[] = (
-          ['dark', 'tenna', 'knights'].includes(encounter.kind ?? '')
+          ['dark', 'tenna', 'knights', 'vessel'].includes(encounter.kind ?? '')
             ? [...battleActions, 'spare' as const]
             : battleActions
         ).filter((action) => canUseBattleAction(encounter, action));
@@ -477,9 +477,15 @@ export function setupBattleControls(
     $('talkButton').disabled = $('inspectButton').disabled = active && !intro;
     $('inventoryButton').disabled =
       active &&
-      (['minigame', 'minigameIntro', 'knightRift', 'vesselFaceoff', ...tennaEndingPhases].includes(
-        encounter.phase,
-      ) ||
+      ([
+        'minigame',
+        'minigameIntro',
+        'knightRift',
+        'vesselFaceoff',
+        'vesselXSlash',
+        'vesselWatch',
+        ...tennaEndingPhases,
+      ].includes(encounter.phase) ||
         isPelletCast(encounter) ||
         isProceedScene(encounter) ||
         (encounter.finalAttackComplete && encounter.phase !== 'victory'));
@@ -565,7 +571,7 @@ export function setupBattleControls(
     $('battleActPanel').hidden = !acting || encounter.screen !== 'act';
     $('battleMenuBack').hidden = !acting || encounter.screen === 'menu';
     const floweyTurn = canFloweyAct(encounter),
-      actCost = ['dark', 'knights'].includes(encounter?.kind ?? '')
+      actCost = ['dark', 'knights', 'vessel'].includes(encounter?.kind ?? '')
         ? darkActInfo(encounter).cost
         : floweyTurn
           ? battleSettings.pelletsCost
@@ -576,7 +582,7 @@ export function setupBattleControls(
         ? encounter.turn === 'Kris'
           ? 'Minigame'
           : 'Check Tenna'
-        : ['dark', 'knights'].includes(encounter?.kind ?? '')
+        : ['dark', 'knights', 'vessel'].includes(encounter?.kind ?? '')
           ? `${darkActInfo(encounter).name} · ${actCost}% TP`
           : floweyTurn
             ? 'Friendlyness Pellets · 90% TP'
@@ -585,7 +591,7 @@ export function setupBattleControls(
       !acting ||
       !canUseBattleAction(encounter, 'act') ||
       (encounter.kind !== 'tenna' && encounter.tp < actCost) ||
-      (['dark', 'knights'].includes(encounter.kind ?? '') &&
+      (['dark', 'knights', 'vessel'].includes(encounter.kind ?? '') &&
         (darkActLocked(encounter) ||
           (encounter.turn === 'Ralsey' && Object.values(state.partyHP).every((hp) => hp >= 100))));
     $('battleTargetButton').textContent = encounter
@@ -602,15 +608,17 @@ export function setupBattleControls(
             ? 'Hammer Time'
             : 'Shooting minigame'
         : encounter.phase === 'victory'
-          ? encounter.kind === 'knights'
-            ? 'The knights are down.'
-            : encounter.kind === 'tenna'
-              ? 'Tenna defeated.'
-              : ['dark', 'knights'].includes(encounter.kind ?? '')
-                ? '??? defeated.'
-                : encounter.noelleEscaped
-                  ? 'Noelle escaped.'
-                  : '??? disappeared.'
+          ? encounter.kind === 'vessel'
+            ? 'Vessel defeated.'
+            : encounter.kind === 'knights'
+              ? 'The knights are down.'
+              : encounter.kind === 'tenna'
+                ? 'Tenna defeated.'
+                : ['dark', 'knights', 'vessel'].includes(encounter.kind ?? '')
+                  ? '??? defeated.'
+                  : encounter.noelleEscaped
+                    ? 'Noelle escaped.'
+                    : '??? disappeared.'
           : encounter.phase === 'rescue'
             ? 'Ralsey intervenes'
             : isPelletCast(encounter)
@@ -632,9 +640,9 @@ export function setupBattleControls(
               ? 'Next: Hammer Time · Tenna TVs +5 · Flowey / collisions add X.'
               : 'Shoot enemies, avoid Flowey. 100 points minus 10 per X. No TP cost.'
           : 'Tenna is ready for the Finale.'
-        : encounter && ['dark', 'knights'].includes(encounter.kind ?? '')
+        : encounter && ['dark', 'knights', 'vessel'].includes(encounter.kind ?? '')
           ? encounter.turn === 'Kris'
-            ? encounter.kind === 'knights'
+            ? encounter.kind !== 'dark'
               ? darkActInfo(encounter).description
               : `Shine: ${encounter.shineCount || 0} / 5${encounter.darkUnlocked ? ' · Attacks and ACTs unlocked' : ''}`
             : `${darkActInfo(encounter).description}${darkActLocked(encounter) ? ' · LOCKED until Shine 3/3' : ''}`
@@ -644,9 +652,15 @@ export function setupBattleControls(
     $('leaveBossButton').disabled =
       ['knights', 'vessel'].includes(encounter?.kind ?? '') ||
       (active &&
-        (['minigame', 'minigameIntro', 'knightRift', 'vesselFaceoff', ...tennaEndingPhases].includes(
-          encounter.phase,
-        ) ||
+        ([
+          'minigame',
+          'minigameIntro',
+          'knightRift',
+          'vesselFaceoff',
+          'vesselXSlash',
+          'vesselWatch',
+          ...tennaEndingPhases,
+        ].includes(encounter.phase) ||
           isPelletCast(encounter) ||
           isProceedScene(encounter) ||
           encounter.phase === 'rescue' ||

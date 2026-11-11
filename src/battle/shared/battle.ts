@@ -1,4 +1,5 @@
-import { drawVessel } from '../vessel/drawing.ts';
+import { drawVessel, drawVesselXSlash } from '../vessel/drawing.ts';
+import { vesselBattleLayout, xSlashBackgroundShake } from '../vessel/combat.ts';
 import { drawMysteriousVoid } from '../../rooms/mysterious-void/drawing.ts';
 import { drawKnightRift } from '../knights/rift-drawing.ts';
 import { drawAimedSwords } from '../knights/aimed-swords-drawing.ts';
@@ -302,13 +303,15 @@ export function createBattleDrawing(
     }
     const title =
       encounter.phase === 'victory'
-        ? encounter.kind === 'knights'
-          ? 'The knights are down.'
-          : encounter.kind === 'dark'
-            ? '??? defeated.'
-            : encounter.noelleEscaped
-              ? 'Noelle escaped.'
-              : '??? disappeared.'
+        ? encounter.kind === 'vessel'
+          ? 'Vessel defeated.'
+          : encounter.kind === 'knights'
+            ? 'The knights are down.'
+            : encounter.kind === 'dark'
+              ? '??? defeated.'
+              : encounter.noelleEscaped
+                ? 'Noelle escaped.'
+                : '??? disappeared.'
         : encounter.turn === 'Knights'
           ? 'Knights’ turn'
           : `${encounter.turn || 'Proceed'}${encounter.turn ? '’s turn' : '...'}`;
@@ -330,8 +333,15 @@ export function createBattleDrawing(
       );
       pixelText('THE FINALE', 391, 435, '#ffca50', 14);
     } else if (encounter.kind === 'vessel') {
-      pixelText('VESSEL', 391, 407, '#eeeeee', 18);
-      pixelText('A silent challenger.', 391, 435, '#bbbbbb', 12);
+      pixelText(encounter.screen === 'act' ? darkActInfo(encounter).name : 'VESSEL', 391, 403, '#eeeeee', 16);
+      pixelText(`HP ${encounter.enemy.hp}/${encounter.enemy.maxHP}`, 391, 426, '#ffffff', 13);
+      pixelText(
+        encounter.screen === 'act' ? `${darkActInfo(encounter).cost}% TP` : 'A silent challenger.',
+        391,
+        450,
+        '#bbbbbb',
+        12,
+      );
     } else if (encounter.kind === 'knights') {
       const act = darkActInfo(encounter);
       pixelText(
@@ -698,23 +708,58 @@ export function createBattleDrawing(
       return;
     }
     if (encounter?.kind === 'vessel') {
-      drawMysteriousVoid(ctx, t, reducedParticleMotion.matches);
-      drawVessel(ctx, 460, 285, 150);
-      drawBattleKris(180, 250, 0.65);
-      drawBattleFlowey(225, 280, t, 0.75);
-      for (const [name, x, y] of [
-        ['Susie', 270, 250],
-        ['Ralsey', 310, 280],
+      const l = vesselBattleLayout;
+      drawMysteriousVoid(
+        ctx,
+        t,
+        reducedParticleMotion.matches,
+        xSlashBackgroundShake(encounter.vesselXSlashAge, reducedParticleMotion.matches),
+      );
+      const shake =
+        encounter.hitAge !== null && !reducedParticleMotion.matches ? Math.sin(encounter.hitAge * 80) * 2 : 0;
+      drawVessel(ctx, l.vessel.x + shake, l.vessel.y, l.vessel.height);
+      drawBattleKris(
+        l.kris.x,
+        l.kris.y,
+        l.kris.scale,
+        encounter.hitActor === 'Kris' ? encounter.hitAge : null,
+      );
+      drawBattleFlowey(l.flowey.x, l.flowey.y, t, l.flowey.scale);
+      for (const [name, p] of [
+        ['Susie', l.susie],
+        ['Ralsey', l.ralsey],
       ] as const) {
-        drawPartyMember(name, x, y, 0.75, encounter.partyStatus[name], () => {
+        drawPartyMember(name, p.x, p.y, p.scale, encounter.partyStatus[name], () => {
           ctx.save();
-          ctx.translate(x, y);
-          ctx.scale(0.75, 0.75);
+          ctx.translate(p.x, p.y);
+          ctx.scale(p.scale, p.scale);
           helpers.drawFountainFriend({ name, x: 0, y: 0, hideName: true }, t);
           ctx.restore();
         });
       }
-      pixelText('VESSEL', 460, 90, '#dddddd', 18);
+      if (isPelletCast(encounter))
+        drawPelletsCast(encounter, {
+          origin: { x: l.flowey.x, y: l.flowey.y - 20 },
+          target: { x: l.vessel.x, y: l.vessel.y - 40 },
+        });
+      if (encounter.vesselXSlashAge !== undefined) drawVesselXSlash(ctx, encounter.vesselXSlashAge);
+      else if (encounter.hitAge !== null) {
+        ctx.save();
+        ctx.translate(l.vessel.x - 528, l.vessel.y - 40 - 192);
+        if (encounter.hitActor === 'Flowey') drawFloweyPellets(encounter.hitAge);
+        else drawSwordSlash(encounter.hitAge);
+        ctx.restore();
+      }
+      if (encounter.hitAge !== null || encounter.vesselXSlashAge !== undefined)
+        pixelText(`-${encounter.hitDamage}`, l.vessel.x - 20, 145, '#ffffff', 18);
+      if (encounter.darkHeal) {
+        const p = { Kris: l.kris, Flowey: l.flowey, Susie: l.susie, Ralsey: l.ralsey }[
+          encounter.darkHeal.target as PartyName
+        ];
+        if (p) pixelText(`+${encounter.darkHeal.restored}`, p.x - 12, p.y - 55, '#80e7aa', 14);
+      }
+      pixelText('VESSEL', l.vessel.x - 25, 110, '#dddddd', 14);
+      pixelText(`TP ${Math.floor(encounter.tp)}%`, 12, 286, '#ffca50', 14);
       drawDarkPartyStatus();
       drawBattleMenu();
       $('gameHint').textContent = encounter.message;
