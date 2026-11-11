@@ -27,21 +27,21 @@ function fixture(kind: 'falling' | 'mini') {
   return b;
 }
 
-test('a floor impact removes the falling sword and emits exactly six upward mini swords once', () => {
+test('a floor impact removes the falling sword and emits exactly four upward mini swords once', () => {
   const rain = createVesselRain();
   rain.nextVolley = 10;
   rain.swords.push(sword('falling', 320, 445));
   advanceVesselRain(rain, 1 / 60, { x: 10, y: 10 });
   assert.equal(rain.bursts.length, 1);
-  assert.equal(rain.swords.length, 6);
+  assert.equal(rain.swords.length, 4);
   assert.ok(rain.swords.every((s) => s.kind === 'mini' && s.vy < 0));
-  assert.ok(rain.swords[0].vx < 0 && rain.swords[5].vx > 0);
+  assert.ok(rain.swords[0].vx < 0 && rain.swords[3].vx > 0);
   advanceVesselRain(rain, 0.3, { x: 10, y: 10 });
   assert.equal(rain.bursts.length, 1);
-  assert.equal(rain.swords.length, 6);
+  assert.equal(rain.swords.length, 4);
 });
 
-test('ten warned pairs finish in finite time at 30, 60 and 144 FPS', () => {
+test('fourteen warned pairs finish in finite time at 30, 60 and 144 FPS', () => {
   for (const fps of [30, 60, 144]) {
     const rain = createVesselRain();
     let finished = false,
@@ -55,7 +55,7 @@ test('ten warned pairs finish in finite time at 30, 60 and 144 FPS', () => {
       assert.ok(rain.swords.length < 70);
     }
     assert.ok(finished && sawWarning && sawMinis);
-    assert.equal(rain.volleys, 10);
+    assert.equal(rain.volleys, 14);
     assert.ok(rain.age > 13 && rain.age < 16);
   }
 });

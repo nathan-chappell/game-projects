@@ -2,11 +2,15 @@ import type { Point } from '../../world/types.ts';
 
 export const vesselRainArena = { x: 0, y: 0, width: 640, height: 480, border: 0 };
 export const vesselRainSettings = {
-  volleys: 10,
-  interval: 0.95,
+  volleys: 14,
+  interval: 0.65,
   warmup: 0.7,
   warning: 0.5,
+  fallingSpeed: 270,
+  fallingGravity: 480,
+  fallingMaxSpeed: 780,
   fallingDamage: 40,
+  miniCount: 4,
   miniDamage: 15,
   hitCooldown: 0.75,
   miniSpeed: 210,
@@ -60,7 +64,7 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
         x: warning.x,
         y: -40,
         vx: 0,
-        vy: 180,
+        vy: vesselRainSettings.fallingSpeed,
         angle: Math.PI / 2,
         scale: 1,
         age: 0,
@@ -72,15 +76,19 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     const next: VesselSword[] = [];
     for (const sword of rain.swords) {
       sword.age += step;
-      if (sword.kind === 'falling') sword.vy = Math.min(600, sword.vy + 320 * step);
+      if (sword.kind === 'falling')
+        sword.vy = Math.min(
+          vesselRainSettings.fallingMaxSpeed,
+          sword.vy + vesselRainSettings.fallingGravity * step,
+        );
       sword.x += sword.vx * step;
       sword.y += sword.vy * step;
       if (sword.kind === 'falling' && sword.y + 35 >= vesselRainArena.height) {
         const x = sword.x,
           y = vesselRainArena.height - 6;
         rain.bursts.push({ x, y: vesselRainArena.height, age: 0 });
-        for (let i = 0; i < 6; i++) {
-          const angle = -Math.PI + 0.3 + (i / 5) * (Math.PI - 0.6);
+        for (let i = 0; i < vesselRainSettings.miniCount; i++) {
+          const angle = -Math.PI + 0.3 + (i / (vesselRainSettings.miniCount - 1)) * (Math.PI - 0.6);
           next.push({
             kind: 'mini',
             x,
