@@ -14,7 +14,7 @@ export const vesselBattleLayout = {
   flowey: { x: 220, y: 286, scale: 1.1 },
   susie: { x: 285, y: 225, scale: 1.1 },
   ralsey: { x: 350, y: 288, scale: 1.1 },
-  vessel: { x: 455, y: 270, height: 96 },
+  vessel: { x: 455, y: 270, height: 120 },
 };
 export function vesselDamage(encounter: Encounter, act = false) {
   return act

@@ -1,3 +1,4 @@
+import { vesselBattleLayout } from './combat.ts';
 import vesselURL from '../../../assets/vessel-left.png?inline';
 let image: HTMLImageElement | undefined;
 /** The grayscale reference variant is already facing left; never mirror it again. */
@@ -32,7 +33,7 @@ export function drawVesselArrival(ctx: CanvasRenderingContext2D, age: number, re
   ctx.ellipse(450, 280, 25 + age * 12, 7 + age * 2, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
-  drawVessel(ctx, 450, 280 - (reduced ? 0 : (1 - progress) * 12), 96, progress);
+  drawVessel(ctx, 450, 280 - (reduced ? 0 : (1 - progress) * 12), vesselBattleLayout.vessel.height, progress);
 }
 export function drawVesselXSlash(ctx: CanvasRenderingContext2D, age: number) {
   if (age < 0 || age >= 0.75) return;
