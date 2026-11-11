@@ -5,7 +5,7 @@ import { createEncounter } from '../shared/rules.ts';
 export const vesselConversation = ['[Flowey] * Where are we?', "[Ralsey] * I don't know..."];
 export const vesselAppearanceSeconds = 3.2;
 export interface VesselArrival {
-  phase: 'dialogue' | 'appear' | 'battle';
+  phase: 'dialogue' | 'appear' | 'question' | 'battle';
   age: number;
 }
 export function beginVesselConversation(state: GameState) {
@@ -50,7 +50,14 @@ export function advanceVesselAppearance(state: GameState, dt: number) {
   state.keys.clear();
   state.player.moving = false;
   if (arrival.age < vesselAppearanceSeconds - 1e-9) return false;
-  arrival.phase = 'battle';
+  arrival.phase = 'question';
+  return true;
+}
+
+export function completeVesselQuestion(state: GameState) {
+  if (state.vesselArrival?.phase !== 'question' || state.bossEncounter) return false;
+  state.vesselArrival.phase = 'battle';
   state.bossEncounter = createVesselEncounter();
+  state.keys.clear();
   return true;
 }

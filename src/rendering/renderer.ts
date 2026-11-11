@@ -630,7 +630,11 @@ export function createRenderer(
         if (![1, 10].includes(r.map[y][x])) drawTile(r.map[y][x], x * T, y * T, r.theme);
     if (state.mode === 'build' && r.scene === 'glitchBoss') drawNoelleBoss(528, 122, 140);
     if (r.scene === 'mysteriousVoid') drawMysteriousVoid(ctx, time, reducedParticleMotion.matches);
-    if (r.scene === 'mysteriousVoid' && state.vesselArrival?.phase === 'appear')
+    if (
+      r.scene === 'mysteriousVoid' &&
+      state.vesselArrival &&
+      ['appear', 'question'].includes(state.vesselArrival.phase)
+    )
       drawVesselArrival(ctx, state.vesselArrival.age, reducedParticleMotion.matches);
     if (r.scene === 'glitchStudio') glitchStudioDrawing.room(time, r);
     if (r.scene === postShowScene) drawPostShowRoom(ctx, r, time, reducedParticleMotion.matches);

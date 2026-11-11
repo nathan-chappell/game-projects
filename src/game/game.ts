@@ -1108,6 +1108,7 @@ export function startGame() {
     'knightStatues',
     'knightEncounter',
     'mysteriousArrival',
+    'vesselQuestion',
     'undyneCandy',
     'tennaCut',
   ]);

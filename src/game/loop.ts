@@ -140,7 +140,10 @@ export function createGameLoop(dependencies: Dependencies) {
         }
       }
       if (state.vesselArrival?.phase === 'appear') {
-        if (advanceVesselAppearance(state, dt)) dependencies.syncBossUI();
+        if (advanceVesselAppearance(state, dt)) {
+          dependencies.openDialogue(['[Susie] * Who are you?'], 'vesselQuestion');
+          dependencies.canvas.focus({ preventScroll: true });
+        }
         return;
       }
     }

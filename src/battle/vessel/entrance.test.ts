@@ -6,6 +6,7 @@ import { upgradeProject } from '../../world/upgrades.ts';
 import {
   beginVesselConversation,
   completeVesselConversation,
+  completeVesselQuestion,
   advanceVesselAppearance,
   vesselConversation,
 } from './entrance.ts';
@@ -30,6 +31,11 @@ test('Vessel waits for both dialogue lines before appearing and starts one battl
   assert.equal(advanceVesselAppearance(state, 1), false);
   assert.equal(state.bossEncounter, null);
   assert.equal(advanceVesselAppearance(state, 2.2), true);
+  assert.equal(state.vesselArrival?.phase, 'question');
+  assert.equal(state.bossEncounter, null);
+  assert.equal(advanceVesselAppearance(state, 10), false);
+  assert.equal(completeVesselQuestion(state), true);
+  assert.equal(completeVesselQuestion(state), false);
   const b = state.bossEncounter!;
   assert.equal(b.kind, 'vessel');
   assert.equal(b.enemy.name, 'Vessel');

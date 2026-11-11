@@ -1,4 +1,4 @@
-import { completeVesselConversation } from '../battle/vessel/entrance.ts';
+import { completeVesselConversation, completeVesselQuestion } from '../battle/vessel/entrance.ts';
 import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
 import { completeTennaOutburst, completeTennaShutdown } from '../battle/tenna/ending.ts';
 import { completeTennaScoreEvent } from '../battle/tenna/score-events.ts';
@@ -421,6 +421,7 @@ export function createDialogue(dependencies: Dependencies) {
       }
       if (npcId === 'core-warning-froggit') state.story.coreFroggitWarned = true;
       if (kind === 'mysteriousArrival') completeVesselConversation(state);
+      if (kind === 'vesselQuestion' && completeVesselQuestion(state)) dependencies.syncBossUI();
       if (kind === 'knightStatues') {
         state.story.knightStatuesExplained = true;
         dependencies.storyUI();

@@ -43,7 +43,14 @@ test('Flowey and Ralsey speak before the left-facing grayscale Vessel appears an
     await writeFile(testInfo.outputPath(name), Buffer.from(png, 'base64'));
   };
   await capture('vessel-appears.png');
-  await frames(page, 160);
+  await frames(page, 190);
+  await expect(page.locator('#speakerName')).toHaveText('Susie');
+  await expect(page.locator('#dialogueText')).toContainText('Who are you?');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter)).toBeNull();
+  await capture('susie-questions-vessel.png');
+  await page.locator('#game').focus();
+  await page.keyboard.press('Enter');
+  await frames(page, 2);
   await expect(page.locator('#dialogue')).toBeHidden();
   expect(
     await page.evaluate(() => ({
