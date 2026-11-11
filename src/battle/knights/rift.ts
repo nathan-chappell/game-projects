@@ -17,13 +17,8 @@ export function advanceKnightRift(encounter: Encounter, dt: number) {
 }
 /** Pure timing shared by the drawing and its tests. */
 export function knightRiftFrame(age: number) {
-  const fight = Math.max(0, Math.min(1, (age - 1.4) / 4.2));
-  const beat = Math.max(0, age - 1.4) % 0.7;
   return {
     raised: age < 1.4,
-    fight,
-    beat,
-    clash: age >= 1.4 && age < 5.6 && beat >= 0.38 && beat < 0.62,
     fountain: Math.max(0, Math.min(1, (age - 5.6) / 3.6)),
     whiteout: Math.max(0, Math.min(1, (age - 9.2) / 0.8)),
     fade: Math.max(0, Math.min(1, (age - 10.5) / 0.7)),

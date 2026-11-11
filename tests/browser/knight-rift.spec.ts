@@ -53,8 +53,14 @@ test('seven knight rounds lead through the protected Fountain cutscene into the 
   };
   await frames(page, 1);
   await capture('raised-blades.png');
-  await frames(page, 125);
+  await frames(page, 80);
+  await page.evaluate(() => {
+    window.battleFixtureState.bossEncounter!.animationAge = 1.85;
+  });
+  await frames(page, 1);
   await capture('knights-clash.png');
+  await frames(page, 45);
+  await capture('knights-counterattack.png');
   await page.keyboard.press('Shift');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('knightRift');
   await frames(page, 290);
