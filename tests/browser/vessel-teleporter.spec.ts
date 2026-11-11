@@ -29,7 +29,7 @@ for (const method of ['button', 'walking'] as const) {
       await page.keyboard.up('ArrowRight');
     }
     await frames(page, 1);
-    await expect(page.locator('#dialogue')).toBeHidden();
+    await expect(page.locator('#speakerName')).toHaveText('Susie');
     const after = await page.evaluate(() => {
       const s = window.battleFixtureState;
       return { hp: s.partyHP, inventory: s.inventory };
@@ -48,6 +48,10 @@ for (const method of ['button', 'walking'] as const) {
     expect(arrived.kind).toBe('vessel');
     expect(arrived.hp).toBe(10000);
     expect(arrived.finaleComplete).toBe(false);
+    await frames(page, 40);
+    await expect(page.locator('#dialogueText')).toContainText('Who are you?');
+    await page.locator('#game').focus();
+    await page.keyboard.press('Enter');
     await frames(page, 75);
     await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
     await expect(page.locator('#battleAttack')).toBeEnabled();

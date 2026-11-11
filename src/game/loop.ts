@@ -318,6 +318,17 @@ export function createGameLoop(dependencies: Dependencies) {
         return;
       }
     }
+    if (
+      state.bossEncounter?.kind === 'vessel' &&
+      state.bossEncounter.phase === 'vesselFaceoff' &&
+      !state.bossEncounter.vesselQuestionAsked &&
+      !state.dialogue
+    ) {
+      state.vesselArrival = { phase: 'question', age: 3.2 };
+      dependencies.openDialogue(['[Susie] * Who are you?'], 'vesselQuestion');
+      dependencies.canvas.focus({ preventScroll: true });
+      return;
+    }
     if (state.bossEncounter?.phase === 'knightRift') {
       state.keys.clear();
       state.player.moving = false;

@@ -37,6 +37,7 @@ export function createVesselEncounter() {
     maxHP: vesselSettings.hp,
     visible: true,
   };
+  encounter.vesselQuestionAsked = false;
   encounter.phase = 'vesselFaceoff';
   encounter.turn = 'Vessel';
   encounter.message = 'The Vessel silently raises its blade.';
@@ -55,9 +56,14 @@ export function advanceVesselAppearance(state: GameState, dt: number) {
 }
 
 export function completeVesselQuestion(state: GameState) {
-  if (state.vesselArrival?.phase !== 'question' || state.bossEncounter) return false;
+  if (
+    state.vesselArrival?.phase !== 'question' ||
+    (state.bossEncounter && state.bossEncounter.kind !== 'vessel')
+  )
+    return false;
   state.vesselArrival.phase = 'battle';
-  state.bossEncounter = createVesselEncounter();
+  state.bossEncounter ??= createVesselEncounter();
+  state.bossEncounter.vesselQuestionAsked = true;
   state.keys.clear();
   return true;
 }

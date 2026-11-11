@@ -252,6 +252,7 @@ export interface EncounterBase {
   holdBreath?: boolean;
   knightDuelAge?: number;
   vesselXSlashAge?: number;
+  vesselQuestionAsked?: boolean;
   knightImpacts?: Partial<Record<KnightOwner, { damage: number; age: number }>>;
 }
 export type Encounter = EncounterBase &
