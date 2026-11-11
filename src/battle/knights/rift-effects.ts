@@ -1,6 +1,5 @@
 import { knightSword } from '../../rooms/post-show/knight-choreography.ts';
 import { knightRiftDuel } from './rift-choreography.ts';
-import { drawMysteriousVoid } from '../../rooms/mysterious-void/drawing.ts';
 
 export function drawRiftSwordTrails(ctx: CanvasRenderingContext2D, age: number) {
   if (age < 1.4 || age > 5.3) return;
@@ -70,19 +69,13 @@ export function drawFountainRift(ctx: CanvasRenderingContext2D, age: number, p: 
   glow.addColorStop(1, '#17022d00');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, 640, 480);
-  // A split dark/light aperture opens inside the Fountain, revealing the destination.
+  // Keep the aperture dark until the cutscene finishes and the party enters the destination.
   ctx.save();
   ctx.beginPath();
   ctx.ellipse(320, 210, radius * 0.62, radius, 0, 0, Math.PI * 2);
   ctx.clip();
   ctx.fillStyle = '#090015';
   ctx.fillRect(0, 0, 640, 480);
-  if (p > 0.35) {
-    ctx.globalAlpha = Math.min(0.85, (p - 0.35) * 1.5);
-    ctx.translate(320 - radius * 0.62, 210 - radius);
-    ctx.scale((radius * 1.24) / 640, (radius * 2) / 480);
-    drawMysteriousVoid(ctx, 0, true);
-  }
   ctx.restore();
   for (let i = 0; i < 8; i++) {
     const offset = (i - 3.5) * (2 + p * 3);
