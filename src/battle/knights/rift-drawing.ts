@@ -31,10 +31,9 @@ export function drawKnightRift(ctx: CanvasRenderingContext2D, age: number, reduc
         ctx.save();
         ctx.translate(x, 220 + hover);
         ctx.scale(side, 1);
-        // Screen composition preserves the supplied pixel pose while its black backing blends into the scene.
+        // Remove the near-black backing during drawing so the reference cannot tint a rectangle.
         ctx.globalCompositeOperation = 'screen';
-        ctx.shadowColor = '#9080c5';
-        ctx.shadowBlur = reduced ? 0 : 3;
+        ctx.filter = 'contrast(4)';
         ctx.drawImage(raised, -76, -165, 153, 190);
         ctx.restore();
       } else drawKnightActor(ctx, actor, kaizo);
