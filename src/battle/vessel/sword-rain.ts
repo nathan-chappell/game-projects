@@ -22,8 +22,9 @@ export const vesselRainSettings = {
 export const vesselJumpSettings = {
   volleys: 12,
   interval: 0.95,
-  pairDelay: 0.22,
-  speed: 330,
+  pairDelay: 0.18,
+  speed: 300,
+  soulSpeed: 180,
   redWave: 4,
   miniSpacing: 0.16,
 };

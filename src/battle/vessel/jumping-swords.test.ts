@@ -58,7 +58,7 @@ test('twelve close sword pairs come from both sides and exactly one red sword em
   assert.equal(big.size, 24);
   assert.equal([...big].filter((s) => s.red).length, 1);
   assert.ok([...big].some((s) => s.vx > 0) && [...big].some((s) => s.vx < 0));
-  assert.ok([...big].every((s) => Math.abs(s.y - 468) < 1e-8 && Math.abs(s.vx) === 330));
+  assert.ok([...big].every((s) => Math.abs(s.y - 468) < 1e-8 && Math.abs(s.vx) === 300));
   assert.equal(mini.size, 4);
   assert.ok(
     [...mini].every(
@@ -81,7 +81,7 @@ test('a timed jump clears a close sword pair that hits a standing soul', () => {
       kind: 'sweeping',
       x: 170,
       y: 468,
-      vx: 330,
+      vx: 300,
       vy: 0,
       angle: 0,
       scale: 1,
@@ -89,7 +89,7 @@ test('a timed jump clears a close sword pair that hits a standing soul', () => {
       active: true,
       hitOpponent: false,
     });
-    rain.swords.push({ ...rain.swords[0], x: 170 - 330 * 0.22 });
+    rain.swords.push({ ...rain.swords[0], x: 170 - 300 * 0.18 });
     for (let frame = 0; frame < 60; frame++) {
       moveSoul(b, new Set(jump ? ['up'] : []), 1 / 60);
       advanceSnowAttack(b, hp, 1 / 60, () => 0);
@@ -105,7 +105,7 @@ test('red mini swords enter the floor path in sequence and a full jump clears th
     kind: 'sweeping',
     x: 605,
     y: 468,
-    vx: 330,
+    vx: 300,
     vy: 0,
     angle: 0,
     scale: 1,

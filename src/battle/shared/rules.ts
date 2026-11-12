@@ -1,4 +1,4 @@
-import { createVesselRain, vesselRainArena } from '../vessel/sword-rain.ts';
+import { createVesselRain, vesselRainArena, vesselJumpSettings } from '../vessel/sword-rain.ts';
 import { vesselDamage, vesselSettings } from '../vessel/combat.ts';
 import { beginKnightRift } from '../knights/rift.ts';
 import { advancePartyDuel } from '../knights/party-duel.ts';
@@ -185,7 +185,7 @@ export function moveSoul(encounter: Encounter, keys: Set<string>, dt: number) {
       dt,
       battleSettings.soulWidth,
       battleSettings.soulHeight,
-      battleSettings.soulSpeed,
+      vesselJumpSettings.soulSpeed,
       { arena: vesselRainArena, groundY: 480, platforms: [] },
     );
     return;
