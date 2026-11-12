@@ -4,7 +4,8 @@ import { vesselEntryLines, vesselTransferFrame } from './soul-transfer.ts';
 export function drawVesselTransfer(ctx: CanvasRenderingContext2D, age: number, reduced: boolean) {
   const frame = vesselTransferFrame(age, reduced);
   ctx.save();
-  if (frame.scale > 0) {
+  if (frame.soulVisible && frame.scale > 0) {
+    ctx.globalAlpha = frame.soulReveal;
     ctx.translate(frame.soul.x, frame.soul.y);
     ctx.scale(frame.scale, frame.scale);
     if (!reduced) {

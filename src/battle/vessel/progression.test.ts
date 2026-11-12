@@ -31,7 +31,7 @@ test('cleared attacks never return even if the round pointer or number selection
   assert.equal(b.soul, null);
   assert.equal(b.snowAttack, null);
   assert.equal(b.enemy.hp, 10000);
-  advanceBattleTime(b, 5, hp());
+  advanceBattleTime(b, 10, hp());
   startNextEnemyAttack(b, '');
   assert.equal(b.phase, 'vesselEntered');
   assert.equal(nextVesselAttackIndex(b), undefined);

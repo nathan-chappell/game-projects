@@ -1,6 +1,6 @@
 import { drawPixelSoul } from './soul-drawing.ts';
 import { drawVesselEntryText, drawVesselTransfer } from '../vessel/soul-transfer-drawing.ts';
-import { isVesselTransfer } from '../vessel/soul-transfer.ts';
+import { isVesselTransfer, vesselTransferFrame } from '../vessel/soul-transfer.ts';
 import { drawVesselRain } from '../vessel/sword-rain-drawing.ts';
 import { drawVessel, drawVesselXSlash } from '../vessel/drawing.ts';
 import { vesselBattleLayout, xSlashBackgroundShake } from '../vessel/combat.ts';
@@ -732,12 +732,23 @@ export function createBattleDrawing(
       const shake =
         encounter.hitAge !== null && !reducedParticleMotion.matches ? Math.sin(encounter.hitAge * 80) * 2 : 0;
       drawVessel(ctx, l.vessel.x + shake, l.vessel.y, l.vessel.height);
-      drawBattleKris(
-        l.kris.x,
-        l.kris.y,
-        l.kris.scale,
-        encounter.hitActor === 'Kris' ? encounter.hitAge : null,
-      );
+      if (isVesselTransfer(encounter)) {
+        const frame = vesselTransferFrame(encounter.animationAge, reducedParticleMotion.matches);
+        battleSprites.krisSoulRemoval(
+          l.kris.x,
+          l.kris.y,
+          l.kris.scale,
+          frame.krisPose,
+          (frame.soul.x - l.kris.x) / (l.kris.scale * 1.75),
+        );
+      } else {
+        drawBattleKris(
+          l.kris.x,
+          l.kris.y,
+          l.kris.scale,
+          encounter.hitActor === 'Kris' ? encounter.hitAge : null,
+        );
+      }
       drawBattleFlowey(l.flowey.x, l.flowey.y, t, l.flowey.scale);
       for (const [name, p] of [
         ['Susie', l.susie],

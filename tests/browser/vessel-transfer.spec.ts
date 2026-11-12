@@ -43,14 +43,16 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
       );
       await writeFile(testInfo.outputPath(name), Buffer.from(png, 'base64'));
     }
+    await capture('kris-pulling-out-soul.png');
+    await frames(page, 122);
     await capture('soul-entering-vessel.png');
-    await frames(page, 170);
+    await frames(page, 288);
     const partial = await page.evaluate(() => window.battleFixtureState.bossEncounter!.message);
     expect(partial).toContain('You entered');
     expect(partial.length).toBeLessThan(40);
     for (const key of ['Enter', 'z', 'Shift', 'Digit1', 'Digit4', 'CapsLock']) await page.keyboard.press(key);
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.message)).toBe(partial);
-    await frames(page, 600);
+    await frames(page, 1500);
     const full = await page.evaluate(() => window.battleFixtureState.bossEncounter!.message);
     expect(full.replaceAll('\n', ' ')).toBe(
       'You entered the Vessel. Its the thing you where looking for. You nearly destroyed the World, didnt you? Looking for your discarded Vessel... now, you face the concicuences.',

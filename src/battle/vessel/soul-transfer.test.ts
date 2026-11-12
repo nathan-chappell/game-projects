@@ -3,22 +3,32 @@ import test from 'node:test';
 import { createVesselEncounter } from './entrance.ts';
 import { beginClearedVesselScene } from './progression.ts';
 import { advanceBattleTime, attackEnemy, startNextEnemyAttack } from '../shared/rules.ts';
-import { vesselEntryText, vesselTransferFrame } from './soul-transfer.ts';
+import { vesselEntryText, vesselTransferFrame, vesselTransferSettings } from './soul-transfer.ts';
 
 test('the soul leaves Kris, reaches the Vessel and is absorbed before the blackout narration', () => {
+  const settings = vesselTransferSettings;
   const start = vesselTransferFrame(0),
-    lifted = vesselTransferFrame(0.8),
-    middle = vesselTransferFrame(1.8);
-  assert.deepEqual(start.soul, { x: 185, y: 203 });
-  assert.ok(lifted.soul.y < start.soul.y);
-  assert.ok(middle.soul.x > 185 && middle.soul.x < 455);
-  assert.deepEqual(vesselTransferFrame(2.8).soul, { x: 455, y: 215 });
-  assert.equal(vesselTransferFrame(3.3).scale, 0);
-  assert.equal(vesselTransferFrame(4.1).blackout, 1);
-  assert.equal(vesselTransferFrame(4.4).text, '');
-  assert.equal(vesselTransferFrame(5).text.length, 16);
-  assert.equal(vesselTransferFrame(20).text, vesselEntryText);
-  assert.deepEqual(vesselTransferFrame(2.8, true).soul, { x: 455, y: 215 });
+    grip = vesselTransferFrame(settings.grip),
+    pulled = vesselTransferFrame(settings.exit),
+    middle = vesselTransferFrame(4);
+  assert.equal(start.soulVisible, false);
+  assert.equal(grip.soulVisible, false);
+  assert.equal(start.krisPose, 1);
+  assert.equal(vesselTransferFrame(0.8).krisPose, 2);
+  assert.equal(vesselTransferFrame(1.4).krisPose, 3);
+  assert.equal(vesselTransferFrame(2).krisPose, 4);
+  assert.equal(pulled.krisPose, 5);
+  assert.ok(pulled.soulVisible && pulled.soul.x > grip.soul.x + 30);
+  assert.equal(vesselTransferFrame(settings.release).krisPose, 6);
+  assert.ok(middle.soul.x > pulled.soul.x && middle.soul.x < 455);
+  assert.deepEqual(vesselTransferFrame(settings.arrive).soul, { x: 455, y: 215 });
+  assert.equal(vesselTransferFrame(settings.absorb).scale, 0);
+  assert.equal(vesselTransferFrame(settings.blackout).blackout, 1);
+  assert.equal(vesselTransferFrame(settings.textStart - 0.1).text, '');
+  const slowText = vesselTransferFrame(settings.textStart + 1).text;
+  assert.ok(slowText.length >= 10 && slowText.length <= 14);
+  assert.equal(vesselTransferFrame(60).text, vesselEntryText);
+  assert.deepEqual(vesselTransferFrame(settings.arrive, true).soul, { x: 455, y: 215 });
   assert.equal(
     vesselEntryText.replaceAll('\n', ' '),
     'You entered the Vessel. Its the thing you where looking for. You nearly destroyed the World, didnt you? Looking for your discarded Vessel... now, you face the concicuences.',
@@ -37,7 +47,7 @@ test('the transfer starts once, preserves battle resources, blocks actions and h
   beginClearedVesselScene(b);
   assert.equal(b.animationAge, 2);
   assert.equal(attackEnemy(b), false);
-  advanceBattleTime(b, 20, hp);
+  advanceBattleTime(b, 60, hp);
   assert.equal(b.phase, 'vesselEntered');
   assert.equal(b.message, vesselEntryText);
   const age = b.animationAge;

@@ -60,7 +60,7 @@ export function createBattleCharacterSprites(ctx: CanvasRenderingContext2D, redu
     r(-8, -42, 8, 1, '#343154');
     r(4, -28, 5, 1, '#3286ad');
   }
-  function paintKris(r: Rect, poly: Polygon, frame: number, red: boolean) {
+  function paintKris(r: Rect, poly: Polygon, frame: number, red: boolean, removal = 0, handX?: number) {
     const outline = '#13132b',
       armor = '#a8c4df',
       shade = '#60759d',
@@ -79,22 +79,71 @@ export function createBattleCharacterSprites(ctx: CanvasRenderingContext2D, redu
     r(-6, -24, 10, 3, '#e6ecff');
     r(-8, -17, 15, 3, armor);
     r(-9, -14, 17, 2, outline);
-    r(-12, -26, 7, 3, outline);
-    r(-14, -23, 8, 7, outline);
-    r(-13, -23, 6, 3, armor);
-    r(-13, -20, 4, 4, shade);
-    r(-14, -16, 5, 3, armor);
-    r(6, -25, 6, 4, outline);
-    r(8, -22, 5, 6, '#64d5e8');
-    r(10, -18, 6, 4, outline);
-    r(11, -18, 5, 3, '#64d5e8');
-    krisHead(r);
+    if (!removal) {
+      r(-12, -26, 7, 3, outline);
+      r(-14, -23, 8, 7, outline);
+      r(-13, -23, 6, 3, armor);
+      r(-13, -20, 4, 4, shade);
+      r(-14, -16, 5, 3, armor);
+      r(6, -25, 6, 4, outline);
+      r(8, -22, 5, 6, '#64d5e8');
+      r(10, -18, 6, 4, outline);
+      r(11, -18, 5, 3, '#64d5e8');
+    } else {
+      // Reuse Kris's armor, cyan hands and pixel outline for distinct removal poses.
+      const hand =
+        removal === 1
+          ? [2, -20]
+          : removal === 2
+            ? [-3, -21]
+            : removal === 3
+              ? [8, -22]
+              : removal === 4
+                ? [18, -22]
+                : removal === 5
+                  ? [22, -22]
+                  : [14, -11];
+      if (removal >= 3 && removal <= 5 && handX !== undefined) hand[0] = handX;
+      const arm = (points: number[][]) => {
+        for (const [width, color] of [
+          [4, outline],
+          [2, '#64d5e8'],
+        ] as const) {
+          for (let i = 1; i < points.length; i++) {
+            const from = points[i - 1],
+              to = points[i];
+            const steps = Math.max(Math.abs(to[0] - from[0]), Math.abs(to[1] - from[1]));
+            for (let step = 0; step <= steps; step++) {
+              const t = steps ? step / steps : 0;
+              r(
+                from[0] + (to[0] - from[0]) * t - width / 2,
+                from[1] + (to[1] - from[1]) * t - width / 2,
+                width,
+                width,
+                color,
+              );
+            }
+          }
+        }
+      };
+      if (removal >= 2) {
+        r(-3, -23, 5, 7, '#15101c');
+        if (removal < 5) r(-1, -21, 2, 3, '#ac1735');
+      }
+      arm([[9, -24], [12, -17], hand]);
+      arm([[-11, -24], [-13, -16], removal <= 3 ? [-2, -20] : [-10, -10]]);
+      r(6, -25, 6, 4, armor);
+      r(-13, -25, 5, 4, armor);
+    }
+    const headDrop = removal >= 2 ? (removal === 6 ? 3 : 2) : 0;
+    krisHead((x, y, w, h, color) => r(x + (removal >= 2 && removal <= 3 ? 2 : 0), y + headDrop, w, h, color));
     r(-10, -29, 16, 5, outline);
     r(-10, -28, 15, 3, scarf);
     r(-8, -27, 12, 2, '#ff79d2');
     r(-16, -27, 7, 4, scarf);
     r(-23, -24, 9, 3, scarf);
     r(-26, -22, 6, 2, '#b52b89');
+    if (removal) return;
     // Three drawn poses avoid a smoothly rotated, vector-looking sword.
     if (frame === 1) {
       poly(
@@ -168,6 +217,13 @@ export function createBattleCharacterSprites(ctx: CanvasRenderingContext2D, redu
     const frame = attacking ? (hitAge < 0.1 ? 0 : hitAge < 0.23 ? 1 : 2) : 0;
     const step = attacking && !reducedMotion() ? [0, 5, 2][frame] : 0;
     sprite(`kris:${frame}:${red}`, x + step, y, scale * 1.75, (r, p) => paintKris(r, p, frame, red));
+  }
+
+  function krisSoulRemoval(x: number, y: number, scale: number, pose: number, handX?: number) {
+    const gripX = pose >= 3 && pose <= 5 ? Math.round(handX ?? 8) : undefined;
+    sprite(`kris:remove:${pose}:${gripX}`, x, y, scale * 1.75, (r, p) =>
+      paintKris(r, p, 0, false, pose, gripX),
+    );
   }
 
   function paintFlowey(r: Rect, bob: number) {
@@ -1247,6 +1303,7 @@ export function createBattleCharacterSprites(ctx: CanvasRenderingContext2D, redu
   }
   return {
     kris,
+    krisSoulRemoval,
     flowey,
     krisDown,
     floweyDown,

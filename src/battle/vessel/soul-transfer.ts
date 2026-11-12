@@ -11,42 +11,69 @@ export const vesselEntryLines = [
 ];
 export const vesselEntryText = vesselEntryLines.join('\n');
 export const vesselTransferSettings = {
-  exit: 0.8,
-  arrive: 2.8,
-  absorb: 3.3,
-  blackout: 4.1,
-  textStart: 4.5,
-  lettersPerSecond: 32,
+  grip: 1.2,
+  exit: 2.4,
+  release: 3,
+  arrive: 5.3,
+  absorb: 6.1,
+  blackout: 6.9,
+  textStart: 7.4,
+  lettersPerSecond: 14,
 };
-const endAge =
-  vesselTransferSettings.textStart + vesselEntryText.length / vesselTransferSettings.lettersPerSecond;
+function letterSeconds(letter: string) {
+  return (
+    1 / vesselTransferSettings.lettersPerSecond +
+    (letter === '\n' ? 0.35 : letter === '.' || letter === '?' ? 0.4 : letter === ',' ? 0.18 : 0)
+  );
+}
+const textDuration = [...vesselEntryText].reduce((seconds, letter) => seconds + letterSeconds(letter), 0);
+const endAge = vesselTransferSettings.textStart + textDuration + 0.01;
+export function vesselEntryTextAt(age: number) {
+  let budget = Math.max(0, age - vesselTransferSettings.textStart),
+    count = 0;
+  for (const letter of vesselEntryText) {
+    if (budget + 1e-9 < 1 / vesselTransferSettings.lettersPerSecond) break;
+    count++;
+    budget -= letterSeconds(letter);
+  }
+  return vesselEntryText.slice(0, count);
+}
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 export function isVesselTransfer(encounter: Encounter | null) {
   return encounter?.kind === 'vessel' && ['vesselTransfer', 'vesselEntered'].includes(encounter.phase);
 }
 export function vesselTransferFrame(age: number, reduced = false) {
   const settings = vesselTransferSettings;
-  const exit = clamp(age / settings.exit),
-    raw = clamp((age - settings.exit) / (settings.arrive - settings.exit));
+  const pull = clamp((age - settings.grip) / (settings.exit - settings.grip));
+  const raw = clamp((age - settings.release) / (settings.arrive - settings.release));
   const travel = raw * raw * (3 - 2 * raw),
     absorbed = clamp((age - settings.arrive) / (settings.absorb - settings.arrive));
-  const origin = { x: vesselBattleLayout.kris.x, y: vesselBattleLayout.kris.y - 35 };
+  const chest = { x: vesselBattleLayout.kris.x - 2, y: vesselBattleLayout.kris.y - 40 };
+  const held = { x: vesselBattleLayout.kris.x + 36, y: vesselBattleLayout.kris.y - 43 };
   const target = { x: vesselBattleLayout.vessel.x, y: vesselBattleLayout.vessel.y - 55 };
+  const hand = { x: chest.x + (held.x - chest.x) * pull, y: chest.y + (held.y - chest.y) * pull };
   return {
+    krisPose:
+      age < 0.55
+        ? 1
+        : age < settings.grip
+          ? 2
+          : age < 1.7
+            ? 3
+            : age < settings.exit
+              ? 4
+              : age < settings.release
+                ? 5
+                : 6,
+    soulVisible: age > settings.grip,
+    soulReveal: clamp(pull * 3),
     soul: {
-      x: origin.x + (target.x - origin.x) * travel,
-      y:
-        origin.y -
-        26 * exit +
-        (target.y - origin.y + 26) * travel -
-        (reduced ? 0 : Math.sin(travel * Math.PI) * 24),
+      x: hand.x + (target.x - hand.x) * travel,
+      y: hand.y + (target.y - hand.y) * travel - (reduced ? 0 : Math.sin(travel * Math.PI) * 20),
     },
     scale: 1 - absorbed,
     blackout: clamp((age - settings.absorb) / (settings.blackout - settings.absorb)),
-    text: vesselEntryText.slice(
-      0,
-      Math.floor(Math.max(0, age - settings.textStart) * settings.lettersPerSecond),
-    ),
+    text: vesselEntryTextAt(age),
     absorbed,
   };
 }
