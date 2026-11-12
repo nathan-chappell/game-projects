@@ -213,6 +213,7 @@ export interface EncounterBase {
   soul: Soul | null;
   snowAttack: Attack | null;
   enemyAttackCount: number;
+  vesselClearedAttacks?: number[];
   lastEnemyAttack: AttackDirection | null;
   goalAttackUsed: boolean;
   specialAttackQueued: boolean;

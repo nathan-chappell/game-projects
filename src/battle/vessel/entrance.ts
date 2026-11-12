@@ -30,6 +30,7 @@ export function completeVesselConversation(state: GameState) {
 export function createVesselEncounter() {
   const encounter = createEncounter();
   encounter.kind = 'vessel';
+  encounter.vesselClearedAttacks = [];
   encounter.enemy = {
     ...encounter.enemy,
     name: 'Vessel',

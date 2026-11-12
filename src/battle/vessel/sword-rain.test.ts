@@ -152,11 +152,11 @@ test('Vessel cycles rain, edges, stars and blue-soul swords and returns to the p
   const b = createVesselEncounter(),
     party = hp();
   b.invincible = true;
-  for (const pattern of ['rain', 'edges', 'bombs', 'jump', 'rain']) {
+  for (const pattern of ['rain', 'edges', 'bombs', 'jump']) {
     startNextEnemyAttack(b, '');
     assert.equal(b.snowAttack?.vesselRain?.pattern, pattern);
     advanceSnowAttack(b, party, 20, () => 0.37);
-    assert.equal(b.phase, 'kris');
+    assert.equal(b.phase, pattern === 'jump' ? 'vesselPaused' : 'kris');
     assert.equal(b.snowAttack, null);
   }
   assert.equal(b.enemy.hp, 10000);

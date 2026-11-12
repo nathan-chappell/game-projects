@@ -1,3 +1,8 @@
+import {
+  nextVesselAttackIndex,
+  pauseClearedVesselBattle,
+  vesselAttackPatterns,
+} from '../vessel/progression.ts';
 import { createVesselRain, vesselRainArena, vesselJumpSettings } from '../vessel/sword-rain.ts';
 import { vesselDamage, vesselSettings } from '../vessel/combat.ts';
 import { beginKnightRift } from '../knights/rift.ts';
@@ -303,7 +308,9 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'vessel') {
-    const pattern = (['rain', 'edges', 'bombs', 'jump'] as const)[encounter.enemyAttackCount % 4];
+    const index = nextVesselAttackIndex(encounter);
+    if (index === undefined) return pauseClearedVesselBattle(encounter);
+    const pattern = vesselAttackPatterns[index];
     beginEnemyAttack(
       encounter,
       'vesselRain',
@@ -319,7 +326,7 @@ export function startNextEnemyAttack(encounter: Encounter, message: string) {
       encounter.snowAttack.vesselRain = createVesselRain(pattern);
     if (pattern === 'jump' && encounter.soul) encounter.soul.y = 480 - battleSettings.soulHeight / 2;
     encounter.turn = 'Vessel';
-    encounter.enemyAttackCount++;
+    encounter.enemyAttackCount = index + 1;
     return true;
   }
 

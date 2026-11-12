@@ -1,3 +1,8 @@
+import {
+  markVesselAttackCleared,
+  pauseClearedVesselBattle,
+  vesselAttackAvailable,
+} from '../vessel/progression.ts';
 import { tennaEndingPhases } from '../tenna/ending.ts';
 import { rejectUndyneAction, undynePresent } from '../tenna/undyne-actions.ts';
 import { setHammerAimKey, setHammerThrowKey, throwHammer } from '../tenna/hammers.ts';
@@ -284,6 +289,10 @@ export function setupBattleControls(
             if (battle.snowAttack) battle.snowAttack.hitCooldown = 0;
             battle.message = `Invincibility ${battle.invincible ? 'ON' : 'OFF'}.`;
           } else if (number) {
+            if (!vesselAttackAvailable(battle, Number(number))) {
+              announce(`Vessel attack ${number} is already cleared.`);
+              return;
+            }
             battle.enemyAttackCount = Number(number) - 1;
             if (canControlSoul(battle)) {
               battle.nextAttackGrazeTP = battle.snowAttack.grazeTP;
@@ -291,8 +300,10 @@ export function setupBattleControls(
               state.keys.clear();
             } else battle.message = `Vessel attack ${number} selected for the next enemy turn.`;
           } else {
+            markVesselAttackCleared(battle);
             startKrisTurn(battle, state.partyHP);
             skipFallenTurns(battle, state.partyHP);
+            pauseClearedVesselBattle(battle);
             state.keys.clear();
           }
           refresh();
@@ -430,6 +441,7 @@ export function setupBattleControls(
           'minigameIntro',
           'knightRift',
           'vesselFaceoff',
+          'vesselPaused',
           'vesselXSlash',
           ...tennaEndingPhases,
         ].includes(encounter.phase) ||
@@ -589,6 +601,7 @@ export function setupBattleControls(
           'minigameIntro',
           'knightRift',
           'vesselFaceoff',
+          'vesselPaused',
           'vesselXSlash',
           ...tennaEndingPhases,
         ].includes(encounter.phase) ||

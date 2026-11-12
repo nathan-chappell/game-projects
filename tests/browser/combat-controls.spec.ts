@@ -1,4 +1,4 @@
-import { installBattleFixture } from './battle-fixture.ts';
+import { installBattleFixture, finishAttackFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
@@ -173,34 +173,15 @@ test('Vessel supports invincibility and Shift skips each attack without changing
     expect(await page.evaluate(() => window.battleFixtureState.partyHP)).toEqual(hp);
     await page.locator('#game').focus();
     await page.keyboard.press('Shift');
-    await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+    if (pattern !== 'jump') await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+    else
+      expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('vesselPaused');
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack)).toBeNull();
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(true);
   }
-  await page.keyboard.press('CapsLock');
-  for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
-  await page.evaluate(() => {
-    const b = window.battleFixtureState.bossEncounter!;
-    b.snowAttack!.vesselRain!.swords.push({
-      kind: 'mini',
-      ...b.soul!,
-      vx: 0,
-      vy: 0,
-      angle: 0,
-      scale: 0.4,
-      age: 0,
-      active: true,
-      hitOpponent: false,
-      red: true,
-    });
-  });
-  const before = await page.evaluate(() =>
-    Object.values(window.battleFixtureState.partyHP).reduce((a, b) => a + b, 0),
-  );
-  await frames(page, 2);
-  expect(
-    await page.evaluate(() => Object.values(window.battleFixtureState.partyHP).reduce((a, b) => a + b, 0)),
-  ).toBeLessThan(before);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.vesselClearedAttacks)).toEqual([
+    1, 2, 3, 4,
+  ]);
 });
 
 test('Vessel number keys queue and switch attacks while Caps Lock controls invincibility', async ({
@@ -257,8 +238,67 @@ test('Vessel number keys queue and switch attacks while Caps Lock controls invin
       grazeTP: 4,
       y: next === 4 ? 469.5 : 240,
     });
-    await page.keyboard.press('Shift');
+    await finishAttackFixture(page);
   }
   await page.keyboard.press('CapsLock');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
+});
+
+test('Vessel permanently locks cleared number keys and pauses after all four attacks', async ({ page }) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await page.goto('/');
+  await frames(page, 1);
+  await page.evaluate(async () => {
+    const path = '/src/battle/vessel/entrance.ts',
+      rules = '/src/battle/shared/rules.ts';
+    const { createVesselEncounter } = await import(path),
+      { advanceBattleTime } = await import(rules);
+    const s = window.battleFixtureState;
+    s.bossEncounter = createVesselEncounter();
+    advanceBattleTime(s.bossEncounter, 1.1, s.partyHP);
+    window.refreshBattleFixture();
+  });
+  await page.locator('#game').focus();
+  await page.keyboard.press('CapsLock');
+  for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
+  await frames(page, 1000);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.vesselClearedAttacks)).toEqual([
+    1,
+  ]);
+  const counter = await page.evaluate(() => window.battleFixtureState.bossEncounter!.enemyAttackCount);
+  await page.keyboard.press('Digit1');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.enemyAttackCount)).toBe(counter);
+  await page.keyboard.press('Digit3');
+  for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
+  expect(
+    await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.pattern),
+  ).toBe('bombs');
+  await frames(page, 10);
+  const age = await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.age);
+  await page.locator('#game').focus();
+  await page.keyboard.press('Numpad1');
+  expect(
+    await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.age),
+  ).toBe(age);
+  await page.keyboard.press('Shift');
+  for (const expected of ['jump', 'edges']) {
+    for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
+    expect(
+      await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.pattern),
+    ).toBe(expected);
+    await page.locator('#game').focus();
+    await page.keyboard.press('Shift');
+  }
+  await frames(page, 120);
+  expect(
+    await page.evaluate(() => {
+      const b = window.battleFixtureState.bossEncounter!;
+      return { phase: b.phase, cleared: b.vesselClearedAttacks, hp: b.enemy.hp, attack: b.snowAttack };
+    }),
+  ).toEqual({ phase: 'vesselPaused', cleared: [1, 3, 4, 2], hp: 10000, attack: null });
+  for (const key of ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad2', 'Shift'])
+    await page.keyboard.press(key);
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('vesselPaused');
+  await expect(page.locator('#battleAttack')).toBeDisabled();
 });
