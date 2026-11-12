@@ -1,3 +1,4 @@
+import { beginVesselTransfer } from './soul-transfer.ts';
 import type { Encounter } from '../shared/types.ts';
 
 export const vesselAttackPatterns = ['rain', 'edges', 'bombs', 'jump'] as const;
@@ -32,12 +33,7 @@ export function markVesselAttackCleared(encounter: Encounter) {
   if (!encounter.vesselClearedAttacks.includes(number)) encounter.vesselClearedAttacks.push(number);
 }
 
-export function pauseClearedVesselBattle(encounter: Encounter) {
+export function beginClearedVesselScene(encounter: Encounter) {
   if (encounter.kind !== 'vessel' || nextVesselAttackIndex(encounter) !== undefined) return false;
-  encounter.phase = 'vesselPaused';
-  encounter.turn = null;
-  encounter.soul = null;
-  encounter.snowAttack = null;
-  encounter.message = 'All four attacks cleared. The battle is paused.';
-  return true;
+  return beginVesselTransfer(encounter);
 }

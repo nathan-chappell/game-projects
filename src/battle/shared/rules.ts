@@ -1,6 +1,7 @@
+import { advanceVesselTransfer, isVesselTransfer } from '../vessel/soul-transfer.ts';
 import {
   nextVesselAttackIndex,
-  pauseClearedVesselBattle,
+  beginClearedVesselScene,
   vesselAttackPatterns,
 } from '../vessel/progression.ts';
 import { createVesselRain, vesselRainArena, vesselJumpSettings } from '../vessel/sword-rain.ts';
@@ -309,7 +310,7 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'vessel') {
     const index = nextVesselAttackIndex(encounter);
-    if (index === undefined) return pauseClearedVesselBattle(encounter);
+    if (index === undefined) return beginClearedVesselScene(encounter);
     const pattern = vesselAttackPatterns[index];
     beginEnemyAttack(
       encounter,
@@ -818,6 +819,7 @@ export function finishTennaMinigame(encounter: Encounter, hp: PartyHP, random: (
 }
 export function advanceBattleTime(encounter: Encounter, dt: number, partyHP?: PartyHP) {
   if (!encounter || !Number.isFinite(dt) || dt < 0) return false;
+  if (isVesselTransfer(encounter)) return advanceVesselTransfer(encounter, dt);
   if (encounter.vesselXSlashAge !== undefined) {
     encounter.vesselXSlashAge += dt;
     if (encounter.vesselXSlashAge >= vesselSettings.xSlashSeconds) {

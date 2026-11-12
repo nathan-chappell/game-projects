@@ -175,7 +175,9 @@ test('Vessel supports invincibility and Shift skips each attack without changing
     await page.keyboard.press('Shift');
     if (pattern !== 'jump') await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
     else
-      expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('vesselPaused');
+      expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe(
+        'vesselTransfer',
+      );
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack)).toBeNull();
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(true);
   }
@@ -244,7 +246,9 @@ test('Vessel number keys queue and switch attacks while Caps Lock controls invin
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
 });
 
-test('Vessel permanently locks cleared number keys and pauses after all four attacks', async ({ page }) => {
+test('Vessel permanently locks cleared number keys and starts the soul transfer after all four attacks', async ({
+  page,
+}) => {
   await controlFrames(page);
   await installBattleFixture(page);
   await page.goto('/');
@@ -296,9 +300,9 @@ test('Vessel permanently locks cleared number keys and pauses after all four att
       const b = window.battleFixtureState.bossEncounter!;
       return { phase: b.phase, cleared: b.vesselClearedAttacks, hp: b.enemy.hp, attack: b.snowAttack };
     }),
-  ).toEqual({ phase: 'vesselPaused', cleared: [1, 3, 4, 2], hp: 10000, attack: null });
+  ).toEqual({ phase: 'vesselTransfer', cleared: [1, 3, 4, 2], hp: 10000, attack: null });
   for (const key of ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Numpad2', 'Shift'])
     await page.keyboard.press(key);
-  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('vesselPaused');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('vesselTransfer');
   await expect(page.locator('#battleAttack')).toBeDisabled();
 });

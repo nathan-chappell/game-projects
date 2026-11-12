@@ -1,3 +1,6 @@
+import { drawPixelSoul } from './soul-drawing.ts';
+import { drawVesselEntryText, drawVesselTransfer } from '../vessel/soul-transfer-drawing.ts';
+import { isVesselTransfer } from '../vessel/soul-transfer.ts';
 import { drawVesselRain } from '../vessel/sword-rain-drawing.ts';
 import { drawVessel, drawVesselXSlash } from '../vessel/drawing.ts';
 import { vesselBattleLayout, xSlashBackgroundShake } from '../vessel/combat.ts';
@@ -681,27 +684,19 @@ export function createBattleDrawing(
   }
   function drawBattleSoul(encounter: Encounter) {
     const snow = encounter.snowAttack;
-    const rows = ['01100110', '11111111', '11111111', '11111111', '01111110', '00111100', '00011000'],
-      left = Math.round(present(encounter.soul).x - battleSettings.soulWidth / 2),
-      top = Math.round(present(encounter.soul).y - battleSettings.soulHeight / 2);
     ctx.save();
     const damageFlash = encounter.invincible ? 0 : Math.max(snow?.hitCooldown || 0, snow?.contactFlash || 0);
     if (damageFlash > 0) ctx.globalAlpha = Math.floor(damageFlash * 12) % 2 ? 0.3 : 1;
-    for (let row = 0; row < rows.length; row++)
-      for (let col = 0; col < rows[row].length; col++)
-        if (rows[row][col] === '1')
-          rect(
-            left + col * 3,
-            top + row * 3,
-            3,
-            3,
-            snow?.direction === 'undyne'
-              ? '#23ed59'
-              : snow?.direction === 'goal' ||
-                  (snow?.direction === 'vesselRain' && snow.vesselRain.pattern === 'jump')
-                ? '#2675ff'
-                : '#ff0000',
-          );
+    drawPixelSoul(
+      ctx,
+      present(encounter.soul),
+      snow?.direction === 'undyne'
+        ? '#23ed59'
+        : snow?.direction === 'goal' ||
+            (snow?.direction === 'vesselRain' && snow.vesselRain.pattern === 'jump')
+          ? '#2675ff'
+          : '#ff0000',
+    );
     ctx.restore();
   }
   function drawBossEncounter(time: number) {
@@ -709,6 +704,11 @@ export function createBattleDrawing(
       t = reducedParticleMotion.matches ? 0 : time;
     const encounter = state.bossEncounter;
     ctx.imageSmoothingEnabled = false;
+    if (encounter?.kind === 'vessel' && encounter.phase === 'vesselEntered') {
+      drawVesselEntryText(ctx, encounter.animationAge);
+      $('gameHint').textContent = encounter.message;
+      return;
+    }
     if (encounter?.phase === 'knightRift') {
       drawKnightRift(ctx, encounter.animationAge, reducedParticleMotion.matches);
       return;
@@ -750,6 +750,11 @@ export function createBattleDrawing(
           helpers.drawFountainFriend({ name, x: 0, y: 0, hideName: true }, t);
           ctx.restore();
         });
+      }
+      if (isVesselTransfer(encounter)) {
+        drawVesselTransfer(ctx, encounter.animationAge, reducedParticleMotion.matches);
+        $('gameHint').textContent = encounter.message;
+        return;
       }
       if (isPelletCast(encounter))
         drawPelletsCast(encounter, {

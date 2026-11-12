@@ -1,6 +1,7 @@
+import { isVesselTransfer } from '../vessel/soul-transfer.ts';
 import {
   markVesselAttackCleared,
-  pauseClearedVesselBattle,
+  beginClearedVesselScene,
   vesselAttackAvailable,
 } from '../vessel/progression.ts';
 import { tennaEndingPhases } from '../tenna/ending.ts';
@@ -303,7 +304,7 @@ export function setupBattleControls(
             markVesselAttackCleared(battle);
             startKrisTurn(battle, state.partyHP);
             skipFallenTurns(battle, state.partyHP);
-            pauseClearedVesselBattle(battle);
+            beginClearedVesselScene(battle);
             state.keys.clear();
           }
           refresh();
@@ -429,6 +430,7 @@ export function setupBattleControls(
       intro ||
       !!state.death ||
       encounter?.phase === 'knightRift' ||
+      isVesselTransfer(encounter) ||
       encounter?.snowAttack?.direction === 'vesselRain' ||
       isBattleBlackout(encounter);
     $('playControls').hidden = state.mode !== 'play' || (active && !intro);
@@ -441,7 +443,8 @@ export function setupBattleControls(
           'minigameIntro',
           'knightRift',
           'vesselFaceoff',
-          'vesselPaused',
+          'vesselTransfer',
+          'vesselEntered',
           'vesselXSlash',
           ...tennaEndingPhases,
         ].includes(encounter.phase) ||
@@ -601,7 +604,8 @@ export function setupBattleControls(
           'minigameIntro',
           'knightRift',
           'vesselFaceoff',
-          'vesselPaused',
+          'vesselTransfer',
+          'vesselEntered',
           'vesselXSlash',
           ...tennaEndingPhases,
         ].includes(encounter.phase) ||

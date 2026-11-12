@@ -156,7 +156,7 @@ test('Vessel cycles rain, edges, stars and blue-soul swords and returns to the p
     startNextEnemyAttack(b, '');
     assert.equal(b.snowAttack?.vesselRain?.pattern, pattern);
     advanceSnowAttack(b, party, 20, () => 0.37);
-    assert.equal(b.phase, pattern === 'jump' ? 'vesselPaused' : 'kris');
+    assert.equal(b.phase, pattern === 'jump' ? 'vesselTransfer' : 'kris');
     assert.equal(b.snowAttack, null);
   }
   assert.equal(b.enemy.hp, 10000);

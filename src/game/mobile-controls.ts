@@ -1,3 +1,4 @@
+import { isVesselTransfer } from '../battle/vessel/soul-transfer.ts';
 import { canControlSoul, canPartyAct } from '../battle/shared/availability.ts';
 import { isProceedScene } from '../battle/noelle/proceed.ts';
 import { knightEncounterActive } from '../rooms/post-show/knight-choreography.ts';
@@ -38,7 +39,11 @@ export function bindMobileControls(
 /** The overlay shares the existing action handlers and held-direction input. */
 export function syncMobileControls(state: GameState, $: Elements) {
   const battle = state.bossEncounter;
-  const hidden = state.mode !== 'play' || !!state.death || !!document.querySelector('dialog[open]');
+  const hidden =
+    isVesselTransfer(battle) ||
+    state.mode !== 'play' ||
+    !!state.death ||
+    !!document.querySelector('dialog[open]');
   if (hidden && !$('mobileGameControls').hidden) state.keys.clear();
   $('mobileGameControls').hidden = hidden;
   const soul = canControlSoul(battle);

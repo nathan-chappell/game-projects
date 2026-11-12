@@ -1,4 +1,4 @@
-import { markVesselAttackCleared, pauseClearedVesselBattle } from '../vessel/progression.ts';
+import { markVesselAttackCleared, beginClearedVesselScene } from '../vessel/progression.ts';
 import { starBombSettings } from '../vessel/star-bombs.ts';
 import { advanceVesselRain, vesselRainSettings } from '../vessel/sword-rain.ts';
 import { advanceAimedSwords } from '../knights/aimed-swords.ts';
@@ -108,7 +108,7 @@ export function createAttackRunner(dependencies: Dependencies) {
         markVesselAttackCleared(encounter);
         dependencies.startKrisTurn(encounter, partyHP);
         dependencies.skipFallenTurns(encounter, partyHP);
-        pauseClearedVesselBattle(encounter);
+        beginClearedVesselScene(encounter);
         return true;
       }
       return changed;

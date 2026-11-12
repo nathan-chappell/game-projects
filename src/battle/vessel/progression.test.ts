@@ -4,7 +4,7 @@ import { createVesselEncounter } from './entrance.ts';
 import {
   markVesselAttackCleared,
   nextVesselAttackIndex,
-  pauseClearedVesselBattle,
+  beginClearedVesselScene,
   vesselAttackAvailable,
   vesselAttackPatterns,
 } from './progression.ts';
@@ -26,14 +26,14 @@ test('cleared attacks never return even if the round pointer or number selection
       assert.notEqual(nextVesselAttackIndex(b), number - 1);
     }
   }
-  assert.equal(b.phase, 'vesselPaused');
+  assert.equal(b.phase, 'vesselTransfer');
   assert.equal(b.turn, null);
   assert.equal(b.soul, null);
   assert.equal(b.snowAttack, null);
   assert.equal(b.enemy.hp, 10000);
   advanceBattleTime(b, 5, hp());
   startNextEnemyAttack(b, '');
-  assert.equal(b.phase, 'vesselPaused');
+  assert.equal(b.phase, 'vesselEntered');
   assert.equal(nextVesselAttackIndex(b), undefined);
   assert.equal(b.finalAttackComplete, false);
   assert.deepEqual(createVesselEncounter().vesselClearedAttacks, []);
@@ -48,7 +48,7 @@ test('interrupted attacks stay available; explicit completion records a unique c
   markVesselAttackCleared(b);
   markVesselAttackCleared(b);
   assert.deepEqual(b.vesselClearedAttacks, [2]);
-  assert.equal(pauseClearedVesselBattle(b), false);
+  assert.equal(beginClearedVesselScene(b), false);
   assert.equal(vesselAttackAvailable(b, 0), false);
   assert.equal(vesselAttackAvailable(b, 5), false);
 });
