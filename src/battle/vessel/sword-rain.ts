@@ -9,6 +9,7 @@ export const vesselRainSettings = {
   fallingSpeed: 270,
   fallingGravity: 480,
   fallingMaxSpeed: 780,
+  edgeSpeedMultiplier: 0.85,
   fallingDamage: 40,
   miniCount: 4,
   miniDamage: 15,
@@ -91,12 +92,15 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     rain.warnings = rain.warnings.filter((warning) => {
       warning.remaining -= step;
       if (warning.remaining > 1e-9) return true;
+      const speed =
+        vesselRainSettings.fallingSpeed *
+        (rain.pattern === 'edges' ? vesselRainSettings.edgeSpeedMultiplier : 1);
       rain.swords.push({
         kind: rain.pattern === 'edges' ? 'launched' : 'falling',
         x: warning.x,
         y: warning.y,
-        vx: Math.cos(warning.angle) * vesselRainSettings.fallingSpeed,
-        vy: Math.sin(warning.angle) * vesselRainSettings.fallingSpeed,
+        vx: Math.cos(warning.angle) * speed,
+        vy: Math.sin(warning.angle) * speed,
         angle: warning.angle,
         scale: 1,
         age: 0,
@@ -109,9 +113,10 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     for (const sword of rain.swords) {
       sword.age += step;
       if (sword.kind !== 'mini') {
+        const multiplier = sword.kind === 'launched' ? vesselRainSettings.edgeSpeedMultiplier : 1;
         const speed = Math.min(
-          vesselRainSettings.fallingMaxSpeed,
-          Math.hypot(sword.vx, sword.vy) + vesselRainSettings.fallingGravity * step,
+          vesselRainSettings.fallingMaxSpeed * multiplier,
+          Math.hypot(sword.vx, sword.vy) + vesselRainSettings.fallingGravity * multiplier * step,
         );
         sword.vx = Math.cos(sword.angle) * speed;
         sword.vy = Math.sin(sword.angle) * speed;
