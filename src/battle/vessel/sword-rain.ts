@@ -24,7 +24,7 @@ export const vesselJumpSettings = {
   interval: 0.95,
   pairDelay: 0.18,
   speed: 300,
-  soulSpeed: 180,
+  soulSpeed: 330,
   redWave: 4,
   miniSpacing: 0.16,
 };
