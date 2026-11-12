@@ -2,7 +2,7 @@ import { installBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
-for (const kind of ['noelle', 'dark', 'tenna', 'knights', 'vessel']) {
+for (const kind of ['noelle', 'dark', 'tenna', 'knights']) {
   test(`${kind} has no player combat cheats or playtesting controls`, async ({ page }) => {
     await controlFrames(page);
     await installBattleFixture(page);
@@ -120,4 +120,85 @@ test('Tenna minigame cannot be skipped and its score cannot be increased with ch
       return { phase: b.phase, score: b.score, invincible: b.invincible };
     }),
   ).toEqual({ phase: 'minigame', score: 0, invincible: false });
+});
+
+test('Vessel supports invincibility and Shift skips each attack without changing their order', async ({
+  page,
+}) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await page.goto('/');
+  await frames(page, 1);
+  await page.evaluate(async () => {
+    const path = '/src/battle/vessel/entrance.ts',
+      rules = '/src/battle/shared/rules.ts';
+    const { createVesselEncounter } = await import(path),
+      { advanceBattleTime } = await import(rules);
+    const s = window.battleFixtureState;
+    s.bossEncounter = createVesselEncounter();
+    advanceBattleTime(s.bossEncounter, 1.1, s.partyHP);
+    window.refreshBattleFixture();
+  });
+  await page.locator('#game').focus();
+  await page.keyboard.press('Digit2');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(true);
+  // Auto-repeat must not toggle back off.
+  await page.keyboard.down('Digit2');
+  await page.keyboard.down('Digit2');
+  await page.keyboard.up('Digit2');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
+  await page.keyboard.press('Numpad2');
+  for (const pattern of ['rain', 'edges', 'bombs']) {
+    for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
+    expect(
+      await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.pattern),
+    ).toBe(pattern);
+    const hp = await page.evaluate(() => structuredClone(window.battleFixtureState.partyHP));
+    await page.evaluate(() => {
+      const b = window.battleFixtureState.bossEncounter!;
+      b.snowAttack!.vesselRain!.swords.push({
+        kind: 'mini',
+        ...b.soul!,
+        vx: 0,
+        vy: 0,
+        angle: 0,
+        scale: 0.4,
+        age: 0,
+        active: true,
+        hitOpponent: false,
+        red: true,
+      });
+    });
+    await frames(page, 2);
+    expect(await page.evaluate(() => window.battleFixtureState.partyHP)).toEqual(hp);
+    await page.locator('#game').focus();
+    await page.keyboard.press('Shift');
+    await expect(page.locator('#battleTurnText')).toHaveText('Kris’s turn');
+    expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack)).toBeNull();
+    expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(true);
+  }
+  await page.keyboard.press('Digit2');
+  for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
+  await page.evaluate(() => {
+    const b = window.battleFixtureState.bossEncounter!;
+    b.snowAttack!.vesselRain!.swords.push({
+      kind: 'mini',
+      ...b.soul!,
+      vx: 0,
+      vy: 0,
+      angle: 0,
+      scale: 0.4,
+      age: 0,
+      active: true,
+      hitOpponent: false,
+      red: true,
+    });
+  });
+  const before = await page.evaluate(() =>
+    Object.values(window.battleFixtureState.partyHP).reduce((a, b) => a + b, 0),
+  );
+  await frames(page, 2);
+  expect(
+    await page.evaluate(() => Object.values(window.battleFixtureState.partyHP).reduce((a, b) => a + b, 0)),
+  ).toBeLessThan(before);
 });

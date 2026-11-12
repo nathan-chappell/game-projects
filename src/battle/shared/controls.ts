@@ -28,6 +28,8 @@ import {
   friendlynessPellets,
   proceed,
   snowAttackStatus,
+  startKrisTurn,
+  skipFallenTurns,
   spareInDark,
   useDarkAct,
 } from './rules.ts';
@@ -265,6 +267,27 @@ export function setupBattleControls(
       )
         return;
       if (blocked()) return;
+      const battle = state.bossEncounter;
+      if (battle?.kind === 'vessel' && (canPartyAct(battle) || canControlSoul(battle))) {
+        const toggle = event.key === '2' || ['Digit2', 'Numpad2'].includes(event.code);
+        const skip = event.key === 'Shift' && canControlSoul(battle);
+        if (toggle || skip) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (event.repeat) return;
+          if (toggle) {
+            battle.invincible = !battle.invincible;
+            if (battle.snowAttack) battle.snowAttack.hitCooldown = 0;
+            battle.message = `Invincibility ${battle.invincible ? 'ON' : 'OFF'}.`;
+          } else {
+            startKrisTurn(battle, state.partyHP);
+            skipFallenTurns(battle, state.partyHP);
+            state.keys.clear();
+          }
+          refresh();
+          return;
+        }
+      }
       if (state.bossEncounter?.phase === 'minigame' && state.bossEncounter.minigame) {
         const b = state.bossEncounter,
           m = present(b.minigame);

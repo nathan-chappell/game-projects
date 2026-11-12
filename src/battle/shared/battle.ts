@@ -710,6 +710,8 @@ export function createBattleDrawing(
     }
     if (encounter?.snowAttack?.direction === 'vesselRain' && encounter.soul) {
       drawVesselRain(ctx, encounter.snowAttack.vesselRain, reducedParticleMotion.matches);
+      $('gameHint').textContent =
+        `${encounter.invincible ? 'Invincibility ON · ' : ''}2: toggle invincibility · Shift: skip attack`;
       drawGrazeRing(encounter);
       drawBattleSoul(encounter);
       return;
