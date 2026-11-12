@@ -206,3 +206,5 @@ On entering the mysterious room, a protected conversation plays: Flowey asks “
 Vessel playtesting: press **Caps Lock** during a party turn or attack to toggle invincibility. Press **Shift** during any Vessel attack to clear its hazards and return to the next living teammate (or begin the soul-transfer cutscene after the fourth distinct clear). These shortcuts do not affect the other bosses or skip dialogue and cutscenes.
 
 During Vessel playtesting, **1–4** (including numpad) select the matching attack. During a party turn the selection queues for the next enemy turn; during an enemy attack it restarts immediately with that pattern, preserving invincibility and the active TP Elixir graze boost. Progression continues from that selection, skipping any attacks already cleared.
+
+Press **6** (or numpad 6) during a Vessel party turn or attack to preview Kris removing the soul, the transfer into the Vessel, and the slow centered narration immediately. It clears active hazards without changing HP, TP or cleared-attack flags, and does not interrupt an existing dialogue or cutscene.

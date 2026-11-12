@@ -306,3 +306,50 @@ test('Vessel permanently locks cleared number keys and starts the soul transfer 
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('vesselTransfer');
   await expect(page.locator('#battleAttack')).toBeDisabled();
 });
+
+for (const phase of ['party', 'enemy'] as const) {
+  test(`Vessel key 6 starts the full soul cutscene from the ${phase} turn`, async ({ page }) => {
+    await controlFrames(page);
+    await installBattleFixture(page);
+    await page.goto('/');
+    await frames(page, 1);
+    await page.evaluate(async (phase) => {
+      const path = '/src/battle/vessel/entrance.ts',
+        rules = '/src/battle/shared/rules.ts';
+      const { createVesselEncounter } = await import(path),
+        { advanceBattleTime, startNextEnemyAttack } = await import(rules);
+      const s = window.battleFixtureState;
+      s.bossEncounter = createVesselEncounter();
+      const b = s.bossEncounter!;
+      advanceBattleTime(b, 1.1, s.partyHP);
+      b.tp = 37;
+      if (phase === 'enemy') startNextEnemyAttack(b, '');
+      window.refreshBattleFixture();
+    }, phase);
+    const hp = await page.evaluate(() => structuredClone(window.battleFixtureState.partyHP));
+    await page.locator('#game').focus();
+    await page.keyboard.press(phase === 'party' ? 'Digit6' : 'Numpad6');
+    expect(
+      await page.evaluate(() => {
+        const b = window.battleFixtureState.bossEncounter!;
+        return {
+          phase: b.phase,
+          age: b.animationAge,
+          soul: b.soul,
+          attack: b.snowAttack,
+          tp: b.tp,
+          cleared: b.vesselClearedAttacks,
+        };
+      }),
+    ).toEqual({ phase: 'vesselTransfer', age: 0, soul: null, attack: null, tp: 37, cleared: [] });
+    await frames(page, 120);
+    await page.keyboard.press('Digit6');
+    expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.animationAge)).toBeCloseTo(2);
+    await frames(page, 2100);
+    const text = await page.evaluate(() => window.battleFixtureState.bossEncounter!.message);
+    expect(text).toContain('You entered the Vessel.');
+    expect(text).toContain('now, you face the concicuences.');
+    expect(await page.evaluate(() => window.battleFixtureState.partyHP)).toEqual(hp);
+    await expect(page.locator('#bossControls')).toBeHidden();
+  });
+}

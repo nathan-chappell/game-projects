@@ -1,4 +1,4 @@
-import { isVesselTransfer } from '../vessel/soul-transfer.ts';
+import { beginVesselTransfer, isVesselTransfer } from '../vessel/soul-transfer.ts';
 import {
   markVesselAttackCleared,
   beginClearedVesselScene,
@@ -280,12 +280,16 @@ export function setupBattleControls(
         const number =
           /^(?:Digit|Numpad)([1-4])$/.exec(event.code)?.[1] ??
           (/^[1-4]$/.test(event.key) ? event.key : undefined);
+        const scene = event.key === '6' || ['Digit6', 'Numpad6'].includes(event.code);
         const skip = event.key === 'Shift' && canControlSoul(battle);
-        if (toggle || skip || number) {
+        if (toggle || skip || number || scene) {
           event.preventDefault();
           event.stopImmediatePropagation();
           if (event.repeat) return;
-          if (toggle) {
+          if (scene) {
+            beginVesselTransfer(battle);
+            state.keys.clear();
+          } else if (toggle) {
             battle.invincible = !battle.invincible;
             if (battle.snowAttack) battle.snowAttack.hitCooldown = 0;
             battle.message = `Invincibility ${battle.invincible ? 'ON' : 'OFF'}.`;

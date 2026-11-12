@@ -716,7 +716,7 @@ export function createBattleDrawing(
     if (encounter?.snowAttack?.direction === 'vesselRain' && encounter.soul) {
       drawVesselRain(ctx, encounter.snowAttack.vesselRain, reducedParticleMotion.matches);
       $('gameHint').textContent =
-        `${encounter.invincible ? 'Invincibility ON · ' : ''}1–4: select attack · Caps Lock: invincibility · Shift: skip attack${encounter.snowAttack.vesselRain.pattern === 'jump' ? ' · Left/right: move · Up/W/Space: jump (hold for height)' : ''}`;
+        `${encounter.invincible ? 'Invincibility ON · ' : ''}1–4: select attack · Caps Lock: invincibility · Shift: skip attack · 6: soul cutscene${encounter.snowAttack.vesselRain.pattern === 'jump' ? ' · Left/right: move · Up/W/Space: jump (hold for height)' : ''}`;
       drawGrazeRing(encounter);
       drawBattleSoul(encounter);
       return;
