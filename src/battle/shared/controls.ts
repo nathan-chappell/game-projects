@@ -29,6 +29,7 @@ import {
   proceed,
   snowAttackStatus,
   startKrisTurn,
+  startNextEnemyAttack,
   skipFallenTurns,
   spareInDark,
   useDarkAct,
@@ -269,9 +270,12 @@ export function setupBattleControls(
       if (blocked()) return;
       const battle = state.bossEncounter;
       if (battle?.kind === 'vessel' && (canPartyAct(battle) || canControlSoul(battle))) {
-        const toggle = event.key === '2' || ['Digit2', 'Numpad2'].includes(event.code);
+        const toggle = event.key === 'CapsLock' || event.code === 'CapsLock';
+        const number =
+          /^(?:Digit|Numpad)([1-4])$/.exec(event.code)?.[1] ??
+          (/^[1-4]$/.test(event.key) ? event.key : undefined);
         const skip = event.key === 'Shift' && canControlSoul(battle);
-        if (toggle || skip) {
+        if (toggle || skip || number) {
           event.preventDefault();
           event.stopImmediatePropagation();
           if (event.repeat) return;
@@ -279,6 +283,13 @@ export function setupBattleControls(
             battle.invincible = !battle.invincible;
             if (battle.snowAttack) battle.snowAttack.hitCooldown = 0;
             battle.message = `Invincibility ${battle.invincible ? 'ON' : 'OFF'}.`;
+          } else if (number) {
+            battle.enemyAttackCount = Number(number) - 1;
+            if (canControlSoul(battle)) {
+              battle.nextAttackGrazeTP = battle.snowAttack.grazeTP;
+              startNextEnemyAttack(battle, `Vessel attack ${number} selected.`);
+              state.keys.clear();
+            } else battle.message = `Vessel attack ${number} selected for the next enemy turn.`;
           } else {
             startKrisTurn(battle, state.partyHP);
             skipFallenTurns(battle, state.partyHP);

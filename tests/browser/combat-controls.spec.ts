@@ -140,14 +140,14 @@ test('Vessel supports invincibility and Shift skips each attack without changing
     window.refreshBattleFixture();
   });
   await page.locator('#game').focus();
-  await page.keyboard.press('Digit2');
+  await page.keyboard.press('CapsLock');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(true);
   // Auto-repeat must not toggle back off.
-  await page.keyboard.down('Digit2');
-  await page.keyboard.down('Digit2');
-  await page.keyboard.up('Digit2');
+  await page.keyboard.down('CapsLock');
+  await page.keyboard.down('CapsLock');
+  await page.keyboard.up('CapsLock');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
-  await page.keyboard.press('Numpad2');
+  await page.keyboard.press('CapsLock');
   for (const pattern of ['rain', 'edges', 'bombs', 'jump']) {
     for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
     expect(
@@ -177,7 +177,7 @@ test('Vessel supports invincibility and Shift skips each attack without changing
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack)).toBeNull();
     expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(true);
   }
-  await page.keyboard.press('Digit2');
+  await page.keyboard.press('CapsLock');
   for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
   await page.evaluate(() => {
     const b = window.battleFixtureState.bossEncounter!;
@@ -201,4 +201,64 @@ test('Vessel supports invincibility and Shift skips each attack without changing
   expect(
     await page.evaluate(() => Object.values(window.battleFixtureState.partyHP).reduce((a, b) => a + b, 0)),
   ).toBeLessThan(before);
+});
+
+test('Vessel number keys queue and switch attacks while Caps Lock controls invincibility', async ({
+  page,
+}) => {
+  await controlFrames(page);
+  await installBattleFixture(page);
+  await page.goto('/');
+  await frames(page, 1);
+  await page.evaluate(async () => {
+    const path = '/src/battle/vessel/entrance.ts',
+      rules = '/src/battle/shared/rules.ts';
+    const { createVesselEncounter } = await import(path),
+      { advanceBattleTime } = await import(rules);
+    const s = window.battleFixtureState;
+    s.bossEncounter = createVesselEncounter();
+    advanceBattleTime(s.bossEncounter, 1.1, s.partyHP);
+    window.refreshBattleFixture();
+  });
+  await page.locator('#game').focus();
+  await page.keyboard.press('Digit2');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
+  await page.keyboard.press('CapsLock');
+  for (let number = 1; number <= 4; number++) {
+    await page.locator('#game').focus();
+    await page.keyboard.press(`Digit${number}`);
+    expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.phase)).toBe('kris');
+    for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
+    const expected = ['rain', 'edges', 'bombs', 'jump'][number - 1];
+    expect(
+      await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.pattern),
+    ).toBe(expected);
+    await page.evaluate(() => {
+      window.battleFixtureState.bossEncounter!.snowAttack!.grazeTP = 4;
+    });
+    const next = (number % 4) + 1;
+    await page.locator('#game').focus();
+    await page.keyboard.press(`Numpad${next}`);
+    expect(
+      await page.evaluate(() => {
+        const b = window.battleFixtureState.bossEncounter!;
+        return {
+          pattern: b.snowAttack!.vesselRain!.pattern,
+          age: b.snowAttack!.vesselRain!.age,
+          invincible: b.invincible,
+          grazeTP: b.snowAttack!.grazeTP,
+          y: b.soul!.y,
+        };
+      }),
+    ).toEqual({
+      pattern: ['rain', 'edges', 'bombs', 'jump'][next - 1],
+      age: 0,
+      invincible: true,
+      grazeTP: 4,
+      y: next === 4 ? 469.5 : 240,
+    });
+    await page.keyboard.press('Shift');
+  }
+  await page.keyboard.press('CapsLock');
+  expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
 });
