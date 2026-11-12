@@ -1,3 +1,4 @@
+import { starBombSettings } from '../vessel/star-bombs.ts';
 import { advanceVesselRain, vesselRainSettings } from '../vessel/sword-rain.ts';
 import { advanceAimedSwords } from '../knights/aimed-swords.ts';
 import { advanceCrossingSwords, crossingSwordTouches } from '../knights/crossing-swords.ts';
@@ -90,7 +91,11 @@ export function createAttackRunner(dependencies: Dependencies) {
             partyHP,
             projectileDamage(
               encounter,
-              hit.kind === 'mini' ? vesselRainSettings.miniDamage : vesselRainSettings.fallingDamage,
+              hit.red
+                ? starBombSettings.damage
+                : hit.kind === 'mini'
+                  ? vesselRainSettings.miniDamage
+                  : vesselRainSettings.fallingDamage,
             ),
             hit.kind === 'mini' ? 'a mini sword' : 'a sword',
             random,

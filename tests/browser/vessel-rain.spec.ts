@@ -3,7 +3,7 @@ import { installBattleFixture } from './battle-fixture.ts';
 import { controlFrames, frames } from './frames.ts';
 import { expect, test } from './test.ts';
 
-for (const pattern of ['rain', 'edges'] as const) {
+for (const pattern of ['rain', 'edges', 'bombs'] as const) {
   test(`Vessel ${pattern} hides the stage, allows full-screen movement, bursts into minis and ends naturally`, async ({
     page,
   }, testInfo) => {
@@ -22,7 +22,7 @@ for (const pattern of ['rain', 'edges'] as const) {
       advanceBattleTime(state.bossEncounter, 1.1, state.partyHP);
       // Keep the player alive while exercising a whole enemy turn through ordinary frames.
       state.bossEncounter!.invincible = true;
-      state.bossEncounter!.enemyAttackCount = pattern === 'edges' ? 1 : 0;
+      state.bossEncounter!.enemyAttackCount = ['rain', 'edges', 'bombs'].indexOf(pattern);
       window.refreshBattleFixture();
     }, pattern);
     for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();

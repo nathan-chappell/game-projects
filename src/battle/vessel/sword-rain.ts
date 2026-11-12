@@ -1,3 +1,4 @@
+import { createStarBomb, starBombSettings, type StarBomb } from './star-bombs.ts';
 import type { Point } from '../../world/types.ts';
 
 export const vesselRainArena = { x: 0, y: 0, width: 640, height: 480, border: 0 };
@@ -26,15 +27,17 @@ export interface VesselSword extends Point {
   age: number;
   active: boolean;
   hitOpponent: false;
+  red?: boolean;
 }
 export interface VesselRain {
-  pattern: 'rain' | 'edges';
+  pattern: 'rain' | 'edges' | 'bombs';
   age: number;
   volleys: number;
   nextVolley: number;
+  bombs: StarBomb[];
   warnings: (Point & { angle: number; remaining: number })[];
   swords: VesselSword[];
-  bursts: (Point & { age: number; angle: number })[];
+  bursts: (Point & { age: number; angle: number; radial?: boolean })[];
 }
 export function createVesselRain(pattern: VesselRain['pattern'] = 'rain'): VesselRain {
   return {
@@ -42,6 +45,7 @@ export function createVesselRain(pattern: VesselRain['pattern'] = 'rain'): Vesse
     age: 0,
     volleys: 0,
     nextVolley: vesselRainSettings.warmup,
+    bombs: [],
     warnings: [],
     swords: [],
     bursts: [],
@@ -57,7 +61,9 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     rain.age += step;
     rain.nextVolley -= step;
     if (rain.volleys < vesselRainSettings.volleys && rain.nextVolley <= 1e-9) {
-      if (rain.pattern === 'edges') {
+      if (rain.pattern === 'bombs') {
+        for (let i = 0; i < 2; i++) rain.bombs.push(createStarBomb(soul, rain.bombs, random));
+      } else if (rain.pattern === 'edges') {
         const first = Math.floor(random() * 4);
         const second = (first + 1 + Math.floor(random() * 3)) % 4;
         for (const side of [first, second]) {
@@ -89,6 +95,28 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
       rain.nextVolley += vesselRainSettings.interval;
     }
     rain.bursts = rain.bursts.filter((burst) => (burst.age += step) < 0.45);
+    rain.bombs = rain.bombs.filter((bomb) => {
+      bomb.age += step;
+      if (bomb.age < starBombSettings.fuse - 1e-9) return true;
+      rain.bursts.push({ x: bomb.x, y: bomb.y, age: 0, angle: 0, radial: true });
+      for (let i = 0; i < starBombSettings.miniCount; i++) {
+        const angle = bomb.angle + (i / starBombSettings.miniCount) * Math.PI * 2;
+        rain.swords.push({
+          kind: 'mini',
+          x: bomb.x,
+          y: bomb.y,
+          vx: Math.cos(angle) * starBombSettings.miniSpeed,
+          vy: Math.sin(angle) * starBombSettings.miniSpeed,
+          angle,
+          scale: 0.4,
+          age: 0,
+          active: true,
+          hitOpponent: false,
+          red: true,
+        });
+      }
+      return false;
+    });
     rain.warnings = rain.warnings.filter((warning) => {
       warning.remaining -= step;
       if (warning.remaining > 1e-9) return true;
@@ -171,6 +199,7 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
   }
   return (
     rain.volleys === vesselRainSettings.volleys &&
+    !rain.bombs.length &&
     !rain.warnings.length &&
     !rain.swords.length &&
     !rain.bursts.length

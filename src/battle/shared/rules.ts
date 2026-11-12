@@ -287,16 +287,18 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'vessel') {
-    const edges = encounter.enemyAttackCount % 2 === 1;
+    const pattern = (['rain', 'edges', 'bombs'] as const)[encounter.enemyAttackCount % 3];
     beginEnemyAttack(
       encounter,
       'vesselRain',
-      edges
-        ? `${message} Swords launch from the edges! Watch their warnings!`
-        : `${message} Dodge the falling swords and their bursts!`,
+      pattern === 'bombs'
+        ? `${message} The stars will burst into red swords!`
+        : pattern === 'edges'
+          ? `${message} Swords launch from the edges! Watch their warnings!`
+          : `${message} Dodge the falling swords and their bursts!`,
     );
-    if (edges && encounter.snowAttack?.direction === 'vesselRain')
-      encounter.snowAttack.vesselRain = createVesselRain('edges');
+    if (encounter.snowAttack?.direction === 'vesselRain')
+      encounter.snowAttack.vesselRain = createVesselRain(pattern);
     encounter.turn = 'Vessel';
     encounter.enemyAttackCount++;
     return true;

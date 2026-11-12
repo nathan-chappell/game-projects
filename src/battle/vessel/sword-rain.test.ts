@@ -148,11 +148,11 @@ test('a launched sword bursts on each destination edge into four inward mini swo
   }
 });
 
-test('Vessel alternates rain and edge attacks and returns to the party after each', () => {
+test('Vessel cycles rain, edges and stars and returns to the party after each', () => {
   const b = createVesselEncounter(),
     party = hp();
   b.invincible = true;
-  for (const pattern of ['rain', 'edges', 'rain', 'edges']) {
+  for (const pattern of ['rain', 'edges', 'bombs', 'rain']) {
     startNextEnemyAttack(b, '');
     assert.equal(b.snowAttack?.vesselRain?.pattern, pattern);
     advanceSnowAttack(b, party, 20, () => 0.37);
