@@ -174,6 +174,22 @@ export function moveSoul(encounter: Encounter, keys: Set<string>, dt: number) {
       if (keys.has(side)) encounter.snowAttack.undyne.shield = side;
     return;
   }
+  if (
+    encounter.snowAttack?.direction === 'vesselRain' &&
+    encounter.snowAttack.vesselRain.pattern === 'jump'
+  ) {
+    moveBlueSoul(
+      encounter.snowAttack.vesselRain.blueSoul,
+      encounter.soul,
+      keys,
+      dt,
+      battleSettings.soulWidth,
+      battleSettings.soulHeight,
+      battleSettings.soulSpeed,
+      { arena: vesselRainArena, groundY: 480, platforms: [] },
+    );
+    return;
+  }
   if (encounter.snowAttack?.direction === 'goal') {
     moveBlueSoul(
       encounter.snowAttack.goal,
@@ -287,18 +303,21 @@ export function finishPartyTurn(encounter: Encounter, message: string) {
 }
 export function startNextEnemyAttack(encounter: Encounter, message: string) {
   if (encounter.kind === 'vessel') {
-    const pattern = (['rain', 'edges', 'bombs'] as const)[encounter.enemyAttackCount % 3];
+    const pattern = (['rain', 'edges', 'bombs', 'jump'] as const)[encounter.enemyAttackCount % 4];
     beginEnemyAttack(
       encounter,
       'vesselRain',
-      pattern === 'bombs'
-        ? `${message} The stars will burst into red swords!`
-        : pattern === 'edges'
-          ? `${message} Swords launch from the edges! Watch their warnings!`
-          : `${message} Dodge the falling swords and their bursts!`,
+      pattern === 'jump'
+        ? `${message} Blue soul! Jump over the swords!`
+        : pattern === 'bombs'
+          ? `${message} The stars will burst into red swords!`
+          : pattern === 'edges'
+            ? `${message} Swords launch from the edges! Watch their warnings!`
+            : `${message} Dodge the falling swords and their bursts!`,
     );
     if (encounter.snowAttack?.direction === 'vesselRain')
       encounter.snowAttack.vesselRain = createVesselRain(pattern);
+    if (pattern === 'jump' && encounter.soul) encounter.soul.y = 480 - battleSettings.soulHeight / 2;
     encounter.turn = 'Vessel';
     encounter.enemyAttackCount++;
     return true;

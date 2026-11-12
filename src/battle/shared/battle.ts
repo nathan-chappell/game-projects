@@ -695,7 +695,12 @@ export function createBattleDrawing(
             top + row * 3,
             3,
             3,
-            snow?.direction === 'undyne' ? '#23ed59' : snow?.direction === 'goal' ? '#2675ff' : '#ff0000',
+            snow?.direction === 'undyne'
+              ? '#23ed59'
+              : snow?.direction === 'goal' ||
+                  (snow?.direction === 'vesselRain' && snow.vesselRain.pattern === 'jump')
+                ? '#2675ff'
+                : '#ff0000',
           );
     ctx.restore();
   }
@@ -711,7 +716,7 @@ export function createBattleDrawing(
     if (encounter?.snowAttack?.direction === 'vesselRain' && encounter.soul) {
       drawVesselRain(ctx, encounter.snowAttack.vesselRain, reducedParticleMotion.matches);
       $('gameHint').textContent =
-        `${encounter.invincible ? 'Invincibility ON · ' : ''}2: toggle invincibility · Shift: skip attack`;
+        `${encounter.invincible ? 'Invincibility ON · ' : ''}2: toggle invincibility · Shift: skip attack${encounter.snowAttack.vesselRain.pattern === 'jump' ? ' · Left/right: move · Up/W/Space: jump (hold for height)' : ''}`;
       drawGrazeRing(encounter);
       drawBattleSoul(encounter);
       return;

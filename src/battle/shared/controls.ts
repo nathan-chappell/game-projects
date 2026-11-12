@@ -349,7 +349,9 @@ export function setupBattleControls(
       }
       if (
         canControlSoul(state.bossEncounter) &&
-        state.bossEncounter.snowAttack?.direction === 'goal' &&
+        (state.bossEncounter.snowAttack?.direction === 'goal' ||
+          (state.bossEncounter.snowAttack?.direction === 'vesselRain' &&
+            state.bossEncounter.snowAttack.vesselRain.pattern === 'jump')) &&
         (event.key === ' ' || event.code === 'Space')
       ) {
         event.preventDefault();

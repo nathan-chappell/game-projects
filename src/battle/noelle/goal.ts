@@ -96,6 +96,7 @@ export function moveBlueSoul(
   width = 24,
   height = 21,
   speed = 150,
+  geometry = { arena: goalArena, groundY: goalGroundY, platforms: goalPlatforms },
 ) {
   if (!Number.isFinite(dt) || dt <= 0) return;
   const jumping = keys.has('up') || keys.has('jump');
@@ -108,7 +109,7 @@ export function moveBlueSoul(
     dx = Number(keys.has('right')) - Number(keys.has('left')),
     halfWidth = width / 2,
     halfHeight = height / 2,
-    floor = { x: goalArena.x, y: goalGroundY, width: goalArena.width };
+    floor = { x: geometry.arena.x, y: geometry.groundY, width: geometry.arena.width };
   for (let i = 0; i < steps; i++) {
     attack.coyoteTime = attack.grounded ? goalSettings.coyoteSeconds : Math.max(0, attack.coyoteTime - step);
     if (attack.jumpBuffer > 0 && attack.coyoteTime > 0) {
@@ -119,15 +120,18 @@ export function moveBlueSoul(
     }
     attack.jumpBuffer = Math.max(0, attack.jumpBuffer - step);
     soul.x = Math.max(
-      goalArena.x + goalArena.border + halfWidth,
-      Math.min(goalArena.x + goalArena.width - goalArena.border - halfWidth, soul.x + dx * speed * step),
+      geometry.arena.x + geometry.arena.border + halfWidth,
+      Math.min(
+        geometry.arena.x + geometry.arena.width - geometry.arena.border - halfWidth,
+        soul.x + dx * speed * step,
+      ),
     );
     const previousBottom = soul.y + halfHeight;
     soul.y += attack.vy * step + (goalSettings.gravity * step * step) / 2;
     attack.vy += goalSettings.gravity * step;
     attack.grounded = false;
     if (attack.vy >= 0) {
-      const landing = [...goalPlatforms, floor]
+      const landing = [...geometry.platforms, floor]
         .filter(
           (platform) =>
             soul.x + halfWidth > platform.x &&
@@ -142,7 +146,7 @@ export function moveBlueSoul(
         attack.grounded = true;
       }
     }
-    const ceiling = goalArena.y + goalArena.border + halfHeight;
+    const ceiling = geometry.arena.y + geometry.arena.border + halfHeight;
     if (soul.y < ceiling) {
       soul.y = ceiling;
       attack.vy = Math.max(0, attack.vy);

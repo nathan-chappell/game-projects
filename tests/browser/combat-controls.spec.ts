@@ -148,7 +148,7 @@ test('Vessel supports invincibility and Shift skips each attack without changing
   await page.keyboard.up('Digit2');
   expect(await page.evaluate(() => window.battleFixtureState.bossEncounter!.invincible)).toBe(false);
   await page.keyboard.press('Numpad2');
-  for (const pattern of ['rain', 'edges', 'bombs']) {
+  for (const pattern of ['rain', 'edges', 'bombs', 'jump']) {
     for (let i = 0; i < 4; i++) await page.locator('#battleDefend').click();
     expect(
       await page.evaluate(() => window.battleFixtureState.bossEncounter!.snowAttack!.vesselRain!.pattern),

@@ -91,11 +91,11 @@ export function createAttackRunner(dependencies: Dependencies) {
             partyHP,
             projectileDamage(
               encounter,
-              hit.red
-                ? starBombSettings.damage
-                : hit.kind === 'mini'
-                  ? vesselRainSettings.miniDamage
-                  : vesselRainSettings.fallingDamage,
+              hit.kind === 'mini'
+                ? hit.red
+                  ? starBombSettings.damage
+                  : vesselRainSettings.miniDamage
+                : vesselRainSettings.fallingDamage,
             ),
             hit.kind === 'mini' ? 'a mini sword' : 'a sword',
             random,

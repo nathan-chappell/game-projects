@@ -1,3 +1,4 @@
+import { createGoalAttack } from '../noelle/goal.ts';
 import { createStarBomb, starBombSettings, type StarBomb } from './star-bombs.ts';
 import type { Point } from '../../world/types.ts';
 
@@ -18,8 +19,10 @@ export const vesselRainSettings = {
   miniSpeed: 210,
   miniLifetime: 3.5,
 };
+export const vesselJumpSettings = { volleys: 10, interval: 1.2, speed: 330, redWave: 4 };
+
 export interface VesselSword extends Point {
-  kind: 'falling' | 'launched' | 'mini';
+  kind: 'falling' | 'launched' | 'sweeping' | 'mini';
   vx: number;
   vy: number;
   angle: number;
@@ -30,18 +33,20 @@ export interface VesselSword extends Point {
   red?: boolean;
 }
 export interface VesselRain {
-  pattern: 'rain' | 'edges' | 'bombs';
+  pattern: 'rain' | 'edges' | 'bombs' | 'jump';
+  blueSoul: ReturnType<typeof createGoalAttack>;
   age: number;
   volleys: number;
   nextVolley: number;
   bombs: StarBomb[];
-  warnings: (Point & { angle: number; remaining: number })[];
+  warnings: (Point & { angle: number; remaining: number; red?: boolean })[];
   swords: VesselSword[];
   bursts: (Point & { age: number; angle: number; radial?: boolean })[];
 }
 export function createVesselRain(pattern: VesselRain['pattern'] = 'rain'): VesselRain {
   return {
     pattern,
+    blueSoul: createGoalAttack(),
     age: 0,
     volleys: 0,
     nextVolley: vesselRainSettings.warmup,
@@ -53,6 +58,8 @@ export function createVesselRain(pattern: VesselRain['pattern'] = 'rain'): Vesse
 }
 
 export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, random = Math.random) {
+  const volleys = rain.pattern === 'jump' ? vesselJumpSettings.volleys : vesselRainSettings.volleys;
+  const interval = rain.pattern === 'jump' ? vesselJumpSettings.interval : vesselRainSettings.interval;
   // Substeps keep floor impacts and accelerated swords consistent across frame rates.
   let remaining = Number.isFinite(dt) ? Math.max(0, dt) : 0;
   while (remaining > 1e-9) {
@@ -60,8 +67,17 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     remaining -= step;
     rain.age += step;
     rain.nextVolley -= step;
-    if (rain.volleys < vesselRainSettings.volleys && rain.nextVolley <= 1e-9) {
-      if (rain.pattern === 'bombs') {
+    if (rain.volleys < volleys && rain.nextVolley <= 1e-9) {
+      if (rain.pattern === 'jump') {
+        const left = rain.volleys % 2 === 0;
+        rain.warnings.push({
+          x: left ? -40 : 680,
+          y: 468,
+          angle: left ? 0 : Math.PI,
+          remaining: vesselRainSettings.warning,
+          red: rain.volleys === vesselJumpSettings.redWave,
+        });
+      } else if (rain.pattern === 'bombs') {
         for (let i = 0; i < 2; i++) rain.bombs.push(createStarBomb(soul, rain.bombs, random));
       } else if (rain.pattern === 'edges') {
         const first = Math.floor(random() * 4);
@@ -92,7 +108,7 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
         );
       }
       rain.volleys++;
-      rain.nextVolley += vesselRainSettings.interval;
+      rain.nextVolley += interval;
     }
     rain.bursts = rain.bursts.filter((burst) => (burst.age += step) < 0.45);
     rain.bombs = rain.bombs.filter((bomb) => {
@@ -121,15 +137,18 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
       warning.remaining -= step;
       if (warning.remaining > 1e-9) return true;
       const speed =
-        vesselRainSettings.fallingSpeed *
-        (rain.pattern === 'edges' ? vesselRainSettings.edgeSpeedMultiplier : 1);
+        rain.pattern === 'jump'
+          ? vesselJumpSettings.speed
+          : vesselRainSettings.fallingSpeed *
+            (rain.pattern === 'edges' ? vesselRainSettings.edgeSpeedMultiplier : 1);
       rain.swords.push({
-        kind: rain.pattern === 'edges' ? 'launched' : 'falling',
+        kind: rain.pattern === 'jump' ? 'sweeping' : rain.pattern === 'edges' ? 'launched' : 'falling',
         x: warning.x,
         y: warning.y,
         vx: Math.cos(warning.angle) * speed,
         vy: Math.sin(warning.angle) * speed,
         angle: warning.angle,
+        red: warning.red,
         scale: 1,
         age: 0,
         active: true,
@@ -140,7 +159,7 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     const next: VesselSword[] = [];
     for (const sword of rain.swords) {
       sword.age += step;
-      if (sword.kind !== 'mini') {
+      if (sword.kind === 'falling' || sword.kind === 'launched') {
         const multiplier = sword.kind === 'launched' ? vesselRainSettings.edgeSpeedMultiplier : 1;
         const speed = Math.min(
           vesselRainSettings.fallingMaxSpeed * multiplier,
@@ -165,19 +184,25 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
                   ? -Math.PI / 2
                   : null;
       if (impactAngle !== null) {
+        if (sword.kind === 'sweeping' && !sword.red) continue;
         const impact = { x: Math.max(0, Math.min(640, tip.x)), y: Math.max(0, Math.min(480, tip.y)) };
         const x = Math.max(6, Math.min(634, impact.x)),
           y = Math.max(6, Math.min(474, impact.y));
         rain.bursts.push({ ...impact, age: 0, angle: impactAngle });
         for (let i = 0; i < vesselRainSettings.miniCount; i++) {
+          const fraction = i / (vesselRainSettings.miniCount - 1);
           const angle =
-            impactAngle - Math.PI / 2 + 0.3 + (i / (vesselRainSettings.miniCount - 1)) * (Math.PI - 0.6);
+            sword.kind === 'sweeping'
+              ? (impactAngle === 0 ? -Math.PI / 2 + 0.22 : -Math.PI + 0.22) + fraction * (Math.PI / 2 - 0.44)
+              : impactAngle - Math.PI / 2 + 0.3 + fraction * (Math.PI - 0.6);
+          const miniSpeed = sword.red ? starBombSettings.miniSpeed : vesselRainSettings.miniSpeed;
           next.push({
             kind: 'mini',
+            red: sword.red,
             x,
             y,
-            vx: Math.cos(angle) * vesselRainSettings.miniSpeed,
-            vy: Math.sin(angle) * vesselRainSettings.miniSpeed,
+            vx: Math.cos(angle) * miniSpeed,
+            vy: Math.sin(angle) * miniSpeed,
             angle,
             scale: 0.4,
             age: 0,
@@ -198,7 +223,7 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     rain.swords = next;
   }
   return (
-    rain.volleys === vesselRainSettings.volleys &&
+    rain.volleys === volleys &&
     !rain.bombs.length &&
     !rain.warnings.length &&
     !rain.swords.length &&
