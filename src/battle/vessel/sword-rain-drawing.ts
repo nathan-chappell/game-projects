@@ -57,7 +57,8 @@ export function drawVesselRain(ctx: CanvasRenderingContext2D, rain: VesselRain, 
     ctx.restore();
   }
   ctx.globalAlpha = 1;
-  for (const sword of rain.swords) drawKnightSword(ctx, { ...sword, owner: 'kaizo' }, reduced);
+  for (const sword of rain.swords)
+    if (sword.active) drawKnightSword(ctx, { ...sword, owner: 'kaizo' }, reduced);
   for (const burst of rain.bursts) {
     const progress = burst.age / 0.45;
     ctx.globalAlpha = 1 - progress;

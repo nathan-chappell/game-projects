@@ -19,7 +19,14 @@ export const vesselRainSettings = {
   miniSpeed: 210,
   miniLifetime: 3.5,
 };
-export const vesselJumpSettings = { volleys: 10, interval: 1.2, speed: 330, redWave: 4 };
+export const vesselJumpSettings = {
+  volleys: 12,
+  interval: 0.95,
+  pairDelay: 0.22,
+  speed: 330,
+  redWave: 4,
+  miniSpacing: 0.16,
+};
 
 export interface VesselSword extends Point {
   kind: 'falling' | 'launched' | 'sweeping' | 'mini';
@@ -31,6 +38,7 @@ export interface VesselSword extends Point {
   active: boolean;
   hitOpponent: false;
   red?: boolean;
+  delay?: number;
 }
 export interface VesselRain {
   pattern: 'rain' | 'edges' | 'bombs' | 'jump';
@@ -70,13 +78,14 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     if (rain.volleys < volleys && rain.nextVolley <= 1e-9) {
       if (rain.pattern === 'jump') {
         const left = rain.volleys % 2 === 0;
-        rain.warnings.push({
-          x: left ? -40 : 680,
-          y: 468,
-          angle: left ? 0 : Math.PI,
-          remaining: vesselRainSettings.warning,
-          red: rain.volleys === vesselJumpSettings.redWave,
-        });
+        for (let i = 0; i < 2; i++)
+          rain.warnings.push({
+            x: left ? -40 : 680,
+            y: 468,
+            angle: left ? 0 : Math.PI,
+            remaining: vesselRainSettings.warning + i * vesselJumpSettings.pairDelay,
+            red: rain.volleys === vesselJumpSettings.redWave && i === 0,
+          });
       } else if (rain.pattern === 'bombs') {
         for (let i = 0; i < 2; i++) rain.bombs.push(createStarBomb(soul, rain.bombs, random));
       } else if (rain.pattern === 'edges') {
@@ -158,6 +167,12 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
     });
     const next: VesselSword[] = [];
     for (const sword of rain.swords) {
+      if ((sword.delay ?? 0) > 1e-9) {
+        sword.delay = Math.max(0, (sword.delay ?? 0) - step);
+        sword.active = sword.delay <= 1e-9;
+        next.push(sword);
+        continue;
+      }
       sword.age += step;
       if (sword.kind === 'falling' || sword.kind === 'launched') {
         const multiplier = sword.kind === 'launched' ? vesselRainSettings.edgeSpeedMultiplier : 1;
@@ -193,20 +208,21 @@ export function advanceVesselRain(rain: VesselRain, dt: number, soul: Point, ran
           const fraction = i / (vesselRainSettings.miniCount - 1);
           const angle =
             sword.kind === 'sweeping'
-              ? (impactAngle === 0 ? -Math.PI / 2 + 0.22 : -Math.PI + 0.22) + fraction * (Math.PI / 2 - 0.44)
+              ? impactAngle
               : impactAngle - Math.PI / 2 + 0.3 + fraction * (Math.PI - 0.6);
           const miniSpeed = sword.red ? starBombSettings.miniSpeed : vesselRainSettings.miniSpeed;
           next.push({
             kind: 'mini',
             red: sword.red,
+            delay: sword.kind === 'sweeping' ? i * vesselJumpSettings.miniSpacing : 0,
             x,
-            y,
+            y: sword.kind === 'sweeping' ? 468 : y,
             vx: Math.cos(angle) * miniSpeed,
             vy: Math.sin(angle) * miniSpeed,
             angle,
             scale: 0.4,
             age: 0,
-            active: true,
+            active: sword.kind !== 'sweeping' || i === 0,
             hitOpponent: false,
           });
         }
